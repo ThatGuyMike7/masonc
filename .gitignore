@@ -1,3 +1,9 @@
+#Ignored Editor Files
 .vscode/
+*.sublime-project
+*.sublime-workspace
+
+
+#Ignored Project Files
 bin/
 build/

@@ -1,0 +1,88 @@
+grammar mason;
+
+// action-dependant: identifier, constant, type_name
+	
+
+primary_expression
+	:	identifier
+	|	constant
+	|	'(' expression ')'
+	;
+	
+constant
+	:	integer_constant
+	|	floating_constant
+	|	character_constant
+	|	string_constant
+	;
+
+argument_expression_list
+	:	primary_expression
+	:	argument_expression_list ',' argument_expression_list
+	;
+
+post_fix_expression
+	:	primary_expression
+	|	post_fix_expression '(' argument_expression_list? ')'
+	|	post_fix_expression '[' expression ']'
+	|	post_fix_expression '.' identifier
+	;
+
+unary_expression
+	:	post_fix_expression
+	|	unary_operator cast_expression
+	;
+
+unary_operator
+	:	'+' | '-' | '*' | '/' | '%'
+	;
+
+cast_expression
+	:	unary_expression
+	:	'cast' '<' type_name '>' '(' cast_expression ')'
+	;
+
+multiplicative_expression
+	:	cast_expression
+	|	multiplicative_expression '*' cast_expression
+	|	multiplicative_expression '/' cast_expression
+	|	multiplicative_expression '%' cast_expression
+	;
+
+additive_expression
+    :   multiplicative_expression
+    |   additive_expression '+' multiplicative_expression
+    |   additive_expression '-' multiplicative_expression
+    ;
+
+assignment_expression
+	:	additive_expression // Replace with highest level expression if new ones are added
+	|	unary_expression assignment_operator assignment_expression
+	;
+	
+assignment_operator
+    :   '=' | '*=' | '/=' | '%=' | '+=' | '-='
+    ;
+
+expression
+	:	assignment_expression
+	|	expression ',' assignment_expression
+	;
+
+variable_declaration
+	:	identifier ':' type_name
+	|	identifier ':' type_name '=' additive_expression // Replace with highest level expression if new ones are added
+	|	identifier ':=' additive_expression // Replace with highest level expression if new ones are added
+	;
+
+procedure_call
+	:	post_fix_expression '(' argument_expression_list? ')'
+	;
+
+statement
+	:	expression_statement
+	;
+
+expression_statement
+	:	expression ';'
+	;
