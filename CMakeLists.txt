@@ -10,6 +10,11 @@ endif()
 cmake_minimum_required (VERSION 3.9.4)
 project (masonc C)
 
+
+# Emit compile commands
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+
 # Add header files
 include_directories(${CMAKE_SOURCE_DIR}/ext/include ${CMAKE_SOURCE_DIR}/include)
 

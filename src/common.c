@@ -10,5 +10,6 @@ void quit(char* message)
 	printf(message);
 	printf("\n\nPress return to exit\n");
 	getchar();
+	
 	exit(-1);
 }

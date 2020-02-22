@@ -26,6 +26,9 @@ typedef struct Stack
 	// How many elements the buffer contains
 	size_t length;
 	
+	// Buffer with size of 1 element for the swap operation
+	void* swap_buffer;
+	
 } Stack;
 
 // Allocation and initialization
@@ -34,11 +37,17 @@ extern Stack stack_new(size_t element_size, size_t chunk_element_count);
 // Free all your elements first if they contain any owning pointers
 extern void stack_free(Stack* s);
 
-// Reallocate the stack to its current size plus "chunk_size" bytes
-extern void stack_grow(Stack* s);
+// Reallocate the stack to its current size plus 'chunk_size * chunks' bytes
+extern void stack_grow(Stack* s, size_t chunks);
 
 // Copy an element onto the stack
 extern void stack_push(Stack* s, void* element);
+
+// Copy the source stack's buffer and add it onto the destination stack.
+// 
+// The destination's 'element_size' and 'chunk_size' are used. This results in the type having to be equal in both stacks
+// (element_size, more specifically. But it is recommended to have equal types unless you know what you are doing).
+extern void stack_pushs(Stack* dest_stack, Stack* src_stack);
 
 // If you pop something, make sure to free() any memory first if your element has any owning pointers
 extern void stack_pop(Stack* s);
@@ -46,5 +55,8 @@ extern void stack_pop(Stack* s);
 // Get element at "index"
 // Does not check for out of bounds
 extern void* stack_at(Stack* s, size_t index);
+
+// Swap two elements at indices i1 and i2
+extern void stack_swap(Stack* s, size_t i1, size_t i2);
 
 #endif
