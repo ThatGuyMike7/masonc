@@ -1,0 +1,19 @@
+proc foo()
+{
+}
+
+proc foo2() -> s32 { }
+
+proc foo3(f: f64,
+		 f2: f32,
+f3: f32)
+ 	 -> s32
+{ }
+
+proc
+foo4
+(
+		x:s32		)
+->
+s32
+{			  }

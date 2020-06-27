@@ -1,0 +1,14 @@
+proc foo();
+
+proc foo2() -> s32;
+
+proc foo3()
+-> s32;
+
+proc
+foo4
+(
+	     )
+->
+s32
+;

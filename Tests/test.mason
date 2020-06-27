@@ -1,0 +1,12 @@
+//proc stuff(x: s64);
+//proc stuff2(mut y: s64) -> f32;
+
+//proc stuff3(mut x: ^s64);
+
+proc foo()
+{
+    num: s64 = 400;
+    p: ^s64 = &num;
+    
+    stuff((16 + 2 * 2) * (5 - (6 / 2) + 10) + ^p);   // 241
+}

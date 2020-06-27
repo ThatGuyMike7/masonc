@@ -1,0 +1,65 @@
+package core.containers;
+
+import core.os;
+
+struct list<T>
+{
+    internal data: ^T = nullptr;
+    internal length: u64;
+}
+
+proc(list) operator=<T>(other: ^T)
+{
+    if(this.data != nullptr)
+    {
+        os.free(this.data);
+    }
+    
+    os.memcopy(this.data, other);
+}
+
+proc(list) operator[]<T>(i: u64) -> ^T
+{
+    ret (this.data + i);
+}
+
+proc(list) add<T>(element: ^T)
+{
+    head: ^T = this.data + this.length;
+    head^ = element^;
+}
+
+proc(list) free()
+{
+    os.free(this.data);
+}
+
+proc(list) size() -> u64
+{
+    ret this.length;
+}
+
+// file: main.m
+import core.io;
+import core.os;
+import core.containers;
+
+proc main()
+{
+    alpha_list: containers.list<char> = { 'a', 'b', 'c' };
+    defer alpha_list.free();
+    
+    for i: u64 = 3, i < 10, i++
+        containers.list.add(alpha_list, 'a' + i);
+    
+    if alpha_list[3] != 'd'
+    {
+        io.print("Error");
+        io.get_char();
+        os.exit(-1);
+    }
+    
+    io.print("Success");
+    io.get_char();
+    os.exit(0);
+}

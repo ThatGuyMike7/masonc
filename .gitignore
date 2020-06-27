@@ -1,9 +1,19 @@
-#Ignored Editor Files
+# Ignored Editor Files
 .vscode/
 *.sublime-project
 *.sublime-workspace
+*.clang_complete
 
+# Ignored Visual Studio Files
+.vs/
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sln
 
-#Ignored Project Files
-bin/
-build/
+# Ignored Project Files
+LLVM-C.dll
+x64/
+x86/
+x32/
+Tests/Unicode/
