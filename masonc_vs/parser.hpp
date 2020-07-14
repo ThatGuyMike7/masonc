@@ -95,8 +95,8 @@ namespace masonc
 
 	enum number_type : u8
 	{
-		NUMBER_INTEGER,		// 5
-		NUMBER_DECIMAL		// 0.31415
+		NUMBER_INTEGER,
+		NUMBER_DECIMAL
 	};
 
 	struct expression_number_literal
@@ -369,19 +369,26 @@ namespace masonc
 		CONTEXT_NONE,
 		CONTEXT_STATEMENT
 	};
-
+	
+	// Package names associated with ASTs
+	using package_ast_map = std::unordered_map<std::string, std::vector<expression>>;
+	
 	struct parser_output
 	{
-		std::vector<expression> expressions;
+		package_map packages;
+		
+		// Each package defined in the parser's input gets its own AST.
+		// After all parsers finished, ASTs of equal packages will be merged in the pre-linker.
+		package_ast_map asts;
+		
 		message_list messages;
 	};
 
 	struct parser
 	{
-		// 'input' is expected to have no errors
-		// 'output' is expected to be allocated and empty
-		// `global_scope_template` will be copied and used as an internal global scope instance.
-		void parse(lexer_output* input, parser_output* output, scope* global_scope_template);
+		// `input` is expected to have no errors,
+		// `output` is expected to be allocated and empty
+		void parse(lexer_output* input, parser_output* output);
 		
 		void print_expressions();
 		std::string format_expression(const expression& expr, u64 level = 0);
@@ -389,25 +396,21 @@ namespace masonc
 	private:
 		lexer_output* input;
 		parser_output* output;
-
-		scope global_scope;
+		
+		// `nullptr` when no package declaration was parsed
+		package* current_package;
+		std::vector<expression>* current_ast;
+		std::string current_package_name;
+		
 		scope_index current_scope_index;
-
-		std::vector<package> packages;
-
-		// Value is -1 if we are in the global module (no package declared)
-		s64 current_package_index;
-
 		u64 token_index;
 
 		bool done;
+		
+		scope* current_scope();
 
-		// Set package with specified name to be current, or add new package if it doesn't exist
-		void set_current_package(const std::string& package_name);
-
-		// Returns address to constant `GLOBAL_PACKAGE_NAME` if we are in the global module,
-		// so make sure to never change the value of the returned string.
-		const std::string* current_package_name();
+		// Set package with specified name to be current, or add a new package if it doesn't exist
+		void set_package(const std::string& package_name);
 
 		// Jump to the next statement or procedure
 		void recover();

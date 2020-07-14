@@ -2,18 +2,19 @@
 
 namespace masonc
 {
-	void pre_linker::merge_global_scopes(scope& destination_global, scope& source_global)
+	void pre_linker::merge_package_scopes(scope& destination, scope& source)
 	{
-		// Copy symbols from `source_global` to `destination_global`
-		for (auto it = source_global.symbols.begin(); it != source_global.symbols.end(); it++)
+		// Copy symbols from source to destination
+		for (auto it = source.symbols.begin(); it != source.symbols.end(); it++)
 		{
 			const std::string& key = it->first;
 
-			auto find_key_it = destination_global.symbols.find(key);
-			if (find_key_it != destination_global.symbols.end())
+			auto find_key_it = destination.symbols.find(key);
+			if (find_key_it != destination.symbols.end())
 			{
 				// TODO: Finish this
-				// Generate an error because a symbol with the same name already exists in `source_global`
+				
+				// Generate an error because a symbol with the same name already exists in `source`
 				output->messages.report_error("");
 			}
 		}

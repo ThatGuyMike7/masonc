@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <limits>
 
 #include "log.hpp"
 #include "lang.hpp"
@@ -79,6 +80,11 @@ namespace masonc
 		return find_it->second;
 	}
 	
+	LLVMTypeRef llvm_converter::get_llvm_pointer_type(LLVMTypeRef llvm_element_type)
+	{
+		return LLVMPointerType(llvm_element_type, 0);
+	}
+	
 	LLVMValueRef llvm_converter::build_alloca_at_entry(LLVMValueRef llvm_function,
 		LLVMTypeRef llvm_variable_type, const char* variable_name)
 	{
@@ -146,9 +152,22 @@ namespace masonc
 	
 	LLVMValueRef llvm_converter::convert_primary(expression* expr)
 	{
-		if(expr->value.empty.type == EXPR_REFERENCE)
+		if(expr->value.empty.type == EXPR_UNARY)
 		{
-			
+			switch(expr->value.unary.value.op_code)
+			{
+			default:
+				// TODO: Report error
+				return nullptr;
+			case '&':
+				return convert_reference_of(expr->value.unary.value.expr);
+			case '^':
+				return convert_dereference(expr->value.unary.value.expr);
+			}
+		}
+		else if(expr->value.empty.type == EXPR_REFERENCE)
+		{
+			return convert_reference(&expr->value.reference.value);
 		}
 		else if(expr->value.empty.type == EXPR_NUMBER_LITERAL)
 		{
@@ -166,6 +185,168 @@ namespace masonc
 		return nullptr;
 	}
 	
+	LLVMValueRef llvm_converter::convert_number_literal(expression_number_literal* expr)
+	{
+		switch(expr->type)
+		{
+		default:
+			// TODO: Report error
+			return nullptr;
+			
+		case NUMBER_INTEGER:
+			// Const integer literals have 64 bit precision
+			return LLVMConstIntOfStringAndSize(
+				LLVMInt64Type(),
+				expr->value.c_str(),
+				static_cast<unsigned int>(expr->value.size()),
+				10u
+			);
+			
+		case NUMBER_DECIMAL:
+			// Const decimal literals have 64 bit precision
+			return LLVMConstRealOfStringAndSize(
+				LLVMDoubleType(),
+				expr->value.c_str(),
+				static_cast<unsigned int>(expr->value.size())
+			);
+		}
+	}
+	
+	LLVMValueRef llvm_converter::convert_local_variable(expression_variable_declaration* expr,
+		LLVMValueRef llvm_function)
+	{
+		LLVMTypeRef llvm_variable_type;
+		
+		if(expr->is_pointer)
+			llvm_variable_type = get_llvm_pointer_type(get_llvm_type_by_name(expr->type_name));
+		else
+			llvm_variable_type = get_llvm_type_by_name(expr->type_name);
+		
+		return build_alloca_at_entry(llvm_function, llvm_variable_type, expr->name.name.c_str());
+	}
+	
+	LLVMValueRef llvm_converter::convert_reference(expression_reference* expr)
+	{
+		return nullptr;
+	}
+	
+	LLVMValueRef llvm_converter::convert_reference_of(LLVMValueRef llvm_value,
+		LLVMValueRef llvm_pointer)
+	{
+		return LLVMBuildStore(llvm_builder, llvm_value, llvm_pointer);
+	}
+	
+    LLVMValueRef llvm_converter::convert_dereference(expression* expr)
+    {
+    	//LLVMBuildLoad2(LLVMBuilderRef, LLVMTypeRef Ty, LLVMValueRef PointerVal, const char *Name)
+		return nullptr;
+    }
+	
+	LLVMValueRef llvm_converter::convert_call(expression_procedure_call* expr)
+	{
+		LLVMValueRef llvm_function = LLVMGetNamedFunction(llvm_module, expr->name.name.c_str());
+
+		// No error checking because the parser should have figured out already if
+		// the function is visible from here or not
+		LLVMTypeRef llvm_function_type = function_type_map[expr->name.name];
+
+		u64 args_count = expr->argument_list.size();
+		LLVMValueRef* args = static_cast<LLVMValueRef*>(alloca(sizeof(LLVMValueRef) * args_count));
+		
+		for(u64 i = 0; i < args_count; i += 1)
+		{
+			args[i] = convert_expression(&expr->argument_list[i]);
+		}
+		
+		// Overflow check before casting `args_count` from `u64` to `unsigned int`
+		std::numeric_limits<unsigned int> unsigned_int_limit;
+		assume(unsigned_int_limit.max() >= args_count);
+
+		return LLVMBuildCall2(
+			llvm_builder,
+			llvm_function_type,
+			llvm_function,
+			args,
+			static_cast<unsigned int>(args_count),
+			""
+		);
+	}
+	
+	LLVMValueRef llvm_converter::convert_procedure(expression_procedure_definition* expr)
+	{
+		LLVMValueRef llvm_function = convert_procedure_prototype(&expr->prototype);
+		convert_procedure_body(llvm_function, expr);
+		return llvm_function;
+	}
+	
+	LLVMValueRef llvm_converter::convert_procedure_prototype(expression_procedure_prototype* expr)
+	{
+		std::vector<LLVMTypeRef> llvm_argument_types;
+		
+		for (u64 i = 0; i < expr->argument_list.size(); i += 1)
+		{
+			expression_variable_declaration* arg =
+				&expr->argument_list[i].value.variable_declaration.value;
+
+			LLVMTypeRef llvm_arg_type = get_llvm_type_by_name(arg->type_name);
+			if (llvm_arg_type == nullptr)
+			{
+				log_error(
+					std::string{ "Argument type '" + arg->type_name + 
+					"' could not be found" }.c_str()
+				);
+				
+				return nullptr;
+			}
+
+			llvm_argument_types.push_back(llvm_arg_type);
+		}
+		
+		LLVMTypeRef llvm_return_type = get_llvm_type_by_name(expr->return_type_name);
+		if (llvm_return_type == nullptr)
+		{
+			log_error(
+				std::string{ "Return type '" + expr->return_type_name +
+				"' could not be found" }.c_str()
+			);
+			
+			return nullptr;
+		}
+		
+		// Overflow check before casting `llvm_argument_types.size()` from `size_t` to `unsigned int`
+		std::numeric_limits<unsigned int> unsigned_int_limit;
+		assume(unsigned_int_limit.max() >= llvm_argument_types.size());
+
+		LLVMTypeRef llvm_function_type = LLVMFunctionType(
+			llvm_return_type,
+			llvm_argument_types.data(),
+			static_cast<unsigned int>(llvm_argument_types.size()),
+			false
+		);
+		
+		function_type_map.insert(std::make_pair(expr->name.name, llvm_function_type));
+		
+		return LLVMAddFunction(llvm_module, expr->name.name.c_str(), llvm_function_type);
+	}
+	
+	void llvm_converter::convert_procedure_body(LLVMValueRef llvm_function,
+		expression_procedure_definition* expr)
+	{
+		LLVMBasicBlockRef llvm_function_block = LLVMAppendBasicBlock(llvm_function, "entry");
+		LLVMPositionBuilderAtEnd(llvm_builder, llvm_function_block);
+		
+		// Generate IR for all expressions in the procedure's body
+		for(size_t i = 0; i < expr->body.size(); i += 1)
+		{
+			convert_statement(&expr->body[i], llvm_function);
+		}
+		
+		// Generate terminator for basic block
+		LLVMValueRef llvm_return = LLVMBuildRetVoid(llvm_builder);
+		
+		LLVMBool llvm_verify = LLVMVerifyFunction(llvm_function, LLVMPrintMessageAction);
+	}
+	
 	LLVMValueRef llvm_converter::convert_binary(s8 op_code, LLVMValueRef left, LLVMValueRef right)
 	{
 		// TODO: Type checking
@@ -174,6 +355,9 @@ namespace masonc
 		default:
 			// TODO: Report error
 			return nullptr;
+		case '=':
+			
+			break;
 		case '+':
 			return LLVMBuildAdd(llvm_builder, left, right, "addtmp");
 		case '-':
@@ -185,33 +369,58 @@ namespace masonc
 		}
 	}
 	
-	void llvm_converter::print_term(const std::vector<term_element>& term)
-	{
-		std::cout << std::endl;
-		for (u64 i = 0; i < term.size(); i += 1)
+	LLVMValueRef llvm_converter::convert_term(expression* term_start)
+    {
+    	std::vector<term_element> infix;
+		AST_to_infix(term_start, infix);
+		//print_term(infix);
+
+		std::vector<term_element> RPN = infix_to_RPN(infix);
+		//print_term(RPN);
+		
+		while(RPN.size() > 1)
 		{
-			const term_element& element = term[i];
-			switch (element.type)
+			for(u64 i = 0; i < RPN.size(); i += 1)
 			{
-			case term_element::VARIANT_OP:
-				std::cout << static_cast<char>(element.op->op_code) << " ";
-				break;
-			case term_element::VARIANT_PRIMARY:
-				std::cout << element.expr->value.number.value.value << " ";
-				break;
-			case term_element::VARIANT_PARENTHESIS_BEGIN:
-				std::cout << "( ";
-				break;
-			case term_element::VARIANT_PARENTHESIS_END:
-				std::cout << ") ";
-				break;
-			case term_element::VARIANT_LLVM_VALUE:
-				std::cout << "LLVMValueRef ";
-				break;
+				term_element& element = RPN[i];
+				
+				if(element.type == term_element::VARIANT_OP)
+				{
+					term_element& left = RPN[i - 2];
+					term_element& right = RPN[i - 1];
+					
+					LLVMValueRef llvm_left;
+					LLVMValueRef llvm_right;
+					
+					// Operands either have to be evaluated or already have been evaluated
+					if(left.type == term_element::VARIANT_PRIMARY)
+						llvm_left = convert_primary(left.expr);
+					else
+						llvm_left = left.llvm_value;
+					
+					if(right.type == term_element::VARIANT_PRIMARY)
+						llvm_right = convert_primary(right.expr);
+					else
+						llvm_right = right.llvm_value;
+					
+					// Evaluate binary operation
+					LLVMValueRef llvm_binary_result = convert_binary(element.op->op_code, 
+						llvm_left, llvm_right);
+					
+					// Change the variant of the operator to our LLVM value result and
+					// remove the now evaluated left and right operands
+					element.type = term_element::VARIANT_LLVM_VALUE;
+					element.llvm_value = llvm_binary_result;
+					RPN.erase(RPN.begin() + i - 2, RPN.begin() + i);
+					
+					break;
+				}
 			}
 		}
-		std::cout << std::endl;
-	}
+
+		// The last remaining element is the result of the chain of binary operations
+		return RPN[0].llvm_value;
+    }
 	
 	void llvm_converter::AST_to_infix(expression* term_start, std::vector<term_element>& term)
 	{
@@ -330,189 +539,31 @@ namespace masonc
 		return output_queue;
 	}
 	
-    LLVMValueRef llvm_converter::convert_term(expression* term_start)
-    {
-    	std::vector<term_element> infix;
-		AST_to_infix(term_start, infix);
-		//print_term(infix);
-
-		std::vector<term_element> RPN = infix_to_RPN(infix);
-		//print_term(RPN);
-		
-		while(RPN.size() > 1)
+	void llvm_converter::print_term(const std::vector<term_element>& term)
+	{
+		std::cout << std::endl;
+		for (u64 i = 0; i < term.size(); i += 1)
 		{
-			for(u64 i = 0; i < RPN.size(); i += 1)
+			const term_element& element = term[i];
+			switch (element.type)
 			{
-				term_element& element = RPN[i];
-				
-				if(element.type == term_element::VARIANT_OP)
-				{
-					term_element& left = RPN[i - 2];
-					term_element& right = RPN[i - 1];
-					
-					LLVMValueRef llvm_left;
-					LLVMValueRef llvm_right;
-					
-					// Operands either have to be evaluated or already have been evaluated
-					if(left.type == term_element::VARIANT_PRIMARY)
-						llvm_left = convert_primary(left.expr);
-					else
-						llvm_left = left.llvm_value;
-					
-					if(right.type == term_element::VARIANT_PRIMARY)
-						llvm_right = convert_primary(right.expr);
-					else
-						llvm_right = right.llvm_value;
-					
-					// Evaluate binary operation
-					LLVMValueRef llvm_binary_result = convert_binary(element.op->op_code, 
-						llvm_left, llvm_right);
-					
-					// Change the variant of the operator to our LLVM value result and
-					// remove the now evaluated left and right operands
-					element.type = term_element::VARIANT_LLVM_VALUE;
-					element.llvm_value = llvm_binary_result;
-					RPN.erase(RPN.begin() + i - 2, RPN.begin() + i);
-					
-					break;
-				}
+			case term_element::VARIANT_OP:
+				std::cout << static_cast<char>(element.op->op_code) << " ";
+				break;
+			case term_element::VARIANT_PRIMARY:
+				std::cout << element.expr->value.number.value.value << " ";
+				break;
+			case term_element::VARIANT_PARENTHESIS_BEGIN:
+				std::cout << "( ";
+				break;
+			case term_element::VARIANT_PARENTHESIS_END:
+				std::cout << ") ";
+				break;
+			case term_element::VARIANT_LLVM_VALUE:
+				std::cout << "LLVMValueRef ";
+				break;
 			}
 		}
-
-		// The last remaining element is the result of the chain of binary operations
-		return RPN[0].llvm_value;
-    }
-	
-	LLVMValueRef llvm_converter::convert_number_literal(expression_number_literal* expr)
-	{
-		switch(expr->type)
-		{
-		default:
-			// TODO: Report error
-			return nullptr;
-		case NUMBER_INTEGER:
-			// Const integer literals have 64 bit precision
-			return LLVMConstIntOfStringAndSize(
-				LLVMInt64Type(),
-				expr->value.c_str(),
-				static_cast<unsigned int>(expr->value.size()),
-				10u
-			);
-		case NUMBER_DECIMAL:
-			// Const decimal literals have 64 bit precision
-			return LLVMConstRealOfStringAndSize(
-				LLVMDoubleType(),
-				expr->value.c_str(),
-				static_cast<unsigned int>(expr->value.size())
-			);
-		}
-	}
-	
-	LLVMValueRef llvm_converter::convert_local_variable(expression_variable_declaration* expr,
-		LLVMValueRef llvm_function)
-	{
-		// Create an alloca for the variable in the function's entry block
-		return build_alloca_at_entry(
-			llvm_function,
-			get_llvm_type_by_name(expr->type_name),
-			expr->name.name.c_str()
-		);
-	}
-	
-	LLVMValueRef llvm_converter::convert_call(expression_procedure_call* expr)
-	{
-		LLVMValueRef llvm_function = LLVMGetNamedFunction(llvm_module, expr->name.name.c_str());
-
-		// No error checking because the parser should have figured out already if
-		// the function is visible from here or not
-		LLVMTypeRef llvm_function_type = function_type_map[expr->name.name];
-
-		u64 args_count = expr->argument_list.size();
-		LLVMValueRef* args = static_cast<LLVMValueRef*>(alloca(sizeof(LLVMValueRef) * args_count));
-		
-		for(u64 i = 0; i < args_count; i += 1)
-		{
-			args[i] = convert_expression(&expr->argument_list[i]);
-		}
-		
-		return LLVMBuildCall2(
-			llvm_builder,
-			llvm_function_type,
-			llvm_function,
-			args,
-			args_count,
-			""
-		);
-	}
-	
-	LLVMValueRef llvm_converter::convert_procedure(expression_procedure_definition* expr)
-	{
-		LLVMValueRef llvm_function = convert_procedure_prototype(&expr->prototype);
-		convert_procedure_body(llvm_function, expr);
-		return llvm_function;
-	}
-	
-	LLVMValueRef llvm_converter::convert_procedure_prototype(expression_procedure_prototype* expr)
-	{
-		std::vector<LLVMTypeRef> llvm_argument_types;
-		
-		for (u64 i = 0; i < expr->argument_list.size(); i += 1)
-		{
-			expression_variable_declaration* arg =
-				&expr->argument_list[i].value.variable_declaration.value;
-
-			LLVMTypeRef llvm_arg_type = get_llvm_type_by_name(arg->type_name);
-			if (llvm_arg_type == nullptr)
-			{
-				log_error(
-					std::string{ "Argument type '" + arg->type_name + 
-					"' could not be found" }.c_str()
-				);
-				
-				return nullptr;
-			}
-
-			llvm_argument_types.push_back(llvm_arg_type);
-		}
-		
-		LLVMTypeRef llvm_return_type = get_llvm_type_by_name(expr->return_type_name);
-		if (llvm_return_type == nullptr)
-		{
-			log_error(
-				std::string{ "Return type '" + expr->return_type_name +
-				"' could not be found" }.c_str()
-			);
-			
-			return nullptr;
-		}
-		
-		LLVMTypeRef llvm_function_type = LLVMFunctionType(
-			llvm_return_type,
-			llvm_argument_types.data(),
-			llvm_argument_types.size(),
-			false
-		);
-		
-		function_type_map.insert(std::make_pair(expr->name.name, llvm_function_type));
-		
-		return LLVMAddFunction(llvm_module, expr->name.name.c_str(), llvm_function_type);
-	}
-	
-	void llvm_converter::convert_procedure_body(LLVMValueRef llvm_function,
-		expression_procedure_definition* expr)
-	{
-		LLVMBasicBlockRef llvm_function_block = LLVMAppendBasicBlock(llvm_function, "entry");
-		LLVMPositionBuilderAtEnd(llvm_builder, llvm_function_block);
-		
-		// Generate IR for all expressions in the procedure's body
-		for(size_t i = 0; i < expr->body.size(); i += 1)
-		{
-			convert_statement(&expr->body[i], llvm_function);
-		}
-		
-		// Generate terminator for basic block
-		LLVMValueRef llvm_return = LLVMBuildRetVoid(llvm_builder);
-		
-		LLVMBool llvm_verify = LLVMVerifyFunction(llvm_function, LLVMPrintMessageAction);
+		std::cout << std::endl;
 	}
 }

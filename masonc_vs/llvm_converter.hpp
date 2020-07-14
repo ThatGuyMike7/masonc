@@ -64,6 +64,7 @@ namespace masonc
         
         // Returns 'nullptr' if type was not found
         LLVMTypeRef get_llvm_type_by_name(const std::string& type_name);
+        LLVMTypeRef get_llvm_pointer_type(LLVMTypeRef llvm_element_type);
         
         LLVMValueRef build_alloca_at_entry(LLVMValueRef llvm_function,
             LLVMTypeRef llvm_variable_type, const char* variable_name);
@@ -74,23 +75,15 @@ namespace masonc
         LLVMValueRef convert_expression(expression* expr);
         LLVMValueRef convert_primary(expression* expr);
         
-        LLVMValueRef convert_binary(s8 op_code, LLVMValueRef left, LLVMValueRef right);
-        
-        void print_term(const std::vector<term_element>& term);
-        
-        // Transform a tree of binary operations into a list that resembles infix notation
-        void AST_to_infix(expression* term_start, std::vector<term_element>& term);
-        
-        // Transform a term from infix notation to reverse polish notation (shunting yard algorithm)
-        std::vector<term_element> infix_to_RPN(const std::vector<term_element>& term);
-        
-        LLVMValueRef convert_term(expression* term_start);
-        
         LLVMValueRef convert_number_literal(expression_number_literal* expr);
         
-        // Returns the alloca
         LLVMValueRef convert_local_variable(expression_variable_declaration* expr,
             LLVMValueRef llvm_function);
+        
+        LLVMValueRef convert_reference(expression_reference* expr);
+        
+        LLVMValueRef convert_reference_of(LLVMValueRef llvm_value, LLVMValueRef llvm_pointer);
+        LLVMValueRef convert_dereference(expression* expr);
         
         // TODO: Implement this
         LLVMValueRef convert_global_variable(expression_variable_declaration* expr);
@@ -102,6 +95,17 @@ namespace masonc
         
         void convert_procedure_body(LLVMValueRef llvm_function,
             expression_procedure_definition* expr);
+        
+        LLVMValueRef convert_binary(s8 op_code, LLVMValueRef left, LLVMValueRef right);
+        LLVMValueRef convert_term(expression* term_start);
+        
+        // Transform a tree of binary operations into a list that resembles infix notation
+        void AST_to_infix(expression* term_start, std::vector<term_element>& term);
+        
+        // Transform a term from infix notation to reverse polish notation (shunting yard algorithm)
+        std::vector<term_element> infix_to_RPN(const std::vector<term_element>& term);
+        
+        void print_term(const std::vector<term_element>& term);
     };
 }
 

@@ -1,5 +1,6 @@
 #include "parser.hpp"
 
+#include "common.hpp"
 #include "lang.hpp"
 #include "log.hpp"
 #include "timer.hpp"
@@ -9,28 +10,51 @@
 
 namespace masonc
 {
-	void parser::set_current_package(const std::string& package_name)
+	scope* parser::current_scope()
 	{
-		for (u64 i = 0; i < packages.size(); i += 1)
-		{
-			if (packages[i].package_name == package_name)
-			{
-				current_package_index = i;
-				return;
-			}
-		}
-
-		current_package_index = packages.size();
-		package new_package = { package_name };
-		packages.push_back(new_package);
+		return current_package->package_scope.get_child(current_scope_index);
 	}
 	
-	const std::string* parser::current_package_name()
+	void parser::set_package(const std::string& package_name)
 	{
-		if (current_package_index < 0)
-			return &GLOBAL_PACKAGE_NAME;//const_cast<std::string*>(&GLOBAL_PACKAGE_NAME);
+		current_package_name = package_name;
+		
+		auto search_package = output->packages.find(package_name);
+		auto search_ast = output->asts.find(package_name);
+		
+		if(search_package != output->packages.end()
+			&& search_ast != output->asts.end())
+		{
+			// Found the package and AST
+			current_package = &search_package->second;
+			current_ast = &search_ast->second;
+		}
+		else
+		{
+			// Create new package and AST
+			auto inserted_package = output->packages.insert({ package_name, package{} });
+			auto inserted_ast = output->asts.insert({ package_name, std::vector<expression>{} });
+			
+			assume(inserted_package.second && inserted_ast.second,
+				"Either package exists and AST does not or AST exists and package does not");
+			
+			current_package = &inserted_package.first->second;
+			current_ast = &inserted_ast.first->second;
 
-		return &packages[current_package_index].package_name;
+			try
+			{
+				// Guess how many tokens will end up being 1 expression on average to
+				// avoid reallocations.
+				current_ast->reserve(input->tokens.size() / 10 + 32);
+			}
+			catch (...)
+			{
+				log_warning("Could not reserve space for AST vector");
+			}
+		}
+		
+		current_package->package_scope.name = current_package_name;
+		current_scope_index = current_package->package_scope.index;
 	}
 
 	void parser::recover()
@@ -90,42 +114,44 @@ namespace masonc
 		);
 	}
 	
-	void parser::parse(lexer_output* input, parser_output* output, scope* global_scope_template)
+	void parser::parse(lexer_output* input, parser_output* output)
 	{
 		this->input = input;
 		this->output = output;
-		this->global_scope = *global_scope_template;
-		this->current_scope_index = global_scope.index;
 		
-		this->current_package_index = -1;
+		this->current_package = nullptr;
+		this->current_ast = nullptr;
+		this->current_package_name = "";
+		
 		this->token_index = 0;
+		
 		this->done = false;
-
-		try
+		
+		// First statement must be package declaration
+		expression first_statement = parse_package_declaration();
+		if(current_ast == nullptr /* || current_package == nullptr */)
 		{
-			// Guess how many tokens will end up being 1 expression on average to
-			// avoid reallocations.
-			output->expressions.reserve(input->tokens.size() / 10 + 32);
+			report_parse_error("No package declared", this->token_index - 1);
+			return;
 		}
-		catch (...)
-		{
-			log_warning("Could not reserve space for token vector");
-		}
-
+		
+		current_ast->push_back(first_statement);
+		
+		// Drive the parser
 		while(true)
 		{
 			// Reached the end of the token stream
 			result<token*> token_result = peek_token();
 			if (!token_result)
 				break;
-
+			
 			expression e = parse_top_level();
 
 			// Early out, probably due to a parse error
 			if (done)
 				break;
-
-			output->expressions.push_back(e);
+			
+			current_ast->push_back(e);
 		}
 	}
 	
@@ -140,7 +166,7 @@ namespace masonc
 			{
 				report_parse_error("Expected a token", this->token_index - 1);
 				this->done = true;
-				std::cout << "\n\nHA\n\n";
+				//std::cout << "\n\nHA\n\n";
 				return result<u8>{};
 			}
 			
@@ -557,8 +583,9 @@ namespace masonc
 
 	expression parser::parse_reference(parse_context context, const std::string& identifier)
 	{
-		scope* current_scope = global_scope.get_child(current_scope_index);
-		result<symbol> reference_result = current_scope->find_symbol(identifier, global_scope);
+		result<symbol> reference_result = current_scope()->find_symbol(
+			identifier, current_package->package_scope
+		);
 		
 		// Check if symbol is visible in current scope
 		if (!reference_result)
@@ -638,9 +665,8 @@ namespace masonc
 			input->identifiers[token_result.value()->value_index];
 		
 		// Check if the type is visible in current scope
-		scope* current_scope = global_scope.get_child(current_scope_index);
-		result<type> find_type_result = current_scope->find_type(
-			variable_type_name, global_scope
+		result<type> find_type_result = current_scope()->find_type(
+			variable_type_name, current_package->package_scope
 		);
 		
 		if (!find_type_result)
@@ -654,8 +680,9 @@ namespace masonc
 		}
 		
 		// Add variable to symbol table of current scope
-		bool add_symbol_result = current_scope->add_symbol(
-			symbol{ variable_name, *current_package_name(), SYMBOL_VARIABLE, variable_type_name }, global_scope
+		bool add_symbol_result = current_scope()->add_symbol(
+			symbol{ variable_name, SYMBOL_VARIABLE, variable_type_name },
+			current_package->package_scope
 		);
 		
 		if (!add_symbol_result)
@@ -730,8 +757,10 @@ namespace masonc
 	expression parser::parse_call(parse_context context, const std::string& procedure_name)
 	{
 		// Check if the procedure is visible in current scope
-		scope* current_scope = global_scope.get_child(current_scope_index);
-		result<symbol> proc_result = current_scope->find_symbol(procedure_name, global_scope);
+		result<symbol> proc_result = current_scope()->find_symbol(
+			procedure_name, current_package->package_scope
+		);
+		
 		if (!proc_result)
 		{
 			report_parse_error(
@@ -751,7 +780,7 @@ namespace masonc
 		}
 
 		expression_procedure_call call_expr{
-			symbol{ procedure_name, *current_package_name(), SYMBOL_PROCEDURE }, std::vector<expression>{}
+			symbol{ procedure_name, SYMBOL_PROCEDURE }, std::vector<expression>{}
 		};
 
 		if (token_result.value()->type != ')')
@@ -930,9 +959,8 @@ namespace masonc
 		get_token();
 
 		// Add procedure to symbol table of current scope
-		scope* current_scope = global_scope.get_child(current_scope_index);
-		bool add_symbol_result = current_scope->add_symbol(
-			symbol{ procedure_name, *current_package_name(), SYMBOL_PROCEDURE }, global_scope
+		bool add_symbol_result = current_scope()->add_symbol(
+			symbol{ procedure_name, SYMBOL_PROCEDURE }, current_package->package_scope
 		);
 		
 		if (!add_symbol_result)
@@ -1025,7 +1053,10 @@ namespace masonc
 				input->identifiers[token_result.value()->value_index];
 
 			// Check if the type is visible in current scope
-			return_type_result = current_scope->find_type(return_type_name, global_scope);
+			return_type_result = current_scope()->find_type(
+				return_type_name, current_package->package_scope
+			);
+			
 			if (!return_type_result)
 			{
 				report_parse_error(
@@ -1059,7 +1090,7 @@ namespace masonc
 			// Parse procedure body
 			return parse_procedure_body(
 				expression_procedure_prototype {
-					symbol { procedure_name, *current_package_name(), SYMBOL_PROCEDURE },
+					symbol { procedure_name, SYMBOL_PROCEDURE },
 					argument_list,
 					return_type_result ? return_type_result.value().name : TYPE_VOID.name
 				}
@@ -1075,7 +1106,7 @@ namespace masonc
 			// Done parsing procedure prototype
 			return expression{
 				expression_procedure_prototype {
-					symbol { procedure_name, *current_package_name(), SYMBOL_PROCEDURE },
+					symbol { procedure_name, SYMBOL_PROCEDURE },
 					argument_list,
 					return_type_result ? return_type_result.value().name : TYPE_VOID.name
 				}
@@ -1115,9 +1146,8 @@ namespace masonc
 		}
 
 		// Create new scope (only if procedure body is not empty)
-		scope_index parent_scope = current_scope_index;
-		scope* current_scope = global_scope.get_child(current_scope_index);
-		current_scope_index = current_scope->add_child(scope{ prototype.name.name });
+		scope_index parent_scope_index = current_scope_index;
+		current_scope_index = current_scope()->add_child(scope{ prototype.name.name });
 
 		std::vector<expression> body;
 
@@ -1131,7 +1161,7 @@ namespace masonc
 				report_parse_error("Expected a token", this->token_index - 1);
 				this->done = true;
 				
-				current_scope_index = parent_scope;
+				current_scope_index = parent_scope_index;
 				return expression{};
 			}
 
@@ -1145,7 +1175,7 @@ namespace masonc
 			}
 		}
 
-		current_scope_index = parent_scope;
+		current_scope_index = parent_scope_index;
 		return expression{ expression_procedure_definition{ prototype, body } };
 	}
 	
@@ -1186,7 +1216,7 @@ namespace masonc
 			else if(token_result.value()->type == ';')
 			{
 				// Done parsing package declaration statement
-				set_current_package(package_name);
+				set_package(package_name);
 				return expression{ expression_package_declaration{ package_name } };
 			}
 			else
@@ -1235,7 +1265,8 @@ namespace masonc
 			}
 			else if(token_result.value()->type == ';')
 			{
-				// Done parsing package declaration statement
+				// Done parsing package import statement
+				current_package->imports.insert(package_import{ package_name });
 				return expression{ expression_package_import{ package_name } };
 			}
 			else
@@ -1263,46 +1294,51 @@ namespace masonc
 		default:
 			message += "Unknown Expression";
 			break;
+			
 		case EXPR_EMPTY:
 			message += "Empty Expression";
 			break;
+			
+		case EXPR_UNARY:
+			message += "Unary Expression: Op_Code='"
+					+ std::to_string(expr.value.unary.value.op_code) + "'"
+					+ "\n" + format_expression(*expr.value.unary.value.expr, level + 1);
+			break;
+		
 		case EXPR_BINARY:
 			message += "Binary Expression: Op_Code='"
-				+ std::to_string(expr.value.binary.value.op->op_code) + "'"
-				+ "\n" + format_expression(*expr.value.binary.value.left, level + 1)
-				+ "\n" + format_expression(*expr.value.binary.value.right, level + 1);
+					+ std::to_string(expr.value.binary.value.op->op_code) + "'"
+					+ "\n" + format_expression(*expr.value.binary.value.left, level + 1)
+					+ "\n" + format_expression(*expr.value.binary.value.right, level + 1);
 			break;
+			
 		case EXPR_PARENTHESES:
 			message += "Parentheses Expression: Op_Code='"
-				+ std::to_string(expr.value.parentheses.value.expr.op->op_code) + "'"
-				+ "\n" + format_expression(*expr.value.parentheses.value.expr.left, level + 1)
-				+ "\n" + format_expression(*expr.value.parentheses.value.expr.right, level + 1);
+					+ std::to_string(expr.value.parentheses.value.expr.op->op_code) + "'"
+					+ "\n" + format_expression(*expr.value.parentheses.value.expr.left, level + 1)
+					+ "\n" + format_expression(*expr.value.parentheses.value.expr.right, level + 1);
 			break;
+			
 		case EXPR_NUMBER_LITERAL:
-			message += "Number Literal: Value='"
-				+ expr.value.number.value.value
-				+ "'";
+			message += "Number Literal: Value='" + expr.value.number.value.value + "'";
 			break;
+			
 		case EXPR_STRING_LITERAL:
-			message += "String Literal: Value='"
-				+ expr.value.str.value.value
-				+ "'";
+			message += "String Literal: Value='" + expr.value.str.value.value + "'";
 			break;
+			
 		case EXPR_REFERENCE:
-			message += "Reference: Name='"
-				+ expr.value.reference.value.name.name
-				+ "'";
+			message += "Reference: Name='" + expr.value.reference.value.name.name + "'";
 			break;
+			
 		case EXPR_VAR_DECLARATION:
 			message += "Variable Declaration: Name='"
-				+ expr.value.variable_declaration.value.name.name
-				+ "' Type='";
+					+ expr.value.variable_declaration.value.name.name + "' Type='";
 			
 			if(expr.value.variable_declaration.value.is_pointer)
 				message += "^";
 			
-			message += expr.value.variable_declaration.value.type_name
-				+ "'";
+			message += expr.value.variable_declaration.value.type_name + "'";
 			
 			if(expr.value.variable_declaration.value.specifiers != SPECIFIER_NONE)
 			{
@@ -1318,11 +1354,12 @@ namespace masonc
 			}
 			
 			break;
+			
 		case EXPR_PROC_PROTOTYPE:
 			message += "Procedure Prototype Expression: Name='"
-				+ expr.value.procedure_prototype.value.name.name
-				+ "' Return Type='" + expr.value.procedure_prototype.value.return_type_name
-				+ "'";
+					+ expr.value.procedure_prototype.value.name.name
+					+ "' Return Type='" + expr.value.procedure_prototype.value.return_type_name
+					+ "'";
 
 			if (expr.value.procedure_prototype.value.argument_list.size() > 0)
 				message += "\nArgument List: ";
@@ -1334,6 +1371,7 @@ namespace masonc
 				);
 			}
 			break;
+			
 		case EXPR_PROC_DEFINITION:
 			message += format_expression(
 				expression{ expr.value.procedure_definition.value.prototype }, level
@@ -1348,6 +1386,7 @@ namespace masonc
 					expr.value.procedure_definition.value.body[i], level + 1);
 			}
 			break;
+			
 		case EXPR_PROC_CALL:
 			message += "Procedure Call Expression: Name='"
 				+ expr.value.procedure_call.value.name.name
@@ -1360,15 +1399,15 @@ namespace masonc
 				);
 			}
 			break;
+			
 		case EXPR_PACKAGE_DECLARATION:
-			message += "Package Declaration: Name='" +
-				expr.value.package_declaration.value.package_name +
-				"'";
+			message += "Package Declaration: Name='"
+					+ expr.value.package_declaration.value.package_name + "'";
 			break;
+			
 		case EXPR_PACKAGE_IMPORT:
-			message += "Package Import: Name='" +
-				expr.value.package_import.value.package_name +
-				"'";
+			message += "Package Import: Name='"
+					+ expr.value.package_import.value.package_name + "'";
 			break;
 		}
 
@@ -1377,9 +1416,14 @@ namespace masonc
 	
 	void parser::print_expressions()
 	{
-		for (u64 i = 0; i < output->expressions.size(); i += 1)
+		for(auto ast_it = output->asts.begin(); ast_it != output->asts.end(); ast_it++)
 		{
-			std::cout << format_expression(output->expressions[i]) << std::endl;
+			std::vector<expression>& ast = ast_it->second;
+			
+			for (u64 i = 0; i < ast.size(); i += 1)
+			{
+				std::cout << format_expression(ast[i]) << std::endl;
+			}
 		}
 	}
 	

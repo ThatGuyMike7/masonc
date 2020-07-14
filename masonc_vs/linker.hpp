@@ -13,7 +13,7 @@ namespace masonc
         message_list messages;
     };
     
-    // The pre-linker's job is to merge all global scope instances
+    // The pre-linker's job is to merge all package scope instances
     // from all the parsers together (and maybe also the ASTs).
     // The lexer, parser and pre-linker stages should run in parallel.
     struct pre_linker
@@ -25,8 +25,8 @@ namespace masonc
         parser_output* input;
         pre_linker_output* output;
         
-        // Input scopes must be global
-        void merge_global_scopes(scope& destination_global, scope& source_global);
+        // Input scopes must be package-level
+        void merge_package_scopes(scope& destination, scope& source);
 
         // TODO: Implement this
         void merge_packages();

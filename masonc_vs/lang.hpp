@@ -1,14 +1,15 @@
 #ifndef $_MASONC_LANG_HPP_$
 #define $_MASONC_LANG_HPP_$
 
+#include "common.hpp"
 #include "type.hpp"
 #include "binary_operator.hpp"
 
 namespace masonc
-{
-	// Insert language-defined types into the global scope
+{	
+	// Insert language-defined types into `PACKAGE_SCOPE_TEMPLATE
 	void initialize_language();
-	
+
 	// Get the operator structure if it is a defined operator
 	result<const binary_operator*> get_op(s8 op_code);
 
@@ -36,7 +37,6 @@ namespace masonc
 	inline const binary_operator OP_SUB{ 2, '-' };
 	inline const binary_operator OP_MUL{ 3, '*' };
 	inline const binary_operator OP_DIV{ 3, '/' };
-	
 }
 
 #endif

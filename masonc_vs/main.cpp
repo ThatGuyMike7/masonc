@@ -76,7 +76,7 @@ int main()
 	parser par;
 	parser_output* par_output = new parser_output;
 	
-	par.parse(lex_output, par_output, &GLOBAL_SCOPE_TEMPLATE);
+	par.parse(lex_output, par_output);
 	par.print_expressions();
 	par_output->messages.print();
 	

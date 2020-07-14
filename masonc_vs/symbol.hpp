@@ -7,7 +7,7 @@
 
 namespace masonc
 {	
-	enum mason_symbol_type : s16
+	enum symbol_type : s16
 	{
 		SYMBOL_UNSET,
 		SYMBOL_VARIABLE,
@@ -17,16 +17,10 @@ namespace masonc
 	struct symbol
 	{
 		std::string name;
-		std::string package_name;
-		mason_symbol_type type = SYMBOL_UNSET;
+		symbol_type type = SYMBOL_UNSET;
 
 		// Optional type name that is set when symbol is a variable
 		std::string variable_type_name;
-		
-		std::string full_name()
-		{
-			return package_name + "." + name;
-		}
 		
 		bool operator< (const symbol& rhs) const
 		{

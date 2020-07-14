@@ -34,11 +34,11 @@ namespace masonc
 		return s;
 	}
 
-	bool scope::add_symbol(const symbol& s, scope& global_scope)
+	bool scope::add_symbol(const symbol& s, scope& package_scope)
 	{
 		assume(this->name != "*___*", "Scope name was \"*___*\"");
 
-		result<symbol> search_result = find_symbol(s.name, global_scope);
+		result<symbol> search_result = find_symbol(s.name, package_scope);
 		if (search_result)
 			return false;
 		
@@ -46,11 +46,11 @@ namespace masonc
 		return true;
 	}
 
-	bool scope::add_type(const type& t, scope& global_scope)
+	bool scope::add_type(const type& t, scope& package_scope)
 	{
 		assume(this->name != "*___*", "Scope name was \"*___*\"");
 
-		result<type> search_result = find_type(t.name, global_scope);
+		result<type> search_result = find_type(t.name, package_scope);
 		if (search_result)
 			return false;
 
@@ -58,16 +58,16 @@ namespace masonc
 		return true;
 	}
 
-	result<type> scope::find_type(const std::string& type_name, scope& global_scope)
+	result<type> scope::find_type(const std::string& type_name, scope& package_scope)
 	{
 		assume(this->name != "*___*", "Scope name was \"*___*\"");
 
-		scope_index current_scope_index = global_scope.index;
+		scope_index current_scope_index = package_scope.index;
 		u64 i = 0;
 
 		while (true)
 		{
-			scope* child = global_scope.get_child(current_scope_index);
+			scope* child = package_scope.get_child(current_scope_index);
 
 			auto it = child->types.find(type_name);
 			if (it != child->types.end())
@@ -82,7 +82,7 @@ namespace masonc
 			i += 1;
 		}
 
-		// If loop did not run then this scope is the global scope (special case)
+		// If loop did not run then this scope is the package scope (special case)
 		if (i == 0)
 		{
 			auto it = types.find(type_name);
@@ -94,16 +94,16 @@ namespace masonc
 		return result<type>{};
 	}
 
-	result<symbol> scope::find_symbol(const std::string& symbol_name, scope& global_scope)
+	result<symbol> scope::find_symbol(const std::string& symbol_name, scope& package_scope)
 	{
 		assume(this->name != "*___*", "Scope name was \"*___*\"");
 
-		scope_index current_scope_index = global_scope.index;
+		scope_index current_scope_index = package_scope.index;
 		u64 i = 0;
 
 		while (true)
 		{
-			scope* child = global_scope.get_child(current_scope_index);
+			scope* child = package_scope.get_child(current_scope_index);
 
 			auto it = child->symbols.find(symbol_name);
 			if (it != child->symbols.end())
@@ -119,7 +119,7 @@ namespace masonc
 			i += 1;
 		}
 
-		// If loop did not run then this scope is the global scope (special case)
+		// If loop did not run then this scope is the package scope (special case)
 		if (i == 0)
 		{
 			auto it = symbols.find(symbol_name);

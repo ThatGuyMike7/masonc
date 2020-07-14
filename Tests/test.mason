@@ -1,6 +1,6 @@
-//proc stuff(x: s64);
-//proc stuff2(mut y: s64) -> f32;
+proc stuff(x: s64);
 
+//proc stuff2(mut y: s64) -> f32;
 //proc stuff3(mut x: ^s64);
 
 proc foo()

@@ -1,5 +1,5 @@
-#ifndef $_MASONC_STRING_COLLECTION_
-#define $_MASONC_STRING_COLLECTION_
+#ifndef $_MASONC_STRING_COLLECTION_$
+#define $_MASONC_STRING_COLLECTION_$
 
 #include "common.hpp"
 #include <vector>
