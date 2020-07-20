@@ -1,3 +1,5 @@
+package main;
+
 proc stuff(x: s64);
 
 //proc stuff2(mut y: s64) -> f32;

@@ -60,7 +60,7 @@ namespace masonc
 	{
 		char c = this->input[this->char_index];
 		if(c == '\0')
-			return result<char>();
+			return result<char>{};
 
 		if (c == '\n')
 		{

@@ -1,7 +1,24 @@
 #include "string_collection.hpp"
 
+#include <cstdlib>
+#include <cstring>
+
 namespace masonc
 {
+    string_collection::string_collection(u64 buffer_chunk_size)
+    {
+        this->buffer_chunk_size = buffer_chunk_size;
+        buffer = static_cast<char*>(std::malloc(buffer_chunk_size));
+        current_buffer_size = buffer_chunk_size;
+        occupied_bytes = 0;
+        item_count = 0;
+    }
+
+    string_collection::~string_collection()
+    {
+        std::free(buffer);
+    }
+    
     void string_collection::add(const char* str, u64 length)
     {
         u64 item_size = sizeof(u64) + length + 1;

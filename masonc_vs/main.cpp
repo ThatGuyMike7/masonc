@@ -45,6 +45,13 @@ int main()
 	return 0;
 	*/
 	
+	// TODO: Only print this if argv is empty
+	std::cout << "Usage: command [arguments] [options]" << std::endl;
+	std::cout << "Type \"help\" for a list of commands" << std::endl;
+	
+	getchar();
+	return 0;
+	
 	timer timer_read_file;
 	timer_read_file.start();
 	

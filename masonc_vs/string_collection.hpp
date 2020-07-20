@@ -4,32 +4,19 @@
 #include "common.hpp"
 #include <vector>
 #include <string>
-#include <cstring>
-#include <cstdlib>
 
 namespace masonc
 {
     // In DEBUG mode, `string_collection` is about 12% faster than `std::vector<std::string>`
-    // when iterating over large amounts of data contiguously and
+    // when iterating over a large amount of data contiguously and
     // about 90% faster when appending a lot of individual elements in a loop.
     // With optimizations turned on, the iteration difference becomes marginal (around 3%) but
     // it's still a bit faster, while appending is about 42% faster.
 	struct string_collection
 	{
-        string_collection(u64 buffer_chunk_size = 4096)
-        {
-            this->buffer_chunk_size = buffer_chunk_size;
-            buffer = static_cast<char*>(std::malloc(buffer_chunk_size));
-            current_buffer_size = buffer_chunk_size;
-            occupied_bytes = 0;
-            item_count = 0;
-        }
-
-        ~string_collection()
-        {
-            std::free(buffer);
-        }
-
+        string_collection(u64 buffer_chunk_size = 4096);
+        ~string_collection();
+        
         // 'length' is expected to not count the null terminator
         void add(const char* str, u64 length);
         void add(const std::string& str);

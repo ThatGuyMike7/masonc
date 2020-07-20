@@ -25,6 +25,8 @@ namespace masonc
 	
 	// Package names associated with package structures
 	using package_map = std::unordered_map<std::string, package>;
+	
+	std::string module_name_from_package_name(const std::string& package_name);
 }
 
 #endif
