@@ -1,0 +1,61 @@
+
+// package := "package" name ("as" identifier)?
+//
+// Code can be bundled into packages using the "package" keyword.
+// The first identifier following the keyword defines the module that the packages reside in.
+// Packages are defined with a dot and an identifier after the module or another package name.
+// 
+//         ----- ----------- -------
+// package mason.collections.generic;
+//         ----- ----------- -------
+//           ^        ^         ^
+//         module  package   package
+// 
+// The module represents the compilation unit.
+// Packages contain code and are used for grouping related code inside the module.
+// 
+// This property allows you to easily export modules as libraries together
+// with all their dependencies.
+//
+// Dependencies between modules are resolved by tracking import statements inside them,
+// so that building your application is simple, fast, and there is no need for external build tools.
+//
+// 1.
+// Import statements make a package, its parents and its dependencies visible
+// in the current source file.
+import core.io.streams;
+
+// The packages "streams" and "io" can be accessed now
+io.write("Hello World", io.streams.std_out);
+
+// 2.
+// Naming conflicts in your project can be resolved by specifying a different name
+// for an imported package.
+import core.io as core.my_io;
+
+// This statement is now equivalent to the one in the first example.
+my_io.print("Hello World");
+
+// Conflicting module names (e.g. two different modules named "core")
+// can only be resolved in a pre-compile pass, more on passes later.
+// 
+// 3.
+// Multiple import statements can optionally be grouped together.
+import
+{
+    core.io,
+    core.os,
+    core.math
+};
+
+// 4.
+// The contents of a package can also be expanded directly into the current file scope.
+// Note that the parents and dependencies of the used package are imported too.
+use core.io;
+print("Hello World");
+
+// This works too because the use-statement implicitly imports the relevant packages.
+io.print("Hello World");
+
+// It is generally good practise to import everything that is used and not rely on
+// implicit resolving of dependencies.

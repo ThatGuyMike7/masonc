@@ -1,0 +1,26 @@
+
+// procedure_prototype := "proc" name "(" argument_list? ")" ("->" return_type)?
+//
+// Procedures execute code.
+// A procedure is characterized by its name, its arguments and its return type.
+proc square(x: s64) -> s64
+{
+    return x * x;
+}
+
+// 1.
+// Arguments at the end of the argument list can have
+// default values that can be omitted at the call-site.
+proc add_numbers(a: s64, b: s64, c: s64 = 0, d: s64 = 0)
+{
+    return a + b + c + d;
+}
+
+// Returns 9 because "c" and "d" were omitted and their default values are both 0.
+add_numbers(4, 5);
+
+// 2.
+
+
+
+// TODO: Talk about implicit context here

@@ -1,0 +1,6 @@
+import core.io;
+
+proc main()
+{
+    io.print("Hello World");
+}

@@ -1,0 +1,45 @@
+
+// Data can be bundled together into structures. The memory layout of the struct
+// is equivalent to the order in which the members are declared and padding is
+// equal to the size of the largest member, just like in the C programming language.
+struct foo
+{
+    // Declare three variables of type "s64" that are uninitialized.
+    x, y, z: s64,
+}
+
+// 1.
+// This is the default way of initializing an instance of a struct.
+// Values have to be stated in the order of the members in the struct,
+// in this case the members will be x = 0, y = 1 and z = 2.
+f1: foo = { 0, 1, 2 };
+
+// 2.
+// If members are omitted from the initialization list, they will be default-initialized.
+struct foo
+{
+    n1: u8,
+    n2: u8 = 0,
+    
+    b1: bool = true,
+    b2: bool,
+}
+
+// "n1" is now 12, "n2" is 7, "b1" is true and "b2" is false.
+f1: foo = { 12u, 7u };
+
+// If default initialization is not desired, members can be set individually as needed.
+f2: foo;
+f2.b2 = true;
+// "n1" is now uninitialized, "n2" is 0, "b1" is true and "b2" is also true.
+
+// 3.
+// Type inference is not allowed inside structs for clarity reasons.
+struct foo
+{
+    a: bool = true,
+    b: bool = false,
+    
+    // Compile error.
+    c := true,
+}
