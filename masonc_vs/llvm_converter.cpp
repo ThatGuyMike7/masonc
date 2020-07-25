@@ -41,11 +41,13 @@ namespace masonc
 		
 		add_built_in_procedures();
 		
+		/*
 		for (size_t i = 0; i < input->expressions.size(); i += 1)
 		{
 			expression* expr = &input->expressions[i];
 			convert_top_level(expr);
 		}
+		*/
 		
 		char* msg = LLVMCreateMessage("");
 		LLVMBool llvm_verify = LLVMVerifyModule(llvm_module, LLVMPrintMessageAction, &msg);
@@ -159,8 +161,8 @@ namespace masonc
 			default:
 				// TODO: Report error
 				return nullptr;
-			case '&':
-				return convert_reference_of(expr->value.unary.value.expr);
+			//case '&':
+			//	return convert_reference_of(expr->value.unary.value.expr);
 			case '^':
 				return convert_dereference(expr->value.unary.value.expr);
 			}

@@ -15,6 +15,11 @@ namespace masonc
 	struct package_import
 	{
 		std::string package_name;
+		
+		bool operator< (const package_import& rhs) const
+		{
+			return package_name < rhs.package_name;
+		}
 	};
 	
 	struct package

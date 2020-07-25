@@ -8,10 +8,16 @@
 #include "timer.hpp"
 #include "test.hpp"
 #include "llvm_converter.hpp"
+#include "command.hpp"
 
 #include <iostream>
 #include <cstdlib>
 #include <string>
+
+constexpr char MASON_ASCII_ART[] = R"(_______ _________ ____________________ 
+__  __ `__ \  __ `/_  ___/  __ \_  __ \
+_  / / / / / /_/ /_(__  )/ /_/ /  / / /
+/_/ /_/ /_/\__,_/ /____/ \____//_/ /_/)";
 
 using namespace masonc;
 
@@ -45,13 +51,25 @@ int main()
 	return 0;
 	*/
 	
-	// TODO: Only print this if argv is empty
-	std::cout << "Usage: command [arguments] [options]" << std::endl;
-	std::cout << "Type \"help\" for a list of commands" << std::endl;
+	std::cout << MASON_ASCII_ART << "\n\n";
+	std::cout << "mason programming language compiler" << "\n";
+	std::cout << "written by Mike Jasinski" << "\n";
+	std::cout << "github.com/ThatGuyMike7/masonc" << "\n\n";
 	
-	getchar();
+	// TODO: Only print this if argv is empty,
+	// which means a user has probably launched the compiler manually.
+	std::cout << "Usage: command [arguments] [options]?" << "\n";
+	std::cout << "Type \"help\" for a list of commands" << "\n\n";
+	std::cout << std::flush;
+	
+	while(true)
+	{
+		listen_command();
+	}
+	
 	return 0;
 	
+	/*
 	timer timer_read_file;
 	timer_read_file.start();
 	
@@ -100,4 +118,5 @@ int main()
 	
 	getchar();
 	return 0;
+	*/
 }
