@@ -21,7 +21,7 @@ _  / / / / / /_/ /_(__  )/ /_/ /  / / /
 
 using namespace masonc;
 
-int main()
+int main(int argc, char** argv)
 {
 	//test_string_collection_against_vector_iteration_and_append_speed();
 	//std::getchar();
@@ -31,40 +31,67 @@ int main()
 	initialize_llvm_converter();
 	
 	/*
-	if (!test_parser("Tests/Pass/pass_1.mason")) log_error("Test pass_1 failed");
-	if (!test_parser("Tests/Pass/pass_2.mason")) log_error("Test pass_2 failed");
-	if (!test_parser("Tests/Pass/pass_3.mason")) log_error("Test pass_3 failed");
+	if (!test_parser("tests/pass/pass_1.mason")) log_error("Test pass_1 failed");
+	if (!test_parser("tests/pass/pass_2.mason")) log_error("Test pass_2 failed");
+	if (!test_parser("tests/pass/pass_3.mason")) log_error("Test pass_3 failed");
 	
-	if (test_parser("Tests/Error/error_1.mason")) log_error("Test error_1 did not fail");
-	if (test_parser("Tests/Error/error_2.mason")) log_error("Test error_2 did not fail");
-	if (test_parser("Tests/Error/error_3.mason")) log_error("Test error_3 did not fail");
-	if (test_parser("Tests/Error/error_4.mason")) log_error("Test error_4 did not fail");
-	if (test_parser("Tests/Error/error_5.mason")) log_error("Test error_5 did not fail");
-	if (test_parser("Tests/Error/error_6.mason")) log_error("Test error_6 did not fail");
-	if (test_parser("Tests/Error/error_7.mason")) log_error("Test error_7 did not fail");
-	if (test_parser("Tests/Error/error_8.mason")) log_error("Test error_8 did not fail");
-	if (test_parser("Tests/Error/error_9.mason")) log_error("Test error_9 did not fail");
-	if (test_parser("Tests/Error/error_10.mason")) log_error("Test error_10 did not fail");
-	if (test_parser("Tests/Error/error_11.mason")) log_error("Test error_11 did not fail");
+	if (test_parser("tests/error/error_1.mason")) log_error("Test error_1 did not fail");
+	if (test_parser("tests/error/error_2.mason")) log_error("Test error_2 did not fail");
+	if (test_parser("tests/error/error_3.mason")) log_error("Test error_3 did not fail");
+	if (test_parser("tests/error/error_4.mason")) log_error("Test error_4 did not fail");
+	if (test_parser("tests/error/error_5.mason")) log_error("Test error_5 did not fail");
+	if (test_parser("tests/error/error_6.mason")) log_error("Test error_6 did not fail");
+	if (test_parser("tests/error/error_7.mason")) log_error("Test error_7 did not fail");
+	if (test_parser("tests/error/error_8.mason")) log_error("Test error_8 did not fail");
+	if (test_parser("tests/error/error_9.mason")) log_error("Test error_9 did not fail");
+	if (test_parser("tests/error/error_10.mason")) log_error("Test error_10 did not fail");
+	if (test_parser("tests/error/error_11.mason")) log_error("Test error_11 did not fail");
 	
 	getchar();
 	return 0;
 	*/
 	
-	std::cout << MASON_ASCII_ART << "\n\n";
-	std::cout << "mason programming language compiler" << "\n";
-	std::cout << "written by Mike Jasinski" << "\n";
-	std::cout << "github.com/ThatGuyMike7/masonc" << "\n\n";
+	// NOTE: It is apparently implementation-defined whether or not the first argument of `argv`
+	//		 is the program name, but almost everyone passes the program name there.
+	std::string command_line_input;
 	
-	// TODO: Only print this if argv is empty,
-	// which means a user has probably launched the compiler manually.
-	std::cout << "Usage: command [arguments] [options]?" << "\n";
-	std::cout << "Type \"help\" for a list of commands" << "\n\n";
-	std::cout << std::flush;
-	
-	while(true)
+	// Ignore the program name and string together the rest of the input
+	for(int i = 1; i < argc; i += 1)
 	{
-		listen_command();
+		command_line_input += argv[i];
+		command_line_input += " ";
+	}
+
+	lexer command_lexer;
+	
+	// If `command_line_input` is empty, a user has probably launched the compiler manually.
+	if(command_line_input.empty())
+	{
+		std::cout << MASON_ASCII_ART << "\n\n" 
+				  << "mason programming language compiler" << "\n"
+				  << "written by Mike Jasinski" << "\n"
+				  << "github.com/ThatGuyMike7/masonc" << "\n\n"
+		
+				  << "Usage: command [arguments] [options]?" << "\n"
+				  << "Type \"help\" for a list of commands" << "\n\n"
+				  << std::flush;
+		
+		while(true)
+		{
+			listen_command(&command_lexer);
+		}
+	}
+	// The compiler was invoked with specific command line arguments
+	else
+	{
+		lexer_output output;
+
+		// Parse and execute the command in question
+		auto command_result = parse_command(&command_lexer, &output,
+			command_line_input.c_str(), command_line_input.length());
+		
+		if(command_result)
+			command_result.value().definition->executor(command_result.value());
 	}
 	
 	return 0;
@@ -74,7 +101,7 @@ int main()
 	timer_read_file.start();
 	
 	u64 file_length;
-	result<char*> file_result = file_read("Tests/test.mason", 1024, &file_length);
+	result<char*> file_result = file_read("tests/test.mason", 1024, &file_length);
 	if(!file_result)
 	{
 		log_error("Something went wrong reading file");

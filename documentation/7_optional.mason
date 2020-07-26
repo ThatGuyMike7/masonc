@@ -1,0 +1,59 @@
+// A common practise in programming is passing or returning values that represent
+// an invalid state when either an error occured, something could not be found, and so on.
+// 
+// You could return a null pointer in a search procedure if an element
+// could not be found in a container, but null pointers lead to problems.
+//
+// Whenever you are dealing with a pointer - unless otherwise documented - you have to assume
+// that it can be a null pointer. You have to look up the procedure and hope that someone
+// documented that a null-check is required. To avoid this problem, some languages introduce
+// a "reference" type which can never be null, but at the same time must always be initialized.
+//
+// This language solves the problem with the "optional" type, which does not
+// have to be immediately initialized and can represent either a valid or invalid value.
+// The value will not be constructed until you need it to.
+
+// 1.
+// The syntax of an optional is simple and clear.
+proc foo(b: bool?) 
+{
+    // Does the optional contain a value?
+    if(b?)
+    {
+        // Is the value the optional is holding true?
+        if(b)
+        {
+            // ...
+        }
+    }
+}
+
+// 2.
+// Optionals are a great way to communicate if a procedure can fail.
+proc read_file(file_name: ^string) -> string?
+{
+    mut contents: string;
+    // ...
+    
+    if(file_exists_and_could_be_read)
+    {
+        return contents;
+    }
+    else
+    {
+        // The "nulL" keyword is only used in conjunction with optionals and
+        // designates that the option's value is not available.
+        return null;
+    }
+}
+
+proc main()
+{
+    result := read_file("hello.txt");
+    
+    // Equivalent to "result?"
+    if(result != null)
+    {
+        // ...
+    }
+}

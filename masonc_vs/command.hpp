@@ -51,11 +51,11 @@ namespace masonc
 
     using command_argument_pair = std::pair<command_argument_type, command_argument_value>;
     using command_option_tuple = std::tuple<command_argument_type,
-        command_argument_value, std::string_view>;
+        command_argument_value, const std::string*>;
     
     struct command_parsed
     {
-        std::string_view name;
+        const std::string* name;
         const command_definition* definition;
         std::vector<command_argument_pair> parsed_arguments;
         std::vector<command_option_tuple> parsed_options;
@@ -63,6 +63,7 @@ namespace masonc
     
     void execute_command_help(const command_parsed& command);
     void execute_command_usage(const command_parsed& command);
+    void execute_command_exit(const command_parsed& command);
     void execute_command_compile(const command_parsed& command);
     
     // Get a `command_argument_type` value as string
@@ -71,9 +72,10 @@ namespace masonc
     // Wait until the user enters something into the input stream,
     // parse the string into a command and execute it.
     // Returns false if the input cannot be parsed and executed.
-    bool listen_command();
-    
-    result<command_parsed> parse_command(const char* input, u64 input_size);
+    bool listen_command(lexer* command_lexer);
+
+    result<command_parsed> parse_command(lexer* command_lexer, lexer_output* output,
+        const char* input, u64 input_size);
     
     // Parse non-optional argument of a command
     result<command_argument_pair> parse_command_argument(u64* token_index, lexer_output* output,
@@ -86,11 +88,11 @@ namespace masonc
     inline const std::map<std::string, command_definition> COMMANDS = 
     {
         { 
-            "help", 
+            "help",
             command_definition
             {
                 0,
-                "Print a list of all available commands",
+                "Print a list of all available commands.",
                 &execute_command_help
             } 
         },
@@ -99,48 +101,64 @@ namespace masonc
             command_definition
             {
                 1,
-                "Print description, usage, and options of a specific command",
+                "Print description and usage of a specific command.",
                 &execute_command_usage,
                 std::vector<command_argument_definition>
                 {
                     command_argument_definition
                     {
                         "command_name",
-                        "Name of the command",
+                        "Name of the command.",
                         command_argument_type::STRING
                     }
                 }
             }
         },
         {
-            "compile",
+            "exit",
             command_definition
             {
                 2,
-                "Compile a list of source files into an object file",
+                "Quit the program.",
+                &execute_command_exit
+            }
+        },
+        {
+            "compile",
+            command_definition
+            {
+                3,
+                "Compile a list of source files into an object file.",
                 &execute_command_compile,
                 std::vector<command_argument_definition>
                 {
                     command_argument_definition
                     {
                         "sources",
-                        "List of source directory and/or file paths separated by \\n",
+                        "List of source directory and/or " 
+                        "file paths separated by \"\\n\"."
+                        "\n                 "
+                        "Directory paths must end with \"/\". For recursively including "
+                        "all sub-directories,"
+                        "\n                 "
+                        "the path must end with \"/*\". ",
                         command_argument_type::STRING
                     },
                     command_argument_definition
                     {
                         "object_file_name",
-                        "Name of the output object file",
+                        "Name of the output object file.",
                         command_argument_type::STRING
                     }
                 },
                 std::map<std::string, command_option_definition>
                 {
                     {
-                        "test_option",
+                        "add_extensions",
                         command_option_definition
                         {
-                            "Does some things differently",
+                            "Additional file extensions to consider source files "
+                            "separated by \"\\n\".",
                             command_argument_type::STRING
                         }
                     }

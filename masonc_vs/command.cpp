@@ -3,6 +3,7 @@
 #include "log.hpp"
 
 #include <iostream>
+#include <cstdlib>
 
 namespace masonc
 {
@@ -16,8 +17,7 @@ namespace masonc
         
         for(auto it = COMMANDS.begin(); it != COMMANDS.end(); it++)
         {
-            std::string command_name = "Command: " + it->first + "\n";
-            std::string command_usage = "Usage: " + it->first;
+            std::string command_usage = "Command: " + it->first;
             std::string command_description = "Description: " + it->second.description + "\n";
             std::string command_argument_list;
             
@@ -27,7 +27,7 @@ namespace masonc
                 std::string argument_type_name = command_argument_type_string(argument.type);
                 
                 command_usage += " <" + argument.name + ">";
-                command_argument_list += "    Argument: " + argument.name + "\n" +
+                command_argument_list += "    Argument: <" + argument.name + ">\n" +
                                          "    Type: " + argument_type_name + "\n" +
                                          "    Description: " + argument.description + "\n\n";
             }
@@ -39,7 +39,7 @@ namespace masonc
                 const std::string& option_description = option.second.description;
                 
                 command_usage += " -" + option_name + "=<" + option_type_name + ">";
-                command_argument_list += "    Option: " + option_name + "\n" +
+                command_argument_list += "    Option: -" + option_name + "\n" +
                                        //"    Type: " + option_type_name + "\n" +
                                          "    Description: " + option_description + "\n\n";
             }
@@ -48,7 +48,7 @@ namespace masonc
             command_description += "\n";
             command_argument_list += "\n";
             
-            output += command_name + command_usage + command_description + command_argument_list;
+            output += command_usage + command_description + command_argument_list;
         }
         
         std::cout << "\n" << output << std::flush;
@@ -56,7 +56,24 @@ namespace masonc
     
     void execute_command_usage(const command_parsed& command)
     {
-        std::cout << "usage" << std::endl;
+        const char* key = command.parsed_arguments[0].second.str;
+        
+        auto find_command_it = COMMANDS.find(key);
+        if (find_command_it == COMMANDS.end())
+        {
+            std::cout << "Command \"" << key << "\" does not exist" << std::endl;
+            return;
+        }
+        
+        const command_definition& definition = find_command_it->second;
+        std::string command_usage = find_command_it->first;
+        
+        // TODO: Continue here
+    }
+    
+    void execute_command_exit(const command_parsed& command)
+    {
+        std::exit(0);
     }
     
     void execute_command_compile(const command_parsed& command)
@@ -88,12 +105,14 @@ namespace masonc
         return argument_type_string;
     }
     
-    bool listen_command()
+    bool listen_command(lexer* command_lexer)
     {
         std::string input;
         std::getline(std::cin, input);
         
-        result<command_parsed> command_result = parse_command(
+        lexer_output output;
+
+        result<command_parsed> command_result = parse_command(command_lexer, &output,
             input.c_str(), static_cast<u64>(input.length()));
         
         if(!command_result)
@@ -101,30 +120,27 @@ namespace masonc
         
         const command_parsed& command = command_result.value();
         command.definition->executor(command);
-        
         return true;
     }
     
-    result<command_parsed> parse_command(const char* input, u64 input_size)
+    result<command_parsed> parse_command(lexer* command_lexer, lexer_output* output,
+        const char* input, u64 input_size)
     {
-        lexer command_lexer;
-        lexer_output output;
-        
-        command_lexer.tokenize(input, input_size, &output);
-        if(output.messages.errors.size() != 0)
+        command_lexer->tokenize(input, input_size, output);
+        if(output->messages.errors.size() != 0)
         {
             std::cout << "Failed to tokenize command" << std::endl;
             return result<command_parsed>{};
         }
         
-        if(output.tokens.size() == 0)
+        if(output->tokens.size() == 0)
         {
             // User entered nothing or whitespace only
             std::cout << "Expected command name" << std::endl;
             return result<command_parsed>{};
         }
         
-        token* first_token = &output.tokens[0];
+        token* first_token = &output->tokens[0];
         if(first_token->type != TOKEN_IDENTIFIER)
         {
             // User did not enter a valid command name
@@ -132,13 +148,13 @@ namespace masonc
             return result<command_parsed>{};
         }
         
-        const std::string& command_name = output.identifiers[first_token->value_index];
+        const std::string& command_name = output->identifiers[first_token->value_index];
         
         auto find_command_it = COMMANDS.find(command_name);
         if(find_command_it == COMMANDS.end())
         {
             // User entered a command that does not exist
-            std::cout << "Command does not exist" << std::endl;
+            std::cout << "Command \"" << command_name << "\" does not exist" << std::endl;
             return result<command_parsed>{};
         }
         
@@ -146,22 +162,20 @@ namespace masonc
         u64 token_index = 1;
         
         command_parsed command;
-        command.name = std::string_view{ find_command_it->first.data(),
-            find_command_it->first.length() };
-        
+        command.name = &find_command_it->first;
         command.definition = &definition;
         
         // Parse arguments
         for(u64 i = 0; i < definition.arguments.size(); i += 1)
         {
-            if(token_index >= output.tokens.size())
+            if(token_index >= output->tokens.size())
             {
                 std::cout << "Missing argument(s)" << std::endl;
                 return result<command_parsed>{};
             }
             
             auto argument_result = parse_command_argument(&token_index,
-                &output, definition.arguments[i].type);
+                output, definition.arguments[i].type);
             
             if(!argument_result)
                 return result<command_parsed>{};
@@ -170,10 +184,9 @@ namespace masonc
         }
         
         // Parse optional arguments
-        while(token_index < output.tokens.size())
+        while(token_index < output->tokens.size())
         {
-            auto option_result = parse_command_option(&token_index,
-                &output, definition.options);
+            auto option_result = parse_command_option(&token_index, output, definition.options);
             
             if(!option_result)
             {
@@ -194,8 +207,13 @@ namespace masonc
         token* current_token = &output->tokens[*token_index];
         *token_index += 1;
 
-        if(argument_type == command_argument_type::INTEGER)
+        switch(argument_type)
         {
+        default:
+            // Not implemented argument type
+            return result<command_argument_pair>{};  
+            
+        case command_argument_type::INTEGER:
             if(current_token->type != TOKEN_INTEGER)
             {
                 std::cout << "Mismatched type, expected an integer" << std::endl;
@@ -206,9 +224,8 @@ namespace masonc
             return result<command_argument_pair>{
                 command_argument_pair{ command_argument_type::INTEGER, value }
             };
-        }
-        else if(argument_type == command_argument_type::DECIMAL)
-        {
+            
+        case command_argument_type::DECIMAL:
             if(current_token->type != TOKEN_DECIMAL)
             {
                 std::cout << "Mismatched type, expected a decimal" << std::endl;
@@ -219,9 +236,8 @@ namespace masonc
             return result<command_argument_pair>{ 
                 command_argument_pair{ command_argument_type::DECIMAL, value }
             };
-        }
-        else if(argument_type == command_argument_type::STRING)
-        {
+            
+        case command_argument_type::STRING:
             if(current_token->type != TOKEN_STRING)
             {
                 std::cout << "Mismatched type, expected a string" << std::endl;
@@ -233,9 +249,6 @@ namespace masonc
                 command_argument_pair{ command_argument_type::STRING, value }
             };
         }
-        
-        // Not implemented argument type
-        return result<command_argument_pair>{};
     }
     
     result<command_option_tuple> parse_command_option(u64* token_index, lexer_output* output,
@@ -270,7 +283,6 @@ namespace masonc
         }
         
         const std::string& option_name = output->identifiers[second_token->value_index];
-        std::string_view option_name_view{ option_name.data(), option_name.length() };
         
         // Find the option type by name
         auto option_find_it = options.find(option_name);
@@ -290,7 +302,7 @@ namespace masonc
         *token_index += 1;
         return result<command_option_tuple>{
             command_option_tuple{ 
-                value_result.value().first, value_result.value().second, option_name_view
+                value_result.value().first, value_result.value().second, &option_name
             }
         };
     }
