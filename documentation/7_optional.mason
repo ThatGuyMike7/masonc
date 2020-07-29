@@ -33,6 +33,7 @@ proc foo(b: bool?)
 proc read_file(file_name: ^string) -> string?
 {
     mut contents: string;
+    
     // ...
     
     if(file_exists_and_could_be_read)

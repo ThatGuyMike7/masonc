@@ -21,6 +21,21 @@ _  / / / / / /_/ /_(__  )/ /_/ /  / / /
 
 using namespace masonc;
 
+void perform_tests()
+{
+	auto parse_tests_pass = test_parse_in_directory("tests/pass", true);
+	for(u64 i = 0; i < parse_tests_pass.matched_expected.size(); i += 1) {
+		if(!parse_tests_pass.matched_expected[i])
+			log_error(std::string{ "parse test failed: " + parse_tests_pass.files[i] }.c_str());
+	}
+	
+	auto parse_tests_fail = test_parse_in_directory("tests/fail", false);
+	for(u64 i = 0; i < parse_tests_fail.matched_expected.size(); i += 1) {
+		if(!parse_tests_fail.matched_expected[i])
+			log_error(std::string{ "parse test failed: " + parse_tests_fail.files[i] }.c_str());
+	}
+}
+
 int main(int argc, char** argv)
 {
 	//test_string_collection_against_vector_iteration_and_append_speed();
@@ -30,26 +45,7 @@ int main(int argc, char** argv)
 	initialize_language();
 	initialize_llvm_converter();
 	
-	/*
-	if (!test_parser("tests/pass/pass_1.mason")) log_error("Test pass_1 failed");
-	if (!test_parser("tests/pass/pass_2.mason")) log_error("Test pass_2 failed");
-	if (!test_parser("tests/pass/pass_3.mason")) log_error("Test pass_3 failed");
-	
-	if (test_parser("tests/error/error_1.mason")) log_error("Test error_1 did not fail");
-	if (test_parser("tests/error/error_2.mason")) log_error("Test error_2 did not fail");
-	if (test_parser("tests/error/error_3.mason")) log_error("Test error_3 did not fail");
-	if (test_parser("tests/error/error_4.mason")) log_error("Test error_4 did not fail");
-	if (test_parser("tests/error/error_5.mason")) log_error("Test error_5 did not fail");
-	if (test_parser("tests/error/error_6.mason")) log_error("Test error_6 did not fail");
-	if (test_parser("tests/error/error_7.mason")) log_error("Test error_7 did not fail");
-	if (test_parser("tests/error/error_8.mason")) log_error("Test error_8 did not fail");
-	if (test_parser("tests/error/error_9.mason")) log_error("Test error_9 did not fail");
-	if (test_parser("tests/error/error_10.mason")) log_error("Test error_10 did not fail");
-	if (test_parser("tests/error/error_11.mason")) log_error("Test error_11 did not fail");
-	
-	getchar();
-	return 0;
-	*/
+	perform_tests();
 	
 	// NOTE: It is apparently implementation-defined whether or not the first argument of `argv`
 	//		 is the program name, but almost everyone passes the program name there.

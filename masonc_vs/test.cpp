@@ -10,43 +10,45 @@
 #include <cstdlib>
 #include <chrono>
 #include <iostream>
-#include <vector>
-#include <string>
 
 namespace masonc
 {
-	/*
-	bool test_parser(const char* filename)
+	test_parse_in_directory_output test_parse_in_directory(const char* directory_path, bool expected)
+	{
+		test_parse_in_directory_output output;
+		output.files = directory_files_recursive(directory_path);
+		for(u64 i = 0; i < output.files.size(); i += 1) {
+			output.matched_expected.emplace_back(test_parse(output.files[i].c_str()) == expected);
+		}
+		return output;
+	}
+	
+	bool test_parse(const char* filename)
 	{
 		u64 file_length;
-		result<char*> file = file_read(filename, 1024, &file_length);
+		result<char*> file;
+		
+		file = file_read(filename, 1024, &file_length);
 		if (!file)
-		{
-			log_error("Something went wrong reading file");
-			getchar();
 			return false;
-		}
 
 		lexer lex;
-		lex.tokenize(file.value, file_length);
-		if (lex.errors.size() > 0)
-		{
-			log_error("Something went wrong tokenizing");
-			getchar();
+		lexer_output lex_output;
+		
+		lex.tokenize(file.value(), file_length, &lex_output);
+		if (lex_output.messages.errors.size() > 0)
 			return false;
-		}
-		//lexer.print_tokens();
 
 		parser par;
-		par.parse(&lex);
-		//par.print_expressions();
-		//par.print_reports();
-		//std::cout << "\nDone" << std::endl;
-
-		std::free(file.value);
-		return par.errors.size() == 0;
+		parser_output par_output;
+		
+		par.parse(&lex_output, &par_output);
+		if(par_output.messages.errors.size() > 0)
+			return false;
+		
+		std::free(file.value());
+		return true;
 	}
-	*/
 
 	void test_malloc_speed_for_different_sizes()
 	{

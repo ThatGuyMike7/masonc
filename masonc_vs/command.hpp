@@ -73,7 +73,12 @@ namespace masonc
     // parse the string into a command and execute it.
     // Returns false if the input cannot be parsed and executed.
     bool listen_command(lexer* command_lexer);
-
+    
+    // Returns a pointer to a key-value pair in "COMMANDS"
+    // that matches the command name found in the tokenizer's output.
+    static result<const std::pair<const std::string, command_definition>*> find_command(
+        lexer_output* output);
+    
     result<command_parsed> parse_command(lexer* command_lexer, lexer_output* output,
         const char* input, u64 input_size);
     
@@ -89,8 +94,7 @@ namespace masonc
     {
         { 
             "help",
-            command_definition
-            {
+            command_definition {
                 0,
                 "Print a list of all available commands.",
                 &execute_command_help
@@ -98,15 +102,13 @@ namespace masonc
         },
         {
             "usage",
-            command_definition
-            {
+            command_definition {
                 1,
                 "Print description and usage of a specific command.",
                 &execute_command_usage,
                 std::vector<command_argument_definition>
                 {
-                    command_argument_definition
-                    {
+                    command_argument_definition {
                         "command_name",
                         "Name of the command.",
                         command_argument_type::STRING
@@ -116,8 +118,7 @@ namespace masonc
         },
         {
             "exit",
-            command_definition
-            {
+            command_definition {
                 2,
                 "Quit the program.",
                 &execute_command_exit
@@ -125,15 +126,13 @@ namespace masonc
         },
         {
             "compile",
-            command_definition
-            {
+            command_definition {
                 3,
                 "Compile a list of source files into an object file.",
                 &execute_command_compile,
                 std::vector<command_argument_definition>
                 {
-                    command_argument_definition
-                    {
+                    command_argument_definition {
                         "sources",
                         "List of source directory and/or " 
                         "file paths separated by \"\\n\"."
@@ -144,8 +143,7 @@ namespace masonc
                         "the path must end with \"/*\". ",
                         command_argument_type::STRING
                     },
-                    command_argument_definition
-                    {
+                    command_argument_definition {
                         "object_file_name",
                         "Name of the output object file.",
                         command_argument_type::STRING
@@ -155,8 +153,7 @@ namespace masonc
                 {
                     {
                         "add_extensions",
-                        command_option_definition
-                        {
+                        command_option_definition {
                             "Additional file extensions to consider source files "
                             "separated by \"\\n\".",
                             command_argument_type::STRING

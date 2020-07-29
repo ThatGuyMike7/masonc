@@ -1,13 +1,27 @@
 #include "io.hpp"
+
 #include "log.hpp"
-#include <string>
+
 #include <system_error>
 #include <cstdlib>
 #include <cstdio>
+#include <filesystem>
+#include <string>
 
 namespace masonc
 {
-	result<char*> file_read(const char* path, const u64 block_size, u64* terminator_index)
+	std::vector<std::string> directory_files_recursive(const char* directory_path)
+	{
+		std::vector<std::string> files;
+		for(const auto& entry : std::filesystem::recursive_directory_iterator(directory_path)) {
+			files.push_back(entry.path().string());
+		}
+		
+		return files;
+	}
+	
+	result<char*> file_read(const char* path, const u64 block_size,
+		u64* terminator_index)
 	{
 		u64 buffer_size = block_size;
 		void* buffer = std::malloc(buffer_size);

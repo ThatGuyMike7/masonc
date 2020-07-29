@@ -17,8 +17,8 @@ y: s64 = x + 1;
 
 // 2.
 // Integer types can represent characters.
-letter: u8 = 'A';       // = 65 in the ASCII table
-letter2: byte = 'B';    // = 66 in the ASCII table
+letter: u8 = "A";       // = 65 in the ASCII table
+letter2: byte = "B";    // = 66 in the ASCII table
 
 // 3.
 // Why is there no specific character type but a distinction between "u8" and "byte"?
@@ -49,7 +49,6 @@ b2: byte = true;
 
 // 4.
 // In many cases the type can be inferred by the compiler.
-// See document 3 for all existing literal types.
 
 // Default integer type "s64"
 a := 3;
@@ -65,7 +64,7 @@ d: = 0.0f;
 
 // 5.
 // Here is a table of all existing literal types:
-a := 'z';               // byte
+a := "z";               // byte
 b := "Hello World";     // ^byte
 
 c := true;              // bool
@@ -75,7 +74,7 @@ e := 50u;               // u64
 f := -61;               // s64
 
 g := 3.14159265f;       // f32
-h := 99.99;             // f64
+h := 99.98;             // f64
 
 // 6.
 // The language encourages good practise by generating warnings when unsigned numeric literals are
