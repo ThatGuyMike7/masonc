@@ -9,6 +9,7 @@
 #include <string>
 #include <string_view>
 #include <utility>
+#include <optional>
 
 namespace masonc
 {
@@ -76,18 +77,18 @@ namespace masonc
     
     // Returns a pointer to a key-value pair in "COMMANDS"
     // that matches the command name found in the tokenizer's output.
-    static result<const std::pair<const std::string, command_definition>*> find_command(
+    static std::optional<const std::pair<const std::string, command_definition>*> find_command(
         lexer_output* output);
     
-    result<command_parsed> parse_command(lexer* command_lexer, lexer_output* output,
+    std::optional<command_parsed> parse_command(lexer* command_lexer, lexer_output* output,
         const char* input, u64 input_size);
     
     // Parse non-optional argument of a command
-    result<command_argument_pair> parse_command_argument(u64* token_index, lexer_output* output,
+    std::optional<command_argument_pair> parse_command_argument(u64* token_index, lexer_output* output,
         command_argument_type argument_type);
     
     // Parse optional argument of a command
-    result<command_option_tuple> parse_command_option(u64* token_index, lexer_output* output,
+    std::optional<command_option_tuple> parse_command_option(u64* token_index, lexer_output* output,
         const std::map<std::string, command_option_definition>& options);
     
     inline const std::map<std::string, command_definition> COMMANDS = 

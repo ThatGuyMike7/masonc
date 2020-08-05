@@ -3,6 +3,7 @@
 *.sublime-project
 *.sublime-workspace
 *.clang_complete
+*.vim
 
 # Ignored Visual Studio Files
 .vs/
@@ -16,4 +17,4 @@ LLVM-C.dll
 x64/
 x86/
 x32/
-Tests/Unicode/
+tests/unicode/

@@ -11,6 +11,8 @@
 
 #include <string>
 #include <vector>
+#include <memory>
+#include <optional>
 
 namespace masonc
 {
@@ -36,8 +38,8 @@ namespace masonc
 	// := variable_declaration ',' variable_declaration
 	// := variable_declaration ',' argument_list
 	
-	// TODO: Maybe change expression_unary.expr into a union of expression_primary and
-	//		 expression_parentheses to avoid the pointer indirection.
+	// FIXME: Maybe change expression_unary.expr into a union of expression_primary and
+	//		 expression_parentheses to avoid the pointer.
 	
 	// := op_code expression_primary | expression_parentheses
 	struct expression_unary
@@ -161,7 +163,8 @@ namespace masonc
 
 		expression_union()
 			: empty(expression_empty_tagged{ EXPR_EMPTY }) { }
-		
+
+        // TODO: Take argument as reference or something?
 		expression_union(expression_unary value)
 			: unary(expression_unary_tagged{ EXPR_UNARY, value }) { }
 		
@@ -386,8 +389,8 @@ namespace masonc
 
 	struct parser
 	{
-		// `input` is expected to have no errors,
-		// `output` is expected to be allocated and empty
+		// "input" is expected to have no errors,
+		// "output" is expected to be allocated and empty.
 		void parse(lexer_output* input, parser_output* output);
 		
 		void print_expressions();
@@ -397,7 +400,7 @@ namespace masonc
 		lexer_output* input;
 		parser_output* output;
 		
-		// `nullptr` when no package declaration was parsed
+		// "nullptr" when no package declaration was parsed.
 		package* current_package;
 		std::vector<expression>* current_ast;
 		std::string current_package_name;
@@ -407,24 +410,67 @@ namespace masonc
 
 		bool done;
 		
+		// Drives the parser by parsing top-level expressions which
+		// in turn parse their own expressions and so on.
+		void drive();
+		
 		scope* current_scope();
 
 		// Set package with specified name to be current, or add a new package if it doesn't exist
 		void set_package(const std::string& package_name);
 
-		// Jump to the next statement or procedure
-		void recover();
-
-		result<token*> get_token();
-		result<token*> peek_token();
+		void eat(u64 count = 1);
+		std::optional<token*> peek_token();
 		
-		// Assumes that the index is in range
+		// If a next token does not exist, the parser is marked as "done",
+        // a parse error is generated and the result is empty.
+		std::optional<token*> expect_any();
+		
+        // If a next token does not exist, the parser is marked as "done",
+        // a parse error is generated and the result is empty.
+        // 
+        // If the next token is not an identifier, a parse error is generated and the result is empty.
+        // 
+        // Otherwise, the token is eaten and the result is valid.
+		std::optional<token*> expect_identifier();
+		
+        // If a next token does not exist, the parser is marked as "done",
+        // a parse error is generated and the result is empty.
+        // 
+        // If the next token is not a character matching the argument,
+        // a parse error is generated and the result is empty.
+        // 
+        // Otherwise, the token is eaten and the result is valid.
+		std::optional<token*> expect(char c);
+		
+        // If a next token does not exist, the parser is marked as "done",
+        // a parse error is generated and the result is empty.
+        // 
+        // If the next token is not an identifier matching the argument,
+        // a parse error is generated and the result is empty.
+        // 
+        // Otherwise, the token is eaten and the result is valid.
+		std::optional<token*> expect(const std::string& identifier);
+		
+		const std::string& identifier_at(const token& identifier_token);
+		const std::string& integer_at(const token& integer_token);
+		const std::string& decimal_at(const token& decimal_token);
+		const std::string& string_at(const token& string_token);
+		
+		// Assumes that the index is in range.
 		token_location* get_token_location(u64 token_index);
 		
-		void report_parse_error(const std::string& msg, u64 token_index);
+		// Report an error at the last token.
+		void report_parse_error(const std::string& msg);
 		
-		// Guarantees that the next token is valid and an identifier, unless an error occured
-		result<u8> parse_specifiers();
+		// Report an error at a specific token.
+		void report_parse_error_at(const std::string& msg, u64 token_index);
+		
+		// Jump to the next statement.
+		void recover();
+		
+		// Guarantees that the next token exists and is an identifier, unless an error occured.
+		std::optional<u8> parse_specifiers();
 		
 		// top-level expression
 		// := expression_variable_declaration |
@@ -432,49 +478,52 @@ namespace masonc
 		//	  expression_procedure_definition |
 		//	  expression_package_declaration  |
 		//	  expression_package_import
-		expression parse_top_level();
+		std::optional<expression> parse_top_level();
 
 		// statement (statements allowed in procedure bodies)
 		// := expression_variable_declaration | 
 		//    expression_procedure_call		  |
 		//    assignment					  |
 		//	  "return" expression
-		expression parse_statement();
+		std::optional<expression> parse_statement();
 		
 		// expression
 		// := expression_primary | expression_binary
 
 		// Parse primary or binary expressions
-		expression parse_expression(parse_context context);
+		std::optional<expression> parse_expression(parse_context context);
 		
 		// expression_primary
 		// := expression_reference | expression_literal | expression_procedure_call |
 		//    expression_unary
-		expression parse_primary(parse_context context);
+		std::optional<expression> parse_primary(parse_context context);
 
 		// Parses right-hand side of a binary expression and returns the whole binary expression
-		expression parse_binary(parse_context context, const expression& left, const binary_operator* op);
+		std::optional<expression> parse_binary(parse_context context,
+			const expression& left, const binary_operator* op);
 		
 		// Parse either expression_primary which would ignore the parentheses,
 		// or binary expression encased in parentheses, returning expression_parentheses
-		expression parse_parentheses(parse_context context);
+		std::optional<expression> parse_parentheses(parse_context context);
 		
-		expression parse_number_literal(parse_context context, const std::string& number, number_type type);
-		expression parse_string_literal(parse_context context, const std::string& str);
-		expression parse_reference(parse_context context, const std::string& identifier);
+		std::optional<expression> parse_number_literal(parse_context context,
+			const std::string& number, number_type type);
 
-		expression parse_variable_declaration(parse_context context,
+		std::optional<expression> parse_string_literal(parse_context context, const std::string& str);
+		std::optional<expression> parse_reference(parse_context context, const std::string& identifier);
+
+		std::optional<expression> parse_variable_declaration(parse_context context,
 			const std::string& variable_name, u8 specifiers);
 		
-		expression parse_call(parse_context context, const std::string& procedure_name);
+		std::optional<expression> parse_call(parse_context context, const std::string& procedure_name);
 		std::vector<expression> parse_argument_list();
 
 		// Returns either Expression_Procedure_Prototype or Expression_Procedure_Definition
-		expression parse_procedure();
-		expression parse_procedure_body(const expression_procedure_prototype& prototype);
+		std::optional<expression> parse_procedure();
+		std::optional<expression> parse_procedure_body(const expression_procedure_prototype& prototype);
 		
-		expression parse_package_declaration();
-		expression parse_package_import();
+		std::optional<expression> parse_package_declaration();
+		std::optional<expression> parse_package_import();
 	};
 	
 	// Returns `expression_binary` from either `expression_binary` or `expression_parentheses`.

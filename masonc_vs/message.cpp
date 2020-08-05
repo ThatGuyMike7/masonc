@@ -2,10 +2,9 @@
 
 namespace masonc
 {
-    void message_list::print()
+    void message_list::print_messages()
     {
-        for (u64 i = 0; i < messages.size(); i += 1)
-        {
+         for (u64 i = 0; i < messages.size(); i += 1) {
             message* msg = &messages[i];
             
             if(msg->stage != build_stage::UNSET)
@@ -16,12 +15,10 @@ namespace masonc
             if (msg->line_number > 0)
                 std::cout << "(l. " << msg->line_number;
             
-            if (msg->line_number > 0)
-            {
+            if (msg->line_number > 0) {
                 std::cout << "(l. " << msg->line_number;
                 
-                if (msg->start_column > 0 && msg->end_column > 0)
-                {
+                if (msg->start_column > 0 && msg->end_column > 0) {
                     if(msg->start_column == msg->end_column)
                         std::cout << ", c. " << msg->start_column;
                     else
@@ -33,9 +30,11 @@ namespace masonc
             
             std::cout << ": " << msg->msg << std::endl;
         }
-
-        for (u64 i = 0; i < warnings.size(); i += 1)
-        {
+    }
+    
+    void message_list::print_warnings()
+    {
+        for (u64 i = 0; i < warnings.size(); i += 1) {
             message* warn = &warnings[i];
             
             if(warn->stage != build_stage::UNSET)
@@ -43,12 +42,10 @@ namespace masonc
             
             std::cout << "Warning";
 
-            if (warn->line_number > 0)
-            {
+            if (warn->line_number > 0) {
                 std::cout << "(l. " << warn->line_number;
                 
-                if (warn->start_column > 0 && warn->end_column > 0)
-                {
+                if (warn->start_column > 0 && warn->end_column > 0) {
                     if(warn->start_column == warn->end_column)
                         std::cout << ", c. " << warn->start_column;
                     else
@@ -60,9 +57,11 @@ namespace masonc
             
             std::cout << ": " << warn->msg << std::endl;
         }
-
-        for (u64 i = 0; i < errors.size(); i += 1)
-        {
+    }
+    
+    void message_list::print_errors()
+    {
+        for (u64 i = 0; i < errors.size(); i += 1) {
             message* err = &errors[i];
             
             if(err->stage != build_stage::UNSET)
@@ -70,12 +69,10 @@ namespace masonc
             
             std::cout << "Error";
 
-            if (err->line_number > 0)
-            {
+            if (err->line_number > 0) {
                 std::cout << "(l. " << err->line_number;
                 
-                if (err->start_column > 0 && err->end_column > 0)
-                {
+                if (err->start_column > 0 && err->end_column > 0) {
                     if(err->start_column == err->end_column)
                         std::cout << ", c. " << err->start_column;
                     else
@@ -87,7 +84,14 @@ namespace masonc
 
             std::cout << ": " << err->msg << std::endl;
         }
-
+    }
+    
+    void message_list::print()
+    {
+        print_messages();
+        print_warnings();
+        print_errors();
+        
         std::cout << "\n";
 
         std::cout << messages.size() << " Messages" << std::endl;

@@ -1,11 +1,12 @@
 #include "lexer.hpp"
 #include "timer.hpp"
 
+#include "build.hpp"
+
 #include <cctype>
 #include <string>
 #include <iostream>
-
-#include "build.hpp"
+#include <optional>
 
 namespace masonc
 {
@@ -56,11 +57,11 @@ namespace masonc
 		return "";
 	}
 	
-	result<char> lexer::get_char()
+	std::optional<char> lexer::get_char()
 	{
 		char c = this->input[this->char_index];
 		if(c == '\0')
-			return result<char>{};
+			return std::optional<char>{};
 
 		if (c == '\n')
 		{
@@ -77,16 +78,16 @@ namespace masonc
 		}
 		
 		this->char_index += 1;
-		return result<char>{ c };
+		return std::optional<char>{ c };
 	}
 	
-	result<char> lexer::peek_char()
+	std::optional<char> lexer::peek_char()
 	{
 		char c = this->input[this->char_index];
 		if(c == '\0')
-			return result<char>{};
+			return std::optional<char>{};
 		
-		return result<char>{ c };
+		return std::optional<char>{ c };
 	}
 	
 	void lexer::add_identifier(const std::string& identifier, u64 start_column, u64 end_column)
@@ -167,7 +168,7 @@ namespace masonc
 	void lexer::analyze()
 	{
 		// Get the first character
-		result<char> char_result = get_char();
+		std::optional<char> char_result = get_char();
 		if (!char_result)
 			return;
 
@@ -377,7 +378,7 @@ namespace masonc
 			// Comments
 			if (char_result.value() == '/')
 			{
-				result<char> peek_token_result = peek_char();
+				std::optional<char> peek_token_result = peek_char();
 				if (peek_token_result)
 				{
 					// Comment until end of line
@@ -469,7 +470,7 @@ namespace masonc
 				{
 					// It could be a composed token
 					
-					result<char> peek_token_result = peek_char();
+					std::optional<char> peek_token_result = peek_char();
 					if (!peek_token_result)
 					{
 						// Not a composed token, create an ASCII token

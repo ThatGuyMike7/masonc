@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <optional>
 
 namespace masonc
 {
@@ -47,10 +48,10 @@ namespace masonc
 		bool add_type(const type& t, scope& package_scope);
 
 		// Search for a type from top to bottom starting at the package scope until this scope
-		result<type> find_type(const std::string& type_name, scope& package_scope);
+		std::optional<type> find_type(const std::string& type_name, scope& package_scope);
 
 		// Search for a symbol from top to bottom starting at the package scope until this scope
-		result<symbol> find_symbol(const std::string& symbol_name, scope& package_scope);
+		std::optional<symbol> find_symbol(const std::string& symbol_name, scope& package_scope);
 	};
 }
 

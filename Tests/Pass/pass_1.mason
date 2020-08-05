@@ -1,3 +1,5 @@
+package my_package;
+
 proc foo();
 
 proc foo2() -> s32;

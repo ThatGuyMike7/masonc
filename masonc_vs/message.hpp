@@ -25,6 +25,9 @@ namespace masonc
         std::vector<message> warnings;
         std::vector<message> errors;
         
+        void print_messages();
+        void print_warnings();
+        void print_errors();
         void print();
         
         void report_message(const std::string& msg, build_stage stage = build_stage::UNSET,

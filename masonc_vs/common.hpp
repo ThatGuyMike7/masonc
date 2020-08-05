@@ -24,26 +24,51 @@ namespace masonc
 	
 	void assume(bool statement, const char* msg = "<empty>", int code = -1);
 
+    /*
+    template <typename T>
+    class result
+    {
+    public:
+        result() : is_ok(false) { }
+        result(T value) : _value(value), is_ok(true) { }
+        ~result() {
+            if (is_ok)
+                _value.~T();
+        }
+
+        explicit operator bool() const { return is_ok; }
+        
+        T value() {
+            assume(is_ok, "\"is_ok\" in std::optional<T> is false");
+            return _value;
+        }
+
+    private:
+        union { T _value; };
+        bool is_ok;
+    };
+
 	template <typename T>
-	class result
+	class _result
 	{
-		public:
-			result() : is_ok(false) { }
-			result(T _value) : is_ok(true), _value(_value) { }
+	public:
+		_result() : is_ok(false) { }
+		_result(T _value) : is_ok(true), _value(_value) { }
 			
-			//operator bool&() { return is_ok; }
-			explicit operator bool() const { return is_ok; }
+		//operator bool&() { return is_ok; }
+		explicit operator bool() const { return is_ok; }
 			
-			T value()
-			{
-				assume(is_ok, "'is_ok' in result<T> is false");
-				return _value;
-			}
+		T value()
+		{
+			assume(is_ok, "\"is_ok\" in std::optional<T> is false");
+			return _value;
+		}
 		
-		private:
-			T _value;
-			bool is_ok;
+	private:
+		T _value;
+		bool is_ok;
 	};
+    */
 }
 
 #endif

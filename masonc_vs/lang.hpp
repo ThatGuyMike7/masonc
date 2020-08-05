@@ -5,13 +5,15 @@
 #include "type.hpp"
 #include "binary_operator.hpp"
 
+#include <optional>
+
 namespace masonc
 {	
 	// Insert language-defined types into `PACKAGE_SCOPE_TEMPLATE
 	void initialize_language();
 
 	// Get the operator structure if it is a defined operator
-	result<const binary_operator*> get_op(s8 op_code);
+	std::optional<const binary_operator*> get_op(s8 op_code);
 
 	// Types defined and built into the programming language
 	inline const type TYPE_VOID{ "void" };

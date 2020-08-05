@@ -3,6 +3,7 @@
 #include "common.hpp"
 
 #include <iostream>
+#include <optional>
 
 namespace masonc
 {
@@ -38,7 +39,7 @@ namespace masonc
 	{
 		assume(this->name != "*___*", "Scope name was \"*___*\"");
 
-		result<symbol> search_result = find_symbol(s.name, package_scope);
+		std::optional<symbol> search_result = find_symbol(s.name, package_scope);
 		if (search_result)
 			return false;
 		
@@ -50,7 +51,7 @@ namespace masonc
 	{
 		assume(this->name != "*___*", "Scope name was \"*___*\"");
 
-		result<type> search_result = find_type(t.name, package_scope);
+		std::optional<type> search_result = find_type(t.name, package_scope);
 		if (search_result)
 			return false;
 
@@ -58,7 +59,7 @@ namespace masonc
 		return true;
 	}
 
-	result<type> scope::find_type(const std::string& type_name, scope& package_scope)
+	std::optional<type> scope::find_type(const std::string& type_name, scope& package_scope)
 	{
 		assume(this->name != "*___*", "Scope name was \"*___*\"");
 
@@ -72,7 +73,7 @@ namespace masonc
 			auto it = child->types.find(type_name);
 			if (it != child->types.end())
 			{
-				return result<type>{ it->second };
+				return std::optional<type>{ it->second };
 			}
 
 			if (i == this->index.indices.size())
@@ -87,14 +88,14 @@ namespace masonc
 		{
 			auto it = types.find(type_name);
 			if (it != types.end())
-				return result<type>{ it->second };
+				return std::optional<type>{ it->second };
 		}
 
 		// Type not found => not visible in current scope
-		return result<type>{};
+		return std::optional<type>{};
 	}
 
-	result<symbol> scope::find_symbol(const std::string& symbol_name, scope& package_scope)
+	std::optional<symbol> scope::find_symbol(const std::string& symbol_name, scope& package_scope)
 	{
 		assume(this->name != "*___*", "Scope name was \"*___*\"");
 
@@ -109,7 +110,7 @@ namespace masonc
 			if (it != child->symbols.end())
 			{
 				//std::cout << symbol_name << std::endl;
-				return result<symbol>{ it->second };
+				return std::optional<symbol>{ it->second };
 			}
 
 			if (i == this->index.indices.size())
@@ -126,12 +127,12 @@ namespace masonc
 			if (it != symbols.end())
 			{
 				//std::cout << symbol_name << std::endl;
-				return result<symbol>{ it->second };
+				return std::optional<symbol>{ it->second };
 			}
 			//std::cout << symbol_name << std::endl;
 		}
 
 		// Symbol not found => not visible in current scope
-		return result<symbol>{};
+		return std::optional<symbol>{};
 	}
 }

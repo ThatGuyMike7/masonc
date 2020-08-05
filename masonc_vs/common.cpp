@@ -1,5 +1,7 @@
 #include "common.hpp"
 
+#include <limits>
+
 namespace masonc
 {
 	// Assert size of integer types
@@ -11,9 +13,14 @@ namespace masonc
 	static_assert(sizeof(f32) == 4 && sizeof(f64) == 8,
 				  "Floating point types do not have the expected size");
 	
-	// Vulnerability checks
-	static_assert(UINTMAX_MAX <= UINT64_MAX, "Vulnerability: 'UINTMAX_MAX' (maximum value of uintmax_t) is greater than 'UINT64_MAX' (maximum value of u64/uint64_t)");
-	static_assert(SIZE_MAX <= UINT64_MAX, "Vulnerability: 'SIZE_MAX' (maximum value of size_t) is greater than 'UINT64_MAX' (maximum value of u64/uint64_t)");
+	// Assert that "char" is signed
+	static_assert(std::numeric_limits<char>::is_signed);
+	
+	// Checks
+	static_assert(UINTMAX_MAX <= UINT64_MAX, "'UINTMAX_MAX' (maximum value of uintmax_t)"
+		"is greater than 'UINT64_MAX' (maximum value of u64/uint64_t)");
+	static_assert(SIZE_MAX <= UINT64_MAX, "'SIZE_MAX' (maximum value of size_t)"
+		"is greater than 'UINT64_MAX' (maximum value of u64/uint64_t)");
 
 	void assume(bool statement, const char* msg, int code)
 	{

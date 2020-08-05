@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <filesystem>
 #include <string>
+#include <optional>
 
 namespace masonc
 {
@@ -14,13 +15,13 @@ namespace masonc
 	{
 		std::vector<std::string> files;
 		for(const auto& entry : std::filesystem::recursive_directory_iterator(directory_path)) {
-			files.push_back(entry.path().string());
+			files.push_back(entry.path().generic_string());
 		}
 		
 		return files;
 	}
 	
-	result<char*> file_read(const char* path, const u64 block_size,
+	std::optional<char*> file_read(const char* path, const u64 block_size,
 		u64* terminator_index)
 	{
 		u64 buffer_size = block_size;
@@ -28,7 +29,7 @@ namespace masonc
 		if(buffer == nullptr)
 		{
 			log_error(std::string{ "Unable to allocate memory buffer for file '" + std::string(path) + "'" }.c_str());
-			return result<char*>{};
+			return std::optional<char*>{};
 		}
 		
 		#pragma warning (disable: 4996)
@@ -37,7 +38,7 @@ namespace masonc
 		{
 			log_error(std::string{ "Unable to open stream for reading file '" + std::string(path) + "'" }.c_str());
 			std::free(buffer);
-			return result<char*>{};
+			return std::optional<char*>{};
 		}
 		
 		u64 bytes_read = std::fread(buffer, 1, block_size, stream);
@@ -51,7 +52,7 @@ namespace masonc
 			if(buffer == nullptr)
 			{
 				log_error(std::string{ "Unable to allocate memory buffer for file '" + std::string(path) + "'" }.c_str());
-				return result<char*>{};
+				return std::optional<char*>{};
 			}
 			
 			// Location of last block (end of old buffer)
@@ -81,7 +82,7 @@ namespace masonc
 			
 			std::fclose(stream);
 			std::free(buffer);
-			return result<char*>{ final_buffer };
+			return std::optional<char*>{ final_buffer };
 		}
 		
 		// An error occured while reading
@@ -90,12 +91,12 @@ namespace masonc
 			log_error(std::string{ "Something went wrong while reading file '" + std::string(path) + "'" }.c_str());
 			std::fclose(stream);
 			std::free(buffer);
-			return result<char*>{};
+			return std::optional<char*>{};
 		}
 		
 		log_error(std::string{ "EOF was not reached while reading file '" + std::string(path) + "'" }.c_str());
 		std::fclose(stream);
 		std::free(buffer);
-		return result<char*>{};
+		return std::optional<char*>{};
 	}
 }

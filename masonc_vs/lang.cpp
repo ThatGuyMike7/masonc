@@ -2,6 +2,8 @@
 #include "scope.hpp"
 #include "package.hpp"
 
+#include <optional>
+
 namespace masonc
 {
 	// Insert language-defined types into `PACKAGE_SCOPE_TEMPLATE`
@@ -28,19 +30,19 @@ namespace masonc
 		PACKAGE_SCOPE_TEMPLATE.add_type(type{ TYPE_F64 }, PACKAGE_SCOPE_TEMPLATE);
 	}
 
-	result<const binary_operator*> get_op(s8 op_code)
+	std::optional<const binary_operator*> get_op(s8 op_code)
 	{
 		if (op_code == OP_EQUALS.op_code)
-			return result<const binary_operator*>{ &OP_EQUALS };
+			return std::optional<const binary_operator*>{ &OP_EQUALS };
 		if (op_code == OP_ADD.op_code)
-			return result<const binary_operator*>{ &OP_ADD };
+			return std::optional<const binary_operator*>{ &OP_ADD };
 		if (op_code == OP_SUB.op_code)
-			return result<const binary_operator*>{ &OP_SUB };
+			return std::optional<const binary_operator*>{ &OP_SUB };
 		if (op_code == OP_MUL.op_code)
-			return result<const binary_operator*>{ &OP_MUL };
+			return std::optional<const binary_operator*>{ &OP_MUL };
 		if (op_code == OP_DIV.op_code)
-			return result<const binary_operator*>{ &OP_DIV };
+			return std::optional<const binary_operator*>{ &OP_DIV };
 
-		return result<const binary_operator*>{};
+		return std::optional<const binary_operator*>{};
 	}
 }

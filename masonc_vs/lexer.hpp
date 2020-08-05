@@ -1,13 +1,14 @@
 #ifndef $_MASONC_LEXER_HPP_$
 #define $_MASONC_LEXER_HPP_$
 
-#include <vector>
-#include <string>
-#include <array>
-
 #include "common.hpp"
 #include "log.hpp"
 #include "message.hpp"
+
+#include <vector>
+#include <string>
+#include <array>
+#include <optional>
 
 namespace masonc
 {
@@ -110,11 +111,11 @@ namespace masonc
 
 		// Return true if next char is valid and increment 'i'
 		// Return false if next char is the null terminator
-		result<char> get_char();
+		std::optional<char> get_char();
 		
 		// Return true if next char is valid, but do not increment 'i'
 		// Return false if next char is the null terminator
-		result<char> peek_char();
+		std::optional<char> peek_char();
 		
 		// Utility functions
 		void add_identifier(const std::string& identifier, u64 start_column, u64 end_column);
