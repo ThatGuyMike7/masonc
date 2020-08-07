@@ -65,15 +65,20 @@ namespace masonc
     void execute_command_help(const command_parsed& command);
     void execute_command_usage(const command_parsed& command);
     void execute_command_exit(const command_parsed& command);
-    void execute_command_compile(const command_parsed& command);
+    void execute_command_build(const command_parsed& command);
     
-    // Get a `command_argument_type` value as string
-    std::string command_argument_type_string(command_argument_type argument_type);
-    
+    // Parse "input" into a command and execute it.
+    // Returns false if the input cannot be parsed nor executed.
+    // This function constructs its own "lexer" object and destructs it at the end.
+    bool execute_command(const std::string& input);
+
     // Wait until the user enters something into the input stream,
     // parse the string into a command and execute it.
-    // Returns false if the input cannot be parsed and executed.
+    // Returns false if the input cannot be parsed nor executed.
     bool listen_command(lexer* command_lexer);
+
+    // Get a "command_argument_type" value as string.
+    std::string command_argument_type_string(command_argument_type argument_type);
     
     // Returns a pointer to a key-value pair in "COMMANDS"
     // that matches the command name found in the tokenizer's output.
@@ -83,11 +88,11 @@ namespace masonc
     std::optional<command_parsed> parse_command(lexer* command_lexer, lexer_output* output,
         const char* input, u64 input_size);
     
-    // Parse non-optional argument of a command
+    // Parse non-optional argument of a command.
     std::optional<command_argument_pair> parse_command_argument(u64* token_index, lexer_output* output,
         command_argument_type argument_type);
     
-    // Parse optional argument of a command
+    // Parse optional argument of a command.
     std::optional<command_option_tuple> parse_command_option(u64* token_index, lexer_output* output,
         const std::map<std::string, command_option_definition>& options);
     
@@ -126,11 +131,11 @@ namespace masonc
             }
         },
         {
-            "compile",
+            "build",
             command_definition {
                 3,
-                "Compile a list of source files into an object file.",
-                &execute_command_compile,
+                "Build a list of source files into an object file.",
+                &execute_command_build,
                 std::vector<command_argument_definition>
                 {
                     command_argument_definition {

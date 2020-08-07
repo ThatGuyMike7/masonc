@@ -19,14 +19,14 @@ namespace masonc
 		TOKEN_DECIMAL = -3,
 		TOKEN_STRING = -4,
 		
-		// Composed tokens
+		// Composed tokens.
 		TOKEN_DOUBLECOLON = -5,
 		TOKEN_RIGHT_POINTER = -6
 	};
 	
 	struct token_location
 	{
-		// A single token can only be on a single line
+		// A single token can only be on a single line.
 		u64 line_number;
 		
 		u64 start_column;
@@ -35,13 +35,13 @@ namespace masonc
 	
 	struct token
 	{	
-		// Index of value if type is identifier, integer, decimal
+		// Index of value if type is identifier, integer, decimal.
 		u64 value_index;
 		
 		s8 type;
 	};
 	
-	// Two characters that make up a single token
+	// Two characters that make up a single token.
 	constexpr u64 COMPOSED_TOKENS_LENGTH = 4;
 	constexpr char COMPOSED_TOKENS[] = 
 	{
@@ -57,15 +57,18 @@ namespace masonc
 	
 	constexpr char ESCAPE_BEGIN = '\\';
 	
-	// Get a composed token as string by type. Returns an empty string if token is not composed or could not be found.
+	// Get a composed token as string by type.
+    // Returns an empty string if token is not composed or could not be found.
 	std::string get_composed_token(token_type type);
 	
-	// Returns true for a valid character after an `ESCAPE_CHAR` in both constant string and char literals.
-	// Additionally, `"` is valid in string and `'` in char literals, but this is not checked here and it will return false.
+	// Returns true for a valid character after an "ESCAPE_CHAR" in both constant string and char literals.
+	// Additionally, '"' is valid in string and "'" in char literals,
+    // but this is not checked here and it will return false.
 	bool is_escape_sequence(char c);
 	
-	// Returns the correct escape character for an escape sequence, including `"` and `'`. Returns '\0' for invalid sequences, so check for it prior.
-	// For example: Passing 'n' will return '\n', passing '"' will simply return '"'.
+	// Returns the correct escape character for an escape sequence, including '"' and "'".
+    // Returns "\0" for invalid sequences, so check for it prior.
+	// For example: Passing "n" will return "\n", passing '"' will simply return '"'.
 	char get_escape_char(char sequence);
 	
 	bool is_space(char c);
@@ -84,13 +87,13 @@ namespace masonc
 	
 	struct lexer
 	{
-		// 'input': Null-terminated string that will be split into tokens
-		// 'input_size': Number of characters in input
-		// 'output' is expected to be allocated and empty
-		// 'tab_size' should be set to get correct error message column numbers
+		// 'input': Null-terminated string that will be split into tokens.
+		// 'input_size': Number of characters in input.
+		// 'output' is expected to be allocated and empty.
+		// 'tab_size' should be set to get correct error message column numbers.
 		void tokenize(const char* input, u64 input_size, lexer_output* output, u8 tab_size = 4);
 
-		// Print all tokens for debug purposes
+		// Print all tokens for debug purposes.
 		void print_tokens();
 
 	private:
@@ -100,21 +103,21 @@ namespace masonc
 		u64 char_index;
 		u64 line_number;
 		
-		// The 'column_number' always points to one column behind the last character
+		// The "column_number" always points to one column behind the last character.
 		u64 column_number;
 		
 		u8 tab_size;
 
-		// Reset the lexer
+		// Reset the lexer.
 		void prepare(const char* input, u64 input_size, lexer_output* output, u8 tab_size);
 		void analyze();
 
-		// Return true if next char is valid and increment 'i'
-		// Return false if next char is the null terminator
+		// Returns true if next char is valid and increment "i".
+		// Returns false if next char is the null terminator.
 		std::optional<char> get_char();
 		
-		// Return true if next char is valid, but do not increment 'i'
-		// Return false if next char is the null terminator
+		// Returns true if next char is valid, but do not increment "i".
+		// Returns false if next char is the null terminator.
 		std::optional<char> peek_char();
 		
 		// Utility functions
@@ -124,7 +127,7 @@ namespace masonc
 	
 	constexpr std::array<bool, 127> build_alpha_lookup()
 	{
-		// All values are default-initialized to false
+		// All values are default-initialized to false.
 		std::array<bool, 127> result{};
 
 		// [A-Z]
@@ -147,7 +150,7 @@ namespace masonc
 
 	constexpr std::array<bool, 127> build_num_lookup()
 	{
-		// All values are default-initialized to false
+		// All values are default-initialized to false.
 		std::array<bool, 127> result{};
 
 		// [0-9]
@@ -164,19 +167,19 @@ namespace masonc
 	constexpr std::array<bool, 127> build_num_lookup();
 	constexpr std::array<bool, 127> NUM_LOOKUP = build_num_lookup();
 
-	// Is alpha [a-z], [A-Z] or underscore '_'
+	// Is alpha [a-z], [A-Z] or underscore "_".
 	constexpr bool is_alpha(s8 c)
 	{
 		return ALPHA_LOOKUP[c];
 	}
 
-	// Is digit [0-9]
+	// Is digit [0-9].
 	constexpr bool is_num(s8 c)
 	{
 		return NUM_LOOKUP[c];
 	}
 
-	// Is alpha, underscore or digit [a-z], [A-Z], '_', [0-9]
+	// Is alpha, underscore or digit [a-z], [A-Z], "_", [0-9].
 	constexpr bool is_alnum(s8 c)
 	{
 		return ALPHA_LOOKUP[c] || NUM_LOOKUP[c];

@@ -1,4 +1,4 @@
-package main;
+package my_program.main;
 
 proc stuff(x: s64);
 

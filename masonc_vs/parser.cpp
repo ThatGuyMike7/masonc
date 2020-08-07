@@ -50,122 +50,121 @@ namespace masonc
         // This is safe because no matter the current variant,
         // it is guaranteed to be at the same address
         // (and type is the first member in tagged expression struct).
-        switch (expr.value.empty.type)
-        {
-        default:
-            message += "Unknown Expression";
-            break;
+        switch (expr.value.empty.type) {
+            default:
+                message += "Unknown Expression";
+                break;
             
-        case EXPR_EMPTY:
-            message += "Empty Expression";
-            break;
+            case EXPR_EMPTY:
+                message += "Empty Expression";
+                break;
             
-        case EXPR_UNARY:
-            message += "Unary Expression: Op_Code='"
-                    + std::to_string(expr.value.unary.value.op_code) + "'"
-                    + "\n" + format_expression(*expr.value.unary.value.expr, level + 1);
-            break;
+            case EXPR_UNARY:
+                message += "Unary Expression: Op_Code='"
+                        + std::to_string(expr.value.unary.value.op_code) + "'"
+                        + "\n" + format_expression(*expr.value.unary.value.expr, level + 1);
+                break;
         
-        case EXPR_BINARY:
-            message += "Binary Expression: Op_Code='"
-                    + std::to_string(expr.value.binary.value.op->op_code) + "'"
-                    + "\n" + format_expression(*expr.value.binary.value.left, level + 1)
-                    + "\n" + format_expression(*expr.value.binary.value.right, level + 1);
-            break;
+            case EXPR_BINARY:
+                message += "Binary Expression: Op_Code='"
+                        + std::to_string(expr.value.binary.value.op->op_code) + "'"
+                        + "\n" + format_expression(*expr.value.binary.value.left, level + 1)
+                        + "\n" + format_expression(*expr.value.binary.value.right, level + 1);
+                break;
             
-        case EXPR_PARENTHESES:
-            message += "Parentheses Expression: Op_Code='"
-                    + std::to_string(expr.value.parentheses.value.expr.op->op_code) + "'"
-                    + "\n" + format_expression(*expr.value.parentheses.value.expr.left, level + 1)
-                    + "\n" + format_expression(*expr.value.parentheses.value.expr.right, level + 1);
-            break;
+            case EXPR_PARENTHESES:
+                message += "Parentheses Expression: Op_Code='"
+                        + std::to_string(expr.value.parentheses.value.expr.op->op_code) + "'"
+                        + "\n" + format_expression(*expr.value.parentheses.value.expr.left, level + 1)
+                        + "\n" + format_expression(*expr.value.parentheses.value.expr.right, level + 1);
+                break;
             
-        case EXPR_NUMBER_LITERAL:
-            message += "Number Literal: Value='" + expr.value.number.value.value + "'";
-            break;
+            case EXPR_NUMBER_LITERAL:
+                message += "Number Literal: Value='" + expr.value.number.value.value + "'";
+                break;
             
-        case EXPR_STRING_LITERAL:
-            message += "String Literal: Value='" + expr.value.str.value.value + "'";
-            break;
+            case EXPR_STRING_LITERAL:
+                message += "String Literal: Value='" + expr.value.str.value.value + "'";
+                break;
             
-        case EXPR_REFERENCE:
-            message += "Reference: Name='" + expr.value.reference.value.name.name + "'";
-            break;
+            case EXPR_REFERENCE:
+                message += "Reference: Name='" + expr.value.reference.value.name.name + "'";
+                break;
             
-        case EXPR_VAR_DECLARATION:
-            message += "Variable Declaration: Name='"
-                    + expr.value.variable_declaration.value.name.name + "' Type='";
+            case EXPR_VAR_DECLARATION:
+                message += "Variable Declaration: Name='"
+                        + expr.value.variable_declaration.value.name.name + "' Type='";
             
-            if(expr.value.variable_declaration.value.is_pointer)
-                message += "^";
+                if(expr.value.variable_declaration.value.is_pointer)
+                    message += "^";
             
-            message += expr.value.variable_declaration.value.type_name + "'";
+                message += expr.value.variable_declaration.value.type_name + "'";
             
-            if(expr.value.variable_declaration.value.specifiers != SPECIFIER_NONE) {
-                message += " Specifiers='";
+                if(expr.value.variable_declaration.value.specifiers != SPECIFIER_NONE) {
+                    message += " Specifiers='";
                 
-                if(expr.value.variable_declaration.value.specifiers & SPECIFIER_CONST)
-                    message += "const ";
+                    if(expr.value.variable_declaration.value.specifiers & SPECIFIER_CONST)
+                        message += "const ";
                 
-                if(expr.value.variable_declaration.value.specifiers & SPECIFIER_MUT)
-                    message += "mut ";
+                    if(expr.value.variable_declaration.value.specifiers & SPECIFIER_MUT)
+                        message += "mut ";
                 
-                message += "'";
-            }
+                    message += "'";
+                }
             
-            break;
+                break;
             
-        case EXPR_PROC_PROTOTYPE:
-            message += "Procedure Prototype Expression: Name='"
-                    + expr.value.procedure_prototype.value.name.name
-                    + "' Return Type='" + expr.value.procedure_prototype.value.return_type_name
+            case EXPR_PROC_PROTOTYPE:
+                message += "Procedure Prototype Expression: Name='"
+                        + expr.value.procedure_prototype.value.name.name
+                        + "' Return Type='" + expr.value.procedure_prototype.value.return_type_name
+                        + "'";
+
+                if (expr.value.procedure_prototype.value.argument_list.size() > 0)
+                    message += "\nArgument List: ";
+
+                for (u64 i = 0; i < expr.value.procedure_prototype.value.argument_list.size(); i += 1) {
+                    message += "\n" + format_expression(
+                        expr.value.procedure_prototype.value.argument_list[i], level + 1
+                    );
+                }
+                break;
+            
+            case EXPR_PROC_DEFINITION:
+                message += format_expression(
+                    expression{ expr.value.procedure_definition.value.prototype }, level
+                );
+
+                if (expr.value.procedure_definition.value.body.size() > 0)
+                    message += "\nBody: ";
+
+                for (u64 i = 0; i < expr.value.procedure_definition.value.body.size(); i += 1) {
+                    message += "\n" + format_expression(
+                        expr.value.procedure_definition.value.body[i], level + 1);
+                }
+                break;
+            
+            case EXPR_PROC_CALL:
+                message += "Procedure Call Expression: Name='"
+                    + expr.value.procedure_call.value.name.name
                     + "'";
 
-            if (expr.value.procedure_prototype.value.argument_list.size() > 0)
-                message += "\nArgument List: ";
-
-            for (u64 i = 0; i < expr.value.procedure_prototype.value.argument_list.size(); i += 1) {
-                message += "\n" + format_expression(
-                    expr.value.procedure_prototype.value.argument_list[i], level + 1
-                );
-            }
-            break;
+                for (u64 i = 0; i < expr.value.procedure_call.value.argument_list.size(); i += 1) {
+                    message += "\n" + format_expression(
+                        expr.value.procedure_call.value.argument_list[i], level + 1
+                    );
+                }
+                break;
             
-        case EXPR_PROC_DEFINITION:
-            message += format_expression(
-                expression{ expr.value.procedure_definition.value.prototype }, level
-            );
-
-            if (expr.value.procedure_definition.value.body.size() > 0)
-                message += "\nBody: ";
-
-            for (u64 i = 0; i < expr.value.procedure_definition.value.body.size(); i += 1) {
-                message += "\n" + format_expression(
-                    expr.value.procedure_definition.value.body[i], level + 1);
-            }
-            break;
+            case EXPR_PACKAGE_DECLARATION:
+                message += "Package Declaration: Name='"
+                        + expr.value.package_declaration.value.package_name + "'";
+                break;
             
-        case EXPR_PROC_CALL:
-            message += "Procedure Call Expression: Name='"
-                + expr.value.procedure_call.value.name.name
-                + "'";
-
-            for (u64 i = 0; i < expr.value.procedure_call.value.argument_list.size(); i += 1) {
-                message += "\n" + format_expression(
-                    expr.value.procedure_call.value.argument_list[i], level + 1
-                );
-            }
-            break;
-            
-        case EXPR_PACKAGE_DECLARATION:
-            message += "Package Declaration: Name='"
-                    + expr.value.package_declaration.value.package_name + "'";
-            break;
-            
-        case EXPR_PACKAGE_IMPORT:
-            message += "Package Import: Name='"
-                    + expr.value.package_import.value.package_name + "'";
-            break;
+            case EXPR_PACKAGE_IMPORT:
+                message += "Package Import: Name='"
+                        + expr.value.package_import.value.package_name + "'";
+                break;
         }
 
         return message;
@@ -315,7 +314,7 @@ namespace masonc
         }
         
         if (token_result.value()->type != TOKEN_IDENTIFIER ||
-            input->identifiers[token_result.value()->value_index] != identifier)
+            identifier_at(*token_result.value()) != identifier)
         {
             report_parse_error("Expected \"" + identifier + "\".");
             return std::optional<token*>{};
@@ -558,76 +557,66 @@ namespace masonc
             return std::nullopt;
         }
         
-        switch (token_result.value()->type)
-        {
-        default:
-        {
-            report_parse_error("Unexpected token.");
-            recover();
-            return std::nullopt;
-        }
-        case '^':
-        case '&':
-        {
-            eat();
-            auto primary_result = parse_primary(context);
-            if (!primary_result)
-                return std::nullopt;
-
-            return expression{
-                expression_unary{
-                    // TODO: Delete this later.
-                    new expression{ primary_result.value() },
-                    token_result.value()->type
-                }
-            };
-        }
-        case TOKEN_IDENTIFIER:
-        {
-            eat();
-
-            auto value = identifier_at(*token_result.value());
-            if (value == "proc") {
-                report_parse_error("Procedure must be top-level expression.");
-                recover(); // TODO: Jump to end of procedure and not next ';' or '}'
+        switch (token_result.value()->type) {
+            default: {
+                report_parse_error("Unexpected token.");
+                recover();
                 return std::nullopt;
             }
-
-            // Look ahead after the identifier.
-            token_result = expect_any();
-            if (!token_result)
-                return std::nullopt;
-
-            switch (token_result.value()->type)
-            {
-            default:
-                return parse_reference(context, value);
-
-            case '(':
+            case '^':
+            case '&': {
                 eat();
-                return parse_call(context, value);
+                auto primary_result = parse_primary(context);
+                if (!primary_result)
+                    return std::nullopt;
+
+                return expression{
+                    expression_unary{
+                        // TODO: Delete this later.
+                        new expression{ primary_result.value() },
+                        token_result.value()->type
+                    }
+                };
             }
-        }
-        case TOKEN_INTEGER:
-        {
-            eat();
-            return parse_number_literal(context, integer_at(*token_result.value()), NUMBER_INTEGER);
-        }
-        case TOKEN_DECIMAL:
-        {
-            eat();
-            return parse_number_literal(context, decimal_at(*token_result.value()), NUMBER_DECIMAL);
-        }
-        case TOKEN_STRING:
-        {
-            eat();
-            return parse_string_literal(context, string_at(*token_result.value()));
-        }
-        case '(':
-        {
-            eat();
-            return parse_parentheses(context);
-        }
+            case TOKEN_IDENTIFIER: {
+                eat();
+
+                auto value = identifier_at(*token_result.value());
+                if (value == "proc") {
+                    report_parse_error("Procedure must be top-level expression.");
+                    recover(); // TODO: Jump to end of procedure and not next ';' or '}'
+                    return std::nullopt;
+                }
+
+                // Look ahead after the identifier.
+                token_result = expect_any();
+                if (!token_result)
+                    return std::nullopt;
+
+                switch (token_result.value()->type) {
+                    default:
+                        return parse_reference(context, value);
+                    case '(':
+                        eat();
+                        return parse_call(context, value);
+                }
+            }
+            case TOKEN_INTEGER: {
+                eat();
+                return parse_number_literal(context, integer_at(*token_result.value()), NUMBER_INTEGER);
+            }
+            case TOKEN_DECIMAL: {
+                eat();
+                return parse_number_literal(context, decimal_at(*token_result.value()), NUMBER_DECIMAL);
+            }
+            case TOKEN_STRING: {
+                eat();
+                return parse_string_literal(context, string_at(*token_result.value()));
+            }
+            case '(': {
+                eat();
+                return parse_parentheses(context);
+            }
         }
     }
 
@@ -847,16 +836,15 @@ namespace masonc
                 if (!token_result)
                     return std::nullopt;
 
-                switch (token_result.value()->type)
-                {
-                default:
-                    report_parse_error("Unexpected token.");
-                    recover();
-                    return std::nullopt;
-                case ',':
-                    continue;
-                case ')':
-                    break;
+                switch (token_result.value()->type) {
+                    default:
+                        report_parse_error("Unexpected token.");
+                        recover();
+                        return std::nullopt;
+                    case ',':
+                        continue;
+                    case ')':
+                        break;
                 };
             }
         }
@@ -912,19 +900,18 @@ namespace masonc
                 return std::vector<expression>{};
             }
 
-            switch (token_result.value()->type)
-            {
-            default:
-                report_parse_error("Unexpected token.");
-                recover();
-                return std::vector<expression>{};
-            case ',':
-                eat();
-                continue;
-            case ')':
-                eat();
-                return argument_list;
-            };
+            switch (token_result.value()->type) {
+                default:
+                    report_parse_error("Unexpected token.");
+                    recover();
+                    return std::vector<expression>{};
+                case ',':
+                    eat();
+                    continue;
+                case ')':
+                    eat();
+                    return argument_list;
+            }
         }
     }
 
@@ -1020,36 +1007,35 @@ namespace masonc
             }
         }
         
-        switch (token_result.value()->type)
-        {
-        default:
-            report_parse_error("Unexpected token.");
-            recover();
-            return std::nullopt;
-        // Procedure has a body.
-        case '{':
-            // Parse procedure body.
-            eat();
-            return parse_procedure_body(
-                expression_procedure_prototype{
-                    symbol { procedure_identifier, SYMBOL_PROCEDURE },
-                    argument_list,
-                    return_type_result ? return_type_result.value().name : TYPE_VOID.name
-                }
-            );
+        switch (token_result.value()->type) {
+            default:
+                report_parse_error("Unexpected token.");
+                recover();
+                return std::nullopt;
+            // Procedure has a body.
+            case '{':
+                // Parse procedure body.
+                eat();
+                return parse_procedure_body(
+                    expression_procedure_prototype{
+                        symbol { procedure_identifier, SYMBOL_PROCEDURE },
+                        argument_list,
+                        return_type_result ? return_type_result.value().name : TYPE_VOID.name
+                    }
+                );
 
-        // Procedure has no body and is a prototype.
-        case ';':
-            // Done parsing procedure prototype.
-            eat();
-            return expression{
-                expression_procedure_prototype {
-                    symbol { procedure_identifier, SYMBOL_PROCEDURE },
-                    argument_list,
-                    return_type_result ? return_type_result.value().name : TYPE_VOID.name
-                }
-            };
-        };
+            // Procedure has no body and is a prototype.
+            case ';':
+                // Done parsing procedure prototype.
+                eat();
+                return expression{
+                    expression_procedure_prototype {
+                        symbol { procedure_identifier, SYMBOL_PROCEDURE },
+                        argument_list,
+                        return_type_result ? return_type_result.value().name : TYPE_VOID.name
+                    }
+                };
+        }
     }
 
     std::optional<expression> parser::parse_procedure_body(const expression_procedure_prototype& prototype)

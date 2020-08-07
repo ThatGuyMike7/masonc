@@ -22,7 +22,7 @@ namespace masonc
 	
 	//using rune = s32;
 	
-	void assume(bool statement, const char* msg = "<empty>", int code = -1);
+	void assume(bool statement, const char* msg = "", int code = -1);
 
     /*
     template <typename T>

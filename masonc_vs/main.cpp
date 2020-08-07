@@ -56,7 +56,7 @@ int main(int argc, char** argv)
     initialize_llvm_converter();
     
     perform_tests();
-    
+
     // NOTE: It is apparently implementation-defined whether or not the first argument of `argv`
     //       is the program name, but almost everyone passes the program name there.
     std::string command_line_input;
@@ -72,14 +72,19 @@ int main(int argc, char** argv)
     // If `command_line_input` is empty, a user has probably launched the compiler manually.
     if(command_line_input.empty()) {
         std::cout << MASON_ASCII_ART << "\n\n" 
-                  << "mason programming language compiler" << "\n"
-                  << "written by Mike Jasinski" << "\n"
+                  << "Compiler for the mason programming language." << "\n"
+                  << "Written by Mike Jasinski." << "\n"
                   << "github.com/ThatGuyMike7/masonc" << "\n\n"
         
                   << "Usage: command [arguments] [options]?" << "\n"
-                  << "Type \"help\" for a list of commands" << "\n\n"
+                  << "Type \"help\" for a list of commands." << "\n\n"
                   << std::flush;
         
+        auto test_compile_command =
+            R"(build "E:/mason-lang/projects/masonc/tests/mason/*" "main.o")";
+
+        execute_command(test_compile_command);
+
         while(true) {
             listen_command(&command_lexer);
         }

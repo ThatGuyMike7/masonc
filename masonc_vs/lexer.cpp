@@ -17,8 +17,7 @@ namespace masonc
 	
 	char get_escape_char(char sequence)
 	{
-		switch(sequence)
-		{
+		switch(sequence) {
 			default:
 				return '\0';
 			case 'n':
@@ -43,10 +42,8 @@ namespace masonc
 	
 	std::string get_composed_token(token_type type)
 	{
-		for(u64 i = 0; i < COMPOSED_TOKENS_LENGTH / 2; i += 1)
-		{
-			if(COMPOSED_TOKEN_TYPES[i] == type)
-			{
+		for(u64 i = 0; i < COMPOSED_TOKENS_LENGTH / 2; i += 1) {
+			if(COMPOSED_TOKEN_TYPES[i] == type) {
 				std::string str;
 				str.push_back(COMPOSED_TOKENS[i * 2]);
 				str.push_back(COMPOSED_TOKENS[i * 2 + 1]);
@@ -63,17 +60,14 @@ namespace masonc
 		if(c == '\0')
 			return std::optional<char>{};
 
-		if (c == '\n')
-		{
+		if (c == '\n') {
 			line_number += 1;
 			this->column_number = 1;
 		}
-		else if(c == '\t')
-		{
+		else if(c == '\t') {
 			this->column_number += this->tab_size;
 		}
-		else
-		{
+		else {
 			this->column_number += 1;
 		}
 		
@@ -102,10 +96,8 @@ namespace masonc
 	
 	void lexer::add_number(const std::string& number, bool dot, u64 start_column, u64 end_column)
 	{
-		if (dot)
-		{
-			if (number.back() == '.')
-			{
+		if (dot) {
+			if (number.back() == '.') {
 				// Error
 				output->messages.report_error(
 					"Expected digit after '.' in decimal",
@@ -121,8 +113,7 @@ namespace masonc
 			this->output->tokens.push_back(tok);
 			this->output->decimals.push_back(number);
 		}
-		else
-		{
+		else {
 			token tok = { this->output->integers.size(), TOKEN_INTEGER };
 			this->output->tokens.push_back(tok);
 			this->output->integers.push_back(number);
@@ -134,10 +125,10 @@ namespace masonc
 	
 	void lexer::tokenize(const char* input, u64 input_size, lexer_output* output, u8 tab_size)
 	{
-		// Reset the lexer
+		// Reset the lexer.
 		prepare(input, input_size, output, tab_size);
 		
-		// Do the actual work
+		// Do the actual work.
 		return analyze();
 	}
 
@@ -151,49 +142,42 @@ namespace masonc
 		this->line_number = 1;
 		this->column_number = 1;
 		
-		try
-		{
-			// Guess how many characters will end up being 1 token on average to avoid reallocations
+		try {
+			// Guess how many characters will end up being 1 token on average to avoid reallocations.
 			const u64 characters_per_token_guess = input_size / 3 + 32;
 			
 			output->tokens.reserve(characters_per_token_guess);
 			output->locations.reserve(characters_per_token_guess);
 		}
-		catch (...)
-		{
+		catch (...) {
 			log_warning("Could not reserve space for token vector");
 		}
 	}
 	
 	void lexer::analyze()
 	{
-		// Get the first character
+		// Get the first character.
 		std::optional<char> char_result = get_char();
 		if (!char_result)
 			return;
 
-		while (true)
-		{
+		while (true) {
 			// Skip whitespace / newline etc.
-			while (is_space(char_result.value()))
-			{
+			while (is_space(char_result.value())) {
 				char_result = get_char();
 				if (!char_result)
 					return;
 			}
 
 			// String
-			if(char_result.value() == '"')
-			{
+			if(char_result.value() == '"') {
 				u64 string_start_column = this->column_number - 1;
 				std::string str;
 				char prev_char = char_result.value();
 				
-				while(true)
-				{
+				while(true) {
 					char_result = get_char();
-					if(!char_result)
-					{
+					if(!char_result) {
 						// Error
 						output->messages.report_error("Expected '\"'", build_stage::LEXER,
 							this->line_number, string_start_column, this->column_number - 1);
@@ -201,14 +185,12 @@ namespace masonc
 						return;
 					}
 					
-					// Lex escape sequence
-					if(char_result.value() == ESCAPE_BEGIN)
-					{
+					// Lex escape sequence.
+					if(char_result.value() == ESCAPE_BEGIN) {
 						u64 escape_start_column = this->column_number - 1;
 						
 						char_result = get_char();
-						if(!char_result)
-						{
+						if(!char_result) {
 							// Error
 							output->messages.report_error("Expected '\"'", build_stage::LEXER,
 								this->line_number, string_start_column, this->column_number - 1);
@@ -218,9 +200,8 @@ namespace masonc
 						
 						// TODO: Continue work here
 						
-						if(!is_escape_sequence(char_result.value()) && char_result.value() != '"')
-						{
-							// Error: Not valid escape sequence
+						if(!is_escape_sequence(char_result.value()) && char_result.value() != '"') {
+							// Error: Not valid escape sequence.
 							output->messages.report_error(
 								"'\\"
 								+ std::string{ char_result.value() }
@@ -231,12 +212,10 @@ namespace masonc
 								this->column_number - 1
 							);
 							
-							// Skip until end of string
-							do
-							{
+							// Skip until end of string.
+							do {
 								char_result = get_char();
-								if(!char_result)
-								{
+								if(!char_result) {
 									// Error
 									output->messages.report_error(
 										"Expected '\"'",
@@ -251,7 +230,7 @@ namespace masonc
 								
 							} while(char_result.value() != '"');
 							
-							// Successfully skipped string, lex the next token
+							// Successfully skipped string, lex the next token.
 							continue;
 						}
 						
@@ -295,55 +274,48 @@ namespace masonc
 				u64 identifier_start_column = this->column_number - 1;
 				std::string identifier;
 				
-				// Read the identifier
-				do
-				{
+				// Read the identifier.
+				do {
 					identifier.push_back(char_result.value());
 
 					char_result = get_char();
-					if (!char_result)
-					{
-						// Add identifier as it is
+					if (!char_result) {
+						// Add identifier as it is.
 						add_identifier(identifier, identifier_start_column, this->column_number - 1);
 						return;
 					}
 					
 				} while (is_alnum(char_result.value())); //|| char_result.value() == '_');
 
-				// TODO: Potentially check if it's a language-defined identifier
+				// TODO: Potentially check if it's a language-defined identifier.
 
-				// Done lexing identifier
+				// Done lexing identifier.
 				add_identifier(identifier, identifier_start_column, this->column_number - 1);
 				continue;
 			}
 
 			// Number (integer or decimal)
-			if (is_num(char_result.value()))
-			{
+			if (is_num(char_result.value())) {
 				u64 number_start_column = this->column_number - 1;
 				std::string number;
 
-				// There can only be one '.' in a decimal
+				// There can only be one "." in a decimal.
 				bool dot = false;
 
-				// Read the number
-				do
-				{
+				// Read the number.
+				do {
 					number.push_back(char_result.value());
 
 					char_result = get_char();
-					if (!char_result)
-					{
+					if (!char_result) {
 						// Add number as it is
 						add_number(number, dot, number_start_column, this->column_number - 1);
 						return;
 					}
 
-					if (char_result.value() == '.')
-					{
+					if (char_result.value() == '.') {
 						// A second dot in this number?
-						if (dot)
-						{
+						if (dot) {
 							// Error
 							output->messages.report_error(
 								"Decimal contains two '.'",
@@ -360,9 +332,8 @@ namespace masonc
 						number.push_back(char_result.value());
 
 						char_result = get_char();
-						if (!char_result)
-						{
-							// Add number as it is
+						if (!char_result) {
+							// Add number as it is.
 							add_number(number, dot, number_start_column, this->column_number - 1);
 							return;
 						}
@@ -370,82 +341,72 @@ namespace masonc
 					
 				} while (is_num(char_result.value()));
 
-				// Done lexing number
+				// Done lexing number.
 				add_number(number, dot, number_start_column, this->column_number - 1);
 				continue;
 			}
 
 			// Comments
-			if (char_result.value() == '/')
-			{
+			if (char_result.value() == '/') {
 				std::optional<char> peek_token_result = peek_char();
-				if (peek_token_result)
-				{
-					// Comment until end of line
-					if (peek_token_result.value() == '/')
-					{
-						// Eat the peeked token
+                if (peek_token_result) {
+					// Comment until end of line.
+					if (peek_token_result.value() == '/') {
+						// Eat the peeked token.
 						get_char();
 
-						do
-						{
+						do {
 							char_result = get_char();
 							if (!char_result)
 								return;
 							
 						} while (char_result.value() != '\n');
 
-						// Eat the '\n'
+						// Eat the "\n".
 						char_result = get_char();
 						if (!char_result)
 							return;
 
-						// Done lexing line comment
+						// Done lexing line comment.
 						continue;
 					}
 
 					// Block comment
-					if (peek_token_result.value() == '*')
-					{
-						// Eat the peeked token
+					if (peek_token_result.value() == '*') {
+						// Eat the peeked token.
 						get_char();
 
 						u64 nests = 1;
 
-						do
-						{
+						do {
 							char_result = get_char();
 							if (!char_result)
 								return;
 
-							if (char_result.value() == '/')
-							{
+							if (char_result.value() == '/') {
 								peek_token_result = peek_char();
 								if (!peek_token_result)
 									return;
 
-								// Nested block comment
-								if (peek_token_result.value() == '*')
-								{
+								// Nested block comment.
+								if (peek_token_result.value() == '*') {
 									nests += 1;
 								}
 
-								// Eat the peeked token
+								// Eat the peeked token.
 								get_char();
 							}
-							else if (char_result.value() == '*')
-							{
+							else if (char_result.value() == '*') {
 								peek_token_result = peek_char();
 								if (!peek_token_result)
 									return;
 
-								// End of a block comment
-								if (peek_token_result.value() == '/')
-								{
+								// End of a block comment.
+								if (peek_token_result.value() == '/') {
 									nests -= 1;
 								}
 
-								// Eat the peeked token
+								// Eat the peeked token.
 								get_char();
 							}
 							
@@ -455,7 +416,7 @@ namespace masonc
 						if (!char_result)
 							return;
 
-						// Done lexing block comment(s)
+						// Done lexing block comment(s).
 						continue;
 					}
 				}
@@ -464,16 +425,13 @@ namespace masonc
 			// Composed tokens
 			u64 i = 0;
 			bool is_composed = false;
-			while (i < COMPOSED_TOKENS_LENGTH)
-			{
-				if (char_result.value() == COMPOSED_TOKENS[i])
-				{
-					// It could be a composed token
+			while (i < COMPOSED_TOKENS_LENGTH) {
+				if (char_result.value() == COMPOSED_TOKENS[i]) {
+					// It could be a composed token.
 					
 					std::optional<char> peek_token_result = peek_char();
-					if (!peek_token_result)
-					{
-						// Not a composed token, create an ASCII token
+					if (!peek_token_result) {
+						// Not a composed token, create an ASCII token.
 						token tok;
 						tok.type = char_result.value();
 						
@@ -489,9 +447,8 @@ namespace masonc
 						return;
 					}
 
-					if (peek_token_result.value() == COMPOSED_TOKENS[i + 1])
-					{
-						// It is a composed token
+					if (peek_token_result.value() == COMPOSED_TOKENS[i + 1]) {
+						// It is a composed token.
 						token tok;
 						tok.type = COMPOSED_TOKEN_TYPES[i / 2];
 						
@@ -504,7 +461,7 @@ namespace masonc
 						this->output->tokens.push_back(tok);
 						this->output->locations.push_back(location);
 						
-						// Eat the current token and the peeked token
+						// Eat the current token and the peeked token.
 						get_char();
 						char_result = get_char();
 						if (!char_result)
@@ -518,11 +475,11 @@ namespace masonc
 				i += 2;
 			}
 
-			// Done lexing composed token
+			// Done lexing composed token.
 			if (is_composed)
 				continue;
 
-			// Otherwise just create an ASCII token
+			// Otherwise just create an ASCII token.
 			token tok;
 			tok.type = char_result.value();
 			
@@ -543,39 +500,41 @@ namespace masonc
 	
 	void lexer::print_tokens()
 	{
-		for(u64 i = 0; i < output->tokens.size(); i += 1)
-		{
+		for(u64 i = 0; i < output->tokens.size(); i += 1) {
 			token* current_token = &this->output->tokens[i];
 			token_location* location = &this->output->locations[i];
 
-			if(current_token->type < 0)
-			{
-				switch(current_token->type)
-				{
+			if(current_token->type < 0) {
+				switch(current_token->type) {
 					default:
 						std::cout << "Unknown Token" << std::endl;
 						break;
 					case TOKEN_IDENTIFIER:
-						std::cout << "Identifier Token (l. " << location->line_number << "): " << this->output->identifiers[current_token->value_index] << std::endl;
+						std::cout << "Identifier Token (l. " << location->line_number << "): " <<
+                                      this->output->identifiers[current_token->value_index] << std::endl;
 						break;
 					case TOKEN_INTEGER:
-						std::cout << "Integer Token (l. " << location->line_number << "): " << this->output->integers[current_token->value_index] << std::endl;
+						std::cout << "Integer Token (l. " << location->line_number << "): " <<
+                                      this->output->integers[current_token->value_index] << std::endl;
 						break;
 					case TOKEN_DECIMAL:
-						std::cout << "Decimal Token (l. " << location->line_number << "): " << this->output->decimals[current_token->value_index] << std::endl;
+						std::cout << "Decimal Token (l. " << location->line_number << "): " <<
+                                      this->output->decimals[current_token->value_index] << std::endl;
 						break;
 					case TOKEN_STRING:
-						std::cout << "String Token (l. " << location->line_number << "): " << this->output->strings[current_token->value_index] << std::endl;
+						std::cout << "String Token (l. " << location->line_number << "): " <<
+                                      this->output->strings[current_token->value_index] << std::endl;
 						break;
 					case TOKEN_DOUBLECOLON:
 					case TOKEN_RIGHT_POINTER:
-						std::cout << "Composed Token (l. " << location->line_number << "): " << get_composed_token(static_cast<token_type>(current_token->type)) << std::endl;
+						std::cout << "Composed Token (l. " << location->line_number << "): " <<
+                                      get_composed_token(static_cast<token_type>(current_token->type)) << std::endl;
 						break;
 				}
 			}
-			else
-			{
-				std::cout << "ASCII Token (l. " << location->line_number << "): " << static_cast<char>(current_token->type) << std::endl;
+			else {
+				std::cout << "ASCII Token (l. " << location->line_number << "): " <<
+                              static_cast<char>(current_token->type) << std::endl;
 			}
 		}
 	}

@@ -206,46 +206,46 @@ namespace masonc
 			// This is safe because no matter the current variant, it is guaranteed to be at the same address (and type is the first member in tagged expression struct)
 			switch (empty.type)
 			{
-			default:
-				break;
-			case EXPR_EMPTY:
-				break;
-			case EXPR_UNARY:
-				unary.value.~expression_unary();
-				break;
-			case EXPR_BINARY:
-				binary.value.~expression_binary();
-				break;
-			case EXPR_PARENTHESES:
-				parentheses.value.~expression_parentheses();
-				break;
-			case EXPR_NUMBER_LITERAL:
-				number.value.~expression_number_literal();
-				break;
-			case EXPR_STRING_LITERAL:
-				str.value.~expression_string_literal();
-				break;
-			case EXPR_REFERENCE:
-				reference.value.~expression_reference();
-				break;
-			case EXPR_VAR_DECLARATION:
-				variable_declaration.value.~expression_variable_declaration();
-				break;
-			case EXPR_PROC_PROTOTYPE:
-				procedure_prototype.value.~expression_procedure_prototype();
-				break;
-			case EXPR_PROC_DEFINITION:
-				procedure_definition.value.~expression_procedure_definition();
-				break;
-			case EXPR_PROC_CALL:
-				procedure_call.value.~expression_procedure_call();
-				break;
-			case EXPR_PACKAGE_DECLARATION:
-				package_declaration.value.~expression_package_declaration();
-				break;
-			case EXPR_PACKAGE_IMPORT:
-				package_import.value.~expression_package_import();
-				break;
+			    default:
+				    break;
+			    case EXPR_EMPTY:
+				    break;
+			    case EXPR_UNARY:
+				    unary.value.~expression_unary();
+				    break;
+			    case EXPR_BINARY:
+				    binary.value.~expression_binary();
+				    break;
+			    case EXPR_PARENTHESES:
+				    parentheses.value.~expression_parentheses();
+				    break;
+			    case EXPR_NUMBER_LITERAL:
+				    number.value.~expression_number_literal();
+				    break;
+			    case EXPR_STRING_LITERAL:
+				    str.value.~expression_string_literal();
+				    break;
+			    case EXPR_REFERENCE:
+				    reference.value.~expression_reference();
+				    break;
+			    case EXPR_VAR_DECLARATION:
+				    variable_declaration.value.~expression_variable_declaration();
+				    break;
+			    case EXPR_PROC_PROTOTYPE:
+				    procedure_prototype.value.~expression_procedure_prototype();
+				    break;
+			    case EXPR_PROC_DEFINITION:
+				    procedure_definition.value.~expression_procedure_definition();
+				    break;
+			    case EXPR_PROC_CALL:
+				    procedure_call.value.~expression_procedure_call();
+				    break;
+			    case EXPR_PACKAGE_DECLARATION:
+				    package_declaration.value.~expression_package_declaration();
+				    break;
+			    case EXPR_PACKAGE_IMPORT:
+				    package_import.value.~expression_package_import();
+				    break;
 			}
 		}
 
@@ -254,47 +254,47 @@ namespace masonc
 			// This is safe because no matter the current variant, it is guaranteed to be at the same address (and type is the first member in tagged expression struct)
 			switch (other.empty.type)
 			{
-			default:
-				break;
-			case EXPR_EMPTY:
-				new(&empty)expression_empty_tagged{};
-				break;
-			case EXPR_UNARY:
-				new(&empty)expression_unary_tagged{ EXPR_UNARY, other.unary.value };
-				break;
-			case EXPR_BINARY:
-				new(&empty)expression_binary_tagged{ EXPR_BINARY, other.binary.value };
-				break;
-			case EXPR_PARENTHESES:
-				new(&empty)expression_parentheses_tagged{ EXPR_PARENTHESES, other.parentheses.value };
-				break;
-			case EXPR_NUMBER_LITERAL:
-				new(&empty)expression_number_literal_tagged{ EXPR_NUMBER_LITERAL, other.number.value };
-				break;
-			case EXPR_STRING_LITERAL:
-				new(&empty)expression_string_literal_tagged{ EXPR_STRING_LITERAL, other.str.value };
-				break;
-			case EXPR_REFERENCE:
-				new(&empty)expression_reference_tagged{ EXPR_REFERENCE, other.reference.value };
-				break;
-			case EXPR_VAR_DECLARATION:
-				new(&empty)expression_variable_declaration_tagged{ EXPR_VAR_DECLARATION, other.variable_declaration.value };
-				break;
-			case EXPR_PROC_PROTOTYPE:
-				new(&empty)expression_procedure_prototype_tagged{ EXPR_PROC_PROTOTYPE, other.procedure_prototype.value };
-				break;
-			case EXPR_PROC_DEFINITION:
-				new(&empty)expression_procedure_definition_tagged{ EXPR_PROC_DEFINITION, other.procedure_definition.value };
-				break;
-			case EXPR_PROC_CALL:
-				new(&empty)expression_procedure_call_tagged{ EXPR_PROC_CALL, other.procedure_call.value };
-				break;
-			case EXPR_PACKAGE_DECLARATION:
-				new(&empty)expression_package_declaration_tagged{ EXPR_PACKAGE_DECLARATION, other.package_declaration.value };
-				break;
-			case EXPR_PACKAGE_IMPORT:
-				new(&empty)expression_package_import_tagged{ EXPR_PACKAGE_IMPORT, other.package_import.value };
-				break;
+			    default:
+				    break;
+			    case EXPR_EMPTY:
+				    new(&empty)expression_empty_tagged{};
+				    break;
+			    case EXPR_UNARY:
+				    new(&empty)expression_unary_tagged{ EXPR_UNARY, other.unary.value };
+				    break;
+			    case EXPR_BINARY:
+				    new(&empty)expression_binary_tagged{ EXPR_BINARY, other.binary.value };
+				    break;
+			    case EXPR_PARENTHESES:
+				    new(&empty)expression_parentheses_tagged{ EXPR_PARENTHESES, other.parentheses.value };
+				    break;
+			    case EXPR_NUMBER_LITERAL:
+				    new(&empty)expression_number_literal_tagged{ EXPR_NUMBER_LITERAL, other.number.value };
+				    break;
+			    case EXPR_STRING_LITERAL:
+				    new(&empty)expression_string_literal_tagged{ EXPR_STRING_LITERAL, other.str.value };
+				    break;
+			    case EXPR_REFERENCE:
+				    new(&empty)expression_reference_tagged{ EXPR_REFERENCE, other.reference.value };
+				    break;
+			    case EXPR_VAR_DECLARATION:
+				    new(&empty)expression_variable_declaration_tagged{ EXPR_VAR_DECLARATION, other.variable_declaration.value };
+				    break;
+			    case EXPR_PROC_PROTOTYPE:
+				    new(&empty)expression_procedure_prototype_tagged{ EXPR_PROC_PROTOTYPE, other.procedure_prototype.value };
+				    break;
+			    case EXPR_PROC_DEFINITION:
+				    new(&empty)expression_procedure_definition_tagged{ EXPR_PROC_DEFINITION, other.procedure_definition.value };
+				    break;
+			    case EXPR_PROC_CALL:
+				    new(&empty)expression_procedure_call_tagged{ EXPR_PROC_CALL, other.procedure_call.value };
+				    break;
+			    case EXPR_PACKAGE_DECLARATION:
+				    new(&empty)expression_package_declaration_tagged{ EXPR_PACKAGE_DECLARATION, other.package_declaration.value };
+				    break;
+			    case EXPR_PACKAGE_IMPORT:
+				    new(&empty)expression_package_import_tagged{ EXPR_PACKAGE_IMPORT, other.package_import.value };
+				    break;
 			}
 		}
 
@@ -306,44 +306,44 @@ namespace masonc
 			// This is safe because no matter the current variant, it is guaranteed to be at the same address (and type is the first member in tagged expression struct)
 			switch (other.empty.type)
 			{
-			default:
-				break;
-			case EXPR_EMPTY:
-				new(&empty)expression_empty_tagged{};
-				break;
-			case EXPR_UNARY:
-				new(&empty)expression_unary_tagged{ EXPR_UNARY, other.unary.value };
-				break;
-			case EXPR_BINARY:
-				new(&empty)expression_binary_tagged{ EXPR_BINARY, other.binary.value };
-				break;
-			case EXPR_PARENTHESES:
-				new(&empty)expression_parentheses_tagged{ EXPR_PARENTHESES, other.parentheses.value };
-				break;
-			case EXPR_NUMBER_LITERAL:
-				new(&empty)expression_number_literal_tagged{ EXPR_NUMBER_LITERAL, other.number.value };
-				break;
-			case EXPR_REFERENCE:
-				new(&empty)expression_reference_tagged{ EXPR_REFERENCE, other.reference.value };
-				break;
-			case EXPR_VAR_DECLARATION:
-				new(&empty)expression_variable_declaration_tagged{ EXPR_VAR_DECLARATION, other.variable_declaration.value };
-				break;
-			case EXPR_PROC_PROTOTYPE:
-				new(&empty)expression_procedure_prototype_tagged{ EXPR_PROC_PROTOTYPE, other.procedure_prototype.value };
-				break;
-			case EXPR_PROC_DEFINITION:
-				new(&empty)expression_procedure_definition_tagged{ EXPR_PROC_DEFINITION, other.procedure_definition.value };
-				break;
-			case EXPR_PROC_CALL:
-				new(&empty)expression_procedure_call_tagged{ EXPR_PROC_CALL, other.procedure_call.value };
-				break;
-			case EXPR_PACKAGE_DECLARATION:
-				new(&empty)expression_package_declaration_tagged{ EXPR_PACKAGE_DECLARATION, other.package_declaration.value };
-				break;
-			case EXPR_PACKAGE_IMPORT:
-				new(&empty)expression_package_import_tagged{ EXPR_PACKAGE_IMPORT, other.package_import.value };
-				break;
+			    default:
+				    break;
+			    case EXPR_EMPTY:
+				    new(&empty)expression_empty_tagged{};
+				    break;
+			    case EXPR_UNARY:
+				    new(&empty)expression_unary_tagged{ EXPR_UNARY, other.unary.value };
+				    break;
+			    case EXPR_BINARY:
+				    new(&empty)expression_binary_tagged{ EXPR_BINARY, other.binary.value };
+				    break;
+			    case EXPR_PARENTHESES:
+				    new(&empty)expression_parentheses_tagged{ EXPR_PARENTHESES, other.parentheses.value };
+				    break;
+			    case EXPR_NUMBER_LITERAL:
+				    new(&empty)expression_number_literal_tagged{ EXPR_NUMBER_LITERAL, other.number.value };
+				    break;
+			    case EXPR_REFERENCE:
+				    new(&empty)expression_reference_tagged{ EXPR_REFERENCE, other.reference.value };
+				    break;
+			    case EXPR_VAR_DECLARATION:
+				    new(&empty)expression_variable_declaration_tagged{ EXPR_VAR_DECLARATION, other.variable_declaration.value };
+				    break;
+			    case EXPR_PROC_PROTOTYPE:
+				    new(&empty)expression_procedure_prototype_tagged{ EXPR_PROC_PROTOTYPE, other.procedure_prototype.value };
+				    break;
+			    case EXPR_PROC_DEFINITION:
+				    new(&empty)expression_procedure_definition_tagged{ EXPR_PROC_DEFINITION, other.procedure_definition.value };
+				    break;
+			    case EXPR_PROC_CALL:
+				    new(&empty)expression_procedure_call_tagged{ EXPR_PROC_CALL, other.procedure_call.value };
+				    break;
+			    case EXPR_PACKAGE_DECLARATION:
+				    new(&empty)expression_package_declaration_tagged{ EXPR_PACKAGE_DECLARATION, other.package_declaration.value };
+				    break;
+			    case EXPR_PACKAGE_IMPORT:
+				    new(&empty)expression_package_import_tagged{ EXPR_PACKAGE_IMPORT, other.package_import.value };
+				    break;
 			}
 
 			return *this;

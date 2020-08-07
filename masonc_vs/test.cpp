@@ -18,7 +18,7 @@ namespace masonc
 	test_parse_in_directory_output test_parse_in_directory(const char* directory_path, bool expected)
 	{
 		test_parse_in_directory_output output;
-		output.files = directory_files_recursive(directory_path);
+		output.files = directory_files_recurse(directory_path);
 		
 		for (u64 i = 0; i < output.files.size(); i += 1) {
 			auto test_parse_result = test_parse(output.files[i].c_str());

@@ -102,23 +102,22 @@ namespace masonc
 	
 	LLVMValueRef llvm_converter::convert_top_level(expression* expr)
 	{
-		switch (expr->value.empty.type)
-		{
-		default:
-			log_error(
-				std::string{ "Cannot generate code for expression of type " +
-				std::to_string(expr->value.empty.type) }.c_str()
-			);
-			return nullptr;
+		switch (expr->value.empty.type) {
+		    default:
+			    log_error(
+				    std::string{ "Cannot generate code for expression of type " +
+				    std::to_string(expr->value.empty.type) }.c_str()
+			    );
+			    return nullptr;
 		
-		case EXPR_VAR_DECLARATION:
-			return nullptr;
+		    case EXPR_VAR_DECLARATION:
+			    return nullptr;
 		
-		case EXPR_PROC_PROTOTYPE:
-			return convert_procedure_prototype(&expr->value.procedure_prototype.value);
+		    case EXPR_PROC_PROTOTYPE:
+			    return convert_procedure_prototype(&expr->value.procedure_prototype.value);
 		
-		case EXPR_PROC_DEFINITION:
-			return convert_procedure(&expr->value.procedure_definition.value);
+		    case EXPR_PROC_DEFINITION:
+			    return convert_procedure(&expr->value.procedure_definition.value);
 		}
 	}
 	
@@ -154,17 +153,15 @@ namespace masonc
 	
 	LLVMValueRef llvm_converter::convert_primary(expression* expr)
 	{
-		if(expr->value.empty.type == EXPR_UNARY)
-		{
-			switch(expr->value.unary.value.op_code)
-			{
-			default:
-				// TODO: Report error
-				return nullptr;
-			//case '&':
-			//	return convert_reference_of(expr->value.unary.value.expr);
-			case '^':
-				return convert_dereference(expr->value.unary.value.expr);
+		if(expr->value.empty.type == EXPR_UNARY) {
+			switch(expr->value.unary.value.op_code) {
+			    default:
+				    // TODO: Report error
+				    return nullptr;
+			    //case '&':
+			    //	return convert_reference_of(expr->value.unary.value.expr);
+			    case '^':
+				    return convert_dereference(expr->value.unary.value.expr);
 			}
 		}
 		else if(expr->value.empty.type == EXPR_REFERENCE)
@@ -189,28 +186,27 @@ namespace masonc
 	
 	LLVMValueRef llvm_converter::convert_number_literal(expression_number_literal* expr)
 	{
-		switch(expr->type)
-		{
-		default:
-			// TODO: Report error
-			return nullptr;
+		switch(expr->type) {
+		    default:
+			    // TODO: Report error
+			    return nullptr;
 			
-		case NUMBER_INTEGER:
-			// Const integer literals have 64 bit precision
-			return LLVMConstIntOfStringAndSize(
-				LLVMInt64Type(),
-				expr->value.c_str(),
-				static_cast<unsigned int>(expr->value.size()),
-				10u
-			);
+		    case NUMBER_INTEGER:
+			    // Const integer literals have 64 bit precision
+			    return LLVMConstIntOfStringAndSize(
+				    LLVMInt64Type(),
+				    expr->value.c_str(),
+				    static_cast<unsigned int>(expr->value.size()),
+				    10u
+			    );
 			
-		case NUMBER_DECIMAL:
-			// Const decimal literals have 64 bit precision
-			return LLVMConstRealOfStringAndSize(
-				LLVMDoubleType(),
-				expr->value.c_str(),
-				static_cast<unsigned int>(expr->value.size())
-			);
+		    case NUMBER_DECIMAL:
+			    // Const decimal literals have 64 bit precision
+			    return LLVMConstRealOfStringAndSize(
+				    LLVMDoubleType(),
+				    expr->value.c_str(),
+				    static_cast<unsigned int>(expr->value.size())
+			    );
 		}
 	}
 	
@@ -352,22 +348,21 @@ namespace masonc
 	LLVMValueRef llvm_converter::convert_binary(s8 op_code, LLVMValueRef left, LLVMValueRef right)
 	{
 		// TODO: Type checking
-		switch(op_code)
-		{
-		default:
-			// TODO: Report error
-			return nullptr;
-		case '=':
+		switch(op_code) {
+		    default:
+			    // TODO: Report error
+			    return nullptr;
+		    case '=':
 			
-			break;
-		case '+':
-			return LLVMBuildAdd(llvm_builder, left, right, "addtmp");
-		case '-':
-			return LLVMBuildSub(llvm_builder, left, right, "subtmp");
-		case '*':
-			return LLVMBuildMul(llvm_builder, left, right, "multmp");
-		case '/':
-			return LLVMBuildSDiv(llvm_builder, left, right, "divtmp");
+			    break;
+		    case '+':
+			    return LLVMBuildAdd(llvm_builder, left, right, "addtmp");
+		    case '-':
+			    return LLVMBuildSub(llvm_builder, left, right, "subtmp");
+		    case '*':
+			    return LLVMBuildMul(llvm_builder, left, right, "multmp");
+		    case '/':
+			    return LLVMBuildSDiv(llvm_builder, left, right, "divtmp");
 		}
 	}
 	
@@ -544,26 +539,24 @@ namespace masonc
 	void llvm_converter::print_term(const std::vector<term_element>& term)
 	{
 		std::cout << std::endl;
-		for (u64 i = 0; i < term.size(); i += 1)
-		{
+		for (u64 i = 0; i < term.size(); i += 1) {
 			const term_element& element = term[i];
-			switch (element.type)
-			{
-			case term_element::VARIANT_OP:
-				std::cout << static_cast<char>(element.op->op_code) << " ";
-				break;
-			case term_element::VARIANT_PRIMARY:
-				std::cout << element.expr->value.number.value.value << " ";
-				break;
-			case term_element::VARIANT_PARENTHESIS_BEGIN:
-				std::cout << "( ";
-				break;
-			case term_element::VARIANT_PARENTHESIS_END:
-				std::cout << ") ";
-				break;
-			case term_element::VARIANT_LLVM_VALUE:
-				std::cout << "LLVMValueRef ";
-				break;
+			switch (element.type) {
+			    case term_element::VARIANT_OP:
+				    std::cout << static_cast<char>(element.op->op_code) << " ";
+				    break;
+			    case term_element::VARIANT_PRIMARY:
+				    std::cout << element.expr->value.number.value.value << " ";
+				    break;
+			    case term_element::VARIANT_PARENTHESIS_BEGIN:
+				    std::cout << "( ";
+				    break;
+			    case term_element::VARIANT_PARENTHESIS_END:
+				    std::cout << ") ";
+				    break;
+			    case term_element::VARIANT_LLVM_VALUE:
+				    std::cout << "LLVMValueRef ";
+				    break;
 			}
 		}
 		std::cout << std::endl;

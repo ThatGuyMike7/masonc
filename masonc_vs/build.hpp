@@ -2,9 +2,18 @@
 #define $_MASONC_BUILD_HPP_$
 
 #include "common.hpp"
+#include "io.hpp"
+
+#include <vector>
+#include <unordered_set>
+#include <string>
 
 namespace masonc
 {
+    // Build a list of sources into an object file.
+    void build_object(std::vector<path> sources,
+        std::unordered_set<std::string> additional_extensions = std::unordered_set<std::string>{});
+
     enum class build_stage : u8
     {
         UNSET,
