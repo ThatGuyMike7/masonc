@@ -251,7 +251,7 @@ namespace masonc
             return result;
         }
         
-        return std::optional<token*>{};
+        return std::nullopt;
     }
     
     std::optional<token*> parser::expect_any()
@@ -260,7 +260,7 @@ namespace masonc
         if (!token_result) {
             report_parse_error("Expected a token.");
             done = true;
-            return std::optional<token*>{};
+            return std::nullopt;
         }
         
         eat();
@@ -273,12 +273,12 @@ namespace masonc
         if (!token_result) {
             report_parse_error("Expected a token.");
             done = true;
-            return std::optional<token*>{};
+            return std::nullopt;
         }
         
         if (token_result.value()->type != TOKEN_IDENTIFIER) {
             report_parse_error("Expected an identifier.");
-            return std::optional<token*>{};
+            return std::nullopt;
         }
         
         eat();
@@ -291,13 +291,13 @@ namespace masonc
         if (!token_result) {
             report_parse_error("Expected a token.");
             done = true;
-            return std::optional<token*>{};
+            return std::nullopt;
         }
         
         // Assumes that type "char" is signed
         if (token_result.value()->type != c) {
             report_parse_error("Expected \"" + std::string{ c } + "\".");
-            return std::optional<token*>{};
+            return std::nullopt;
         }
         
         eat();
@@ -310,14 +310,14 @@ namespace masonc
         if (!token_result) {
             report_parse_error("Expected a token.");
             done = true;
-            return std::optional<token*>{};
+            return std::nullopt;
         }
         
         if (token_result.value()->type != TOKEN_IDENTIFIER ||
             identifier_at(*token_result.value()) != identifier)
         {
             report_parse_error("Expected \"" + identifier + "\".");
-            return std::optional<token*>{};
+            return std::nullopt;
         }
         
         eat();
@@ -429,7 +429,7 @@ namespace masonc
                 specifiers |= SPECIFIER_CONST;
             }
             else {
-                return std::optional<u8>{ specifiers };
+                return specifiers;
             }
         }
     }
@@ -523,25 +523,24 @@ namespace masonc
         }
 
         auto op_result = get_op(token_result.value()->type);
-        if (!op_result) {
+        if (op_result) {
+            // Eat the binary operator.
+            eat();
+        }
+        else {
             // Next token is not a binary operator.
-
             if (context == CONTEXT_STATEMENT) {
-                if (token_result.value()->type != ';') {
-                    recover();
-                    return std::nullopt;
-                }
-                else {
+                if (token_result.value()->type == ';') {
                     // Eat the ";".
                     eat();
+                }
+                else {
+                    recover();
+                    return std::nullopt;
                 }
             }
 
             return primary_result;
-        }
-        else {
-            // Eat the binary operator.
-            eat();
         }
 
         // Parse right-hand side of binary expression.
@@ -566,6 +565,7 @@ namespace masonc
             case '^':
             case '&': {
                 eat();
+
                 auto primary_result = parse_primary(context);
                 if (!primary_result)
                     return std::nullopt;
@@ -589,9 +589,12 @@ namespace masonc
                 }
 
                 // Look ahead after the identifier.
-                token_result = expect_any();
-                if (!token_result)
+                token_result = peek_token();
+                if (!token_result) {
+                    report_parse_error("Expected a token.");
+                    done = true;
                     return std::nullopt;
+                }
 
                 switch (token_result.value()->type) {
                     default:
@@ -641,7 +644,9 @@ namespace masonc
     {
         // Parse what is inside the parentheses.
         auto expr_result = parse_expression(CONTEXT_NONE);
-        
+        if (!expr_result)
+            return std::nullopt;
+
         // Eat the ')'.
         if (!expect(')')) {
             recover();
@@ -819,9 +824,12 @@ namespace masonc
         
         expression_procedure_call call_expr{ symbol{ procedure_name, SYMBOL_PROCEDURE } };
 
-        auto token_result = expect_any();
-        if (!token_result)
+        auto token_result = peek_token();
+        if (!token_result) {
+            report_parse_error("Expected a token.");
+            done = true;
             return std::nullopt;
+        }
 
         if (token_result.value()->type != ')') {
             // Parse argument(s).
@@ -844,11 +852,12 @@ namespace masonc
                     case ',':
                         continue;
                     case ')':
-                        break;
+                        goto END_LOOP;
                 };
             }
         }
 
+        END_LOOP:
         if (context == CONTEXT_STATEMENT) {
             if (!expect(';')) {
                 recover();
@@ -856,7 +865,7 @@ namespace masonc
             }
         }
 
-        return std::optional<expression>{ expression{ call_expr } };
+        return expression{ call_expr };
     }
 
     std::vector<expression> parser::parse_argument_list()
