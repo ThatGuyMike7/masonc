@@ -39,7 +39,7 @@ namespace masonc
         // Drive the parser.
         drive();
     }
-    
+
     std::string parser::format_expression(const expression& expr, u64 level)
     {
         std::string message;
@@ -54,66 +54,66 @@ namespace masonc
             default:
                 message += "Unknown Expression";
                 break;
-            
+
             case EXPR_EMPTY:
                 message += "Empty Expression";
                 break;
-            
+
             case EXPR_UNARY:
                 message += "Unary Expression: Op_Code='"
                         + std::to_string(expr.value.unary.value.op_code) + "'"
                         + "\n" + format_expression(*expr.value.unary.value.expr, level + 1);
                 break;
-        
+
             case EXPR_BINARY:
                 message += "Binary Expression: Op_Code='"
                         + std::to_string(expr.value.binary.value.op->op_code) + "'"
                         + "\n" + format_expression(*expr.value.binary.value.left, level + 1)
                         + "\n" + format_expression(*expr.value.binary.value.right, level + 1);
                 break;
-            
+
             case EXPR_PARENTHESES:
                 message += "Parentheses Expression: Op_Code='"
                         + std::to_string(expr.value.parentheses.value.expr.op->op_code) + "'"
                         + "\n" + format_expression(*expr.value.parentheses.value.expr.left, level + 1)
                         + "\n" + format_expression(*expr.value.parentheses.value.expr.right, level + 1);
                 break;
-            
+
             case EXPR_NUMBER_LITERAL:
                 message += "Number Literal: Value='" + expr.value.number.value.value + "'";
                 break;
-            
+
             case EXPR_STRING_LITERAL:
                 message += "String Literal: Value='" + expr.value.str.value.value + "'";
                 break;
-            
+
             case EXPR_REFERENCE:
                 message += "Reference: Name='" + expr.value.reference.value.name.name + "'";
                 break;
-            
+
             case EXPR_VAR_DECLARATION:
                 message += "Variable Declaration: Name='"
                         + expr.value.variable_declaration.value.name.name + "' Type='";
-            
+
                 if(expr.value.variable_declaration.value.is_pointer)
                     message += "^";
-            
+
                 message += expr.value.variable_declaration.value.type_name + "'";
-            
+
                 if(expr.value.variable_declaration.value.specifiers != SPECIFIER_NONE) {
                     message += " Specifiers='";
-                
+
                     if(expr.value.variable_declaration.value.specifiers & SPECIFIER_CONST)
                         message += "const ";
-                
+
                     if(expr.value.variable_declaration.value.specifiers & SPECIFIER_MUT)
                         message += "mut ";
-                
+
                     message += "'";
                 }
-            
+
                 break;
-            
+
             case EXPR_PROC_PROTOTYPE:
                 message += "Procedure Prototype Expression: Name='"
                         + expr.value.procedure_prototype.value.name.name
@@ -129,7 +129,7 @@ namespace masonc
                     );
                 }
                 break;
-            
+
             case EXPR_PROC_DEFINITION:
                 message += format_expression(
                     expression{ expr.value.procedure_definition.value.prototype }, level
@@ -143,7 +143,7 @@ namespace masonc
                         expr.value.procedure_definition.value.body[i], level + 1);
                 }
                 break;
-            
+
             case EXPR_PROC_CALL:
                 message += "Procedure Call Expression: Name='"
                     + expr.value.procedure_call.value.name.name
@@ -155,12 +155,12 @@ namespace masonc
                     );
                 }
                 break;
-            
+
             case EXPR_PACKAGE_DECLARATION:
                 message += "Package Declaration: Name='"
                         + expr.value.package_declaration.value.package_name + "'";
                 break;
-            
+
             case EXPR_PACKAGE_IMPORT:
                 message += "Package Import: Name='"
                         + expr.value.package_import.value.package_name + "'";
@@ -169,46 +169,46 @@ namespace masonc
 
         return message;
     }
-    
+
     void parser::print_expressions()
     {
         for(auto ast_it = output->asts.begin(); ast_it != output->asts.end(); ast_it++) {
             std::vector<expression>& ast = ast_it->second;
-            
+
             for (u64 i = 0; i < ast.size(); i += 1) {
                 std::cout << format_expression(ast[i]) << std::endl;
             }
         }
     }
-    
+
     void parser::drive()
     {
         while(true) {
             auto top_level_expression = parse_top_level();
             if (top_level_expression)
                 current_ast->push_back(top_level_expression.value());
-            
+
             // TODO: Change all "parse_" methods to return "std::optional<expression>"
             //       as well as use the new "_at" and "expect" methods.
-            
+
             // Reached the end of the token stream.
             if (done)
                 break;
         }
     }
-    
+
     scope* parser::current_scope()
     {
         return current_package->package_scope.get_child(current_scope_index);
     }
-    
+
     void parser::set_package(const std::string& package_name)
     {
         current_package_name = package_name;
-        
+
         auto search_package = output->packages.find(package_name);
         auto search_ast = output->asts.find(package_name);
-        
+
         if (search_package != output->packages.end() && search_ast != output->asts.end()) {
             // Found the package and AST
             current_package = &search_package->second;
@@ -218,10 +218,10 @@ namespace masonc
             // Create new package and AST
             auto inserted_package = output->packages.insert({ package_name, package{} });
             auto inserted_ast = output->asts.insert({ package_name, std::vector<expression>{} });
-            
+
             assume(inserted_package.second && inserted_ast.second,
                 "either package exists and AST does not or AST exists and package does not");
-            
+
             current_package = &inserted_package.first->second;
             current_ast = &inserted_ast.first->second;
 
@@ -234,7 +234,7 @@ namespace masonc
                 log_warning("could not reserve space for AST vector");
             }
         }
-        
+
         current_package->package_scope.name = current_package_name;
         current_scope_index = current_package->package_scope.index;
     }
@@ -243,17 +243,17 @@ namespace masonc
     {
         token_index += count;
     }
-    
+
     std::optional<token*> parser::peek_token()
     {
         if(token_index < input->tokens.size()) {
             std::optional<token*> result{ &input->tokens[token_index] };
             return result;
         }
-        
+
         return std::nullopt;
     }
-    
+
     std::optional<token*> parser::expect_any()
     {
         auto token_result = peek_token();
@@ -262,11 +262,11 @@ namespace masonc
             done = true;
             return std::nullopt;
         }
-        
+
         eat();
         return token_result.value();
     }
-    
+
     std::optional<token*> parser::expect_identifier()
     {
         auto token_result = peek_token();
@@ -275,16 +275,16 @@ namespace masonc
             done = true;
             return std::nullopt;
         }
-        
+
         if (token_result.value()->type != TOKEN_IDENTIFIER) {
             report_parse_error("Expected an identifier.");
             return std::nullopt;
         }
-        
+
         eat();
         return token_result.value();
     }
-    
+
     std::optional<token*> parser::expect(char c)
     {
         auto token_result = peek_token();
@@ -293,17 +293,17 @@ namespace masonc
             done = true;
             return std::nullopt;
         }
-        
+
         // Assumes that type "char" is signed
         if (token_result.value()->type != c) {
             report_parse_error("Expected \"" + std::string{ c } + "\".");
             return std::nullopt;
         }
-        
+
         eat();
         return token_result.value();
     }
-    
+
     std::optional<token*> parser::expect(const std::string& identifier)
     {
         auto token_result = peek_token();
@@ -312,47 +312,47 @@ namespace masonc
             done = true;
             return std::nullopt;
         }
-        
+
         if (token_result.value()->type != TOKEN_IDENTIFIER ||
             identifier_at(*token_result.value()) != identifier)
         {
             report_parse_error("Expected \"" + identifier + "\".");
             return std::nullopt;
         }
-        
+
         eat();
         return token_result.value();
     }
-    
+
     const std::string& parser::identifier_at(const token& identifier_token)
     {
         assume(input->identifiers.size() > identifier_token.value_index, "value_index is out of range");
         return input->identifiers[identifier_token.value_index];
     }
-    
+
     const std::string& parser::integer_at(const token& integer_token)
     {
         assume(input->integers.size() > integer_token.value_index, "value_index is out of range");
         return input->integers[integer_token.value_index];
     }
-    
+
     const std::string& parser::decimal_at(const token& decimal_token)
     {
         assume(input->decimals.size() > decimal_token.value_index, "value_index is out of range");
         return input->decimals[decimal_token.value_index];
     }
-    
+
     const std::string& parser::string_at(const token& string_token)
     {
         assume(input->strings.size() > string_token.value_index, "value_index is out of range");
         return input->strings[string_token.value_index];
     }
-    
+
     token_location* parser::get_token_location(u64 token_index)
     {
         return &input->locations[token_index];
     }
-    
+
     void parser::report_parse_error(const std::string& msg)
     {
         // TODO: Mark as unlikely.
@@ -361,25 +361,25 @@ namespace masonc
         else
             report_parse_error_at(msg, this->token_index - 1);
     }
-    
+
     void parser::report_parse_error_at(const std::string& msg, u64 token_index)
     {
         token_location* location = get_token_location(token_index);
-        
+
         output->messages.report_error(msg, build_stage::PARSER,
             location->line_number, location->start_column, location->end_column
         );
     }
-    
+
     void parser::recover()
     {
         while (true) {
             std::optional<token*> token_result = peek_token();
             if (!token_result)
                 return;
-            
+
             eat();
-            
+
             if (token_result.value()->type == ';' ||
                 token_result.value()->type == '}')
             {
@@ -387,7 +387,7 @@ namespace masonc
             }
         }
     }
-    
+
     std::optional<u8> parser::parse_specifiers()
     {
         u8 specifiers = SPECIFIER_NONE;
@@ -433,7 +433,7 @@ namespace masonc
             }
         }
     }
-    
+
     std::optional<expression> parser::parse_top_level()
     {
         std::optional<u8> specifiers_result = parse_specifiers();
@@ -470,7 +470,7 @@ namespace masonc
         std::optional<u8> specifiers_result = parse_specifiers();
         if(!specifiers_result)
             return std::nullopt;
-        
+
         // Next token is guaranteed to exist and be an identifier.
         auto token_result = peek_token();
         const std::string& identifier = identifier_at(*token_result.value());
@@ -479,10 +479,10 @@ namespace masonc
         if (identifier == "return") {
             // Parse return statement.
             return parse_expression(CONTEXT_STATEMENT);
-            
+
             // TODO: Check if type of returned value matches procedure return type.
         }
-        
+
         token_result = peek_token();
         if (!token_result) {
             report_parse_error("Expected a token.");
@@ -496,11 +496,11 @@ namespace masonc
             eat();
             return parse_call(CONTEXT_STATEMENT, identifier);
         }
-        
+
         // Specifiers are declared or next token is not "(".
 
         if (token_result.value()->type == ':') {
-            eat();  
+            eat();
             return parse_variable_declaration(CONTEXT_STATEMENT, identifier, specifiers_result.value());
         }
 
@@ -514,7 +514,7 @@ namespace masonc
         auto primary_result = parse_primary(CONTEXT_NONE);
         if (!primary_result)
             return std::nullopt;
-        
+
         auto token_result = peek_token();
         if (!token_result) {
             report_parse_error("Expected a token.");
@@ -546,7 +546,7 @@ namespace masonc
         // Parse right-hand side of binary expression.
         return parse_binary(context, primary_result.value(), op_result.value());
     }
-        
+
     std::optional<expression> parser::parse_primary(parse_context context)
     {
         auto token_result = peek_token();
@@ -555,7 +555,7 @@ namespace masonc
             done = true;
             return std::nullopt;
         }
-        
+
         switch (token_result.value()->type) {
             default: {
                 report_parse_error("Unexpected token.");
@@ -632,14 +632,14 @@ namespace masonc
 
         return expression{
             expression_binary{
-                // TODO: Delete this later.    
+                // TODO: Delete this later.
                 new expression{ left },
                 new expression{ right_result.value() },
                 op
             }
         };
     }
-    
+
     std::optional<expression> parser::parse_parentheses(parse_context context)
     {
         // Parse what is inside the parentheses.
@@ -663,14 +663,14 @@ namespace masonc
         // If a binary expression is encased in the parentheses,
         // return a "expression_parentheses" containing the binary expression
         // so that operator precedence can be correctly applied later.
-        // 
+        //
         // Otherwise just return the expression.
         if(expr_result.value().value.empty.type == EXPR_BINARY)
             return expression{ expression_parentheses{ expr_result.value().value.binary.value } };
         else
             return expr_result;
     }
-    
+
     std::optional<expression> parser::parse_number_literal(parse_context context,
         const std::string& number, number_type type)
     {
@@ -680,10 +680,10 @@ namespace masonc
                 return std::nullopt;
             }
         }
-        
+
         return expression{ expression_number_literal{ type, number } };
     }
-    
+
     std::optional<expression> parser::parse_string_literal(parse_context context, const std::string& str)
     {
         if (context == CONTEXT_STATEMENT) {
@@ -692,7 +692,7 @@ namespace masonc
                 return std::nullopt;
             }
         }
-        
+
         return expression{ expression_string_literal{ str } };
     }
 
@@ -700,7 +700,7 @@ namespace masonc
     {
         auto reference_result = current_scope()->find_symbol(
             identifier, current_package->package_scope);
-        
+
         // Check if symbol is visible in current scope.
         if (!reference_result) {
             report_parse_error("Undefined symbol or symbol is not visible in current scope.");
@@ -716,19 +716,19 @@ namespace masonc
 
         return expression{ expression_reference{ reference_result.value() } };
     }
-    
+
     std::optional<expression> parser::parse_variable_declaration(parse_context context,
         const std::string& variable_name, u8 specifiers)
     {
         bool is_pointer;
-        
+
         auto token_result = expect_any();
         if (!token_result)
             return std::nullopt;
-        
+
         if (token_result.value()->type == '^') {
             is_pointer = true;
-            
+
             token_result = expect_identifier();
             if (!token_result) {
                 recover();
@@ -744,21 +744,21 @@ namespace masonc
                 return std::nullopt;
             }
         }
-        
+
         // The token is an identifier.
 
         const std::string& type_identifier = identifier_at(*token_result.value());
-        
+
         // Check if the type is visible in current scope.
         std::optional<type> find_type_result = current_scope()->find_type(
             type_identifier, current_package->package_scope);
-        
+
         if (!find_type_result) {
             report_parse_error("Undefined type or type is not visible in current scope.");
             recover();
             return std::nullopt;
         }
-        
+
         // Add variable to symbol table of current scope.
         bool add_symbol_result = current_scope()->add_symbol(
             symbol{ variable_name, SYMBOL_VARIABLE, type_identifier }, current_package->package_scope);
@@ -775,7 +775,7 @@ namespace masonc
                 recover();
                 return std::nullopt;
             }
-            
+
             // Variable declaration statements can optionally assign a value.
             if (token_result.value()->type == OP_EQUALS.op_code) {
                 // Parse the right-hand side.
@@ -787,7 +787,7 @@ namespace masonc
                             find_type_result.value().name,
                             specifiers,
                             is_pointer
-                        } 
+                        }
                     },
                     &OP_EQUALS
                 );
@@ -816,12 +816,12 @@ namespace masonc
         // Check if the procedure is visible in current scope.
         auto proc_result = current_scope()->find_symbol(
             procedure_name, current_package->package_scope);
-        
+
         if (!proc_result) {
             report_parse_error("Undefined symbol or symbol is not visible in current scope.");
             return std::nullopt;
         }
-        
+
         expression_procedure_call call_expr{ symbol{ procedure_name, SYMBOL_PROCEDURE } };
 
         auto token_result = peek_token();
@@ -896,7 +896,7 @@ namespace masonc
             // Parse the argument
             auto variable_declaration = parse_variable_declaration(CONTEXT_NONE,
                 identifier, specifiers_result.value());
-            
+
             if (!variable_declaration)
                 return std::vector<expression>{};
 
@@ -939,7 +939,7 @@ namespace masonc
         bool add_symbol_result = current_scope()->add_symbol(
             symbol{ procedure_identifier, SYMBOL_PROCEDURE }, current_package->package_scope
         );
-        
+
         if (!add_symbol_result) {
             report_parse_error("Symbol is already defined.");
             return std::nullopt;
@@ -974,7 +974,7 @@ namespace masonc
             // Parse argument list.
             argument_list = parse_argument_list();
         }
-        
+
         token_result = peek_token();
         if (!token_result) {
             report_parse_error("Expected a token.");
@@ -1001,7 +1001,7 @@ namespace masonc
             return_type_result = current_scope()->find_type(
                 return_type_identifier, current_package->package_scope
             );
-            
+
             if (!return_type_result) {
                 report_parse_error("Undefined type or type is not visible in current scope.");
                 return std::nullopt;
@@ -1015,7 +1015,7 @@ namespace masonc
                 return std::nullopt;
             }
         }
-        
+
         switch (token_result.value()->type) {
             default:
                 report_parse_error("Unexpected token.");
@@ -1054,8 +1054,8 @@ namespace masonc
             report_parse_error("Expected a token.");
             done = true;
             return std::nullopt;
-        } 
-        
+        }
+
         if (token_result.value()->type == '}') {
             // Procedure body is empty.
             eat();
@@ -1095,11 +1095,11 @@ namespace masonc
         current_scope_index = parent_scope_index;
         return expression{ expression_procedure_definition{ prototype, body } };
     }
-    
+
     std::optional<expression> parser::parse_package_declaration()
     {
         std::string package_name;
-        
+
         while(true)
         {
             auto token_result = expect_identifier();
@@ -1107,13 +1107,13 @@ namespace masonc
                 recover();
                 return std::nullopt;
             }
-            
+
             package_name += identifier_at(*token_result.value());
-            
+
             token_result = expect_any();
             if (!token_result)
                 return std::nullopt;
-            
+
             if(token_result.value()->type == '.') {
                 package_name += ".";
                 continue;
@@ -1130,11 +1130,11 @@ namespace masonc
             }
         }
     }
-    
+
     std::optional<expression> parser::parse_package_import()
     {
         std::string package_name;
-        
+
         while(true)
         {
             auto token_result = expect_identifier();
@@ -1144,7 +1144,7 @@ namespace masonc
             }
 
             package_name += identifier_at(*token_result.value());
-            
+
             token_result = expect_any();
             if (!token_result)
                 return std::nullopt;
@@ -1166,14 +1166,14 @@ namespace masonc
             }
         }
     }
-    
+
     expression_binary* get_binary_expression(expression* expr)
     {
         if(expr->value.empty.type == EXPR_BINARY)
             return &expr->value.binary.value;
         else if(expr->value.empty.type == EXPR_PARENTHESES)
             return &expr->value.parentheses.value.expr;
-        
+
         return nullptr;
     }
 }
