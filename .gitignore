@@ -1,20 +1,18 @@
-# Ignored Editor Files
+# Editor files
 .vscode/
 *.sublime-project
 *.sublime-workspace
 *.clang_complete
 *.vim
 
-# Ignored Visual Studio Files
+# Visual Studio files
 .vs/
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
 *.sln
 
-# Ignored Project Files
+# Project files
+intermediate/
 LLVM-C.dll
-x64/
-x86/
-x32/
 tests/unicode/
