@@ -13,6 +13,7 @@
 *.sln
 
 # Project files
+build/
 intermediate/
 LLVM-C.dll
 tests/unicode/

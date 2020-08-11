@@ -1,3 +1,0 @@
-# Ensure that the current folder gets upstream, but none of the contents.
-*
-!.gitignore

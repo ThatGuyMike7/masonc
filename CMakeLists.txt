@@ -1,12 +1,3 @@
-# This project requires the LLVM-C dynamic library to be installed.
-#
-# Download LLVM 10 and place "LLVM-C.dll" into the project root directory (on Windows),
-# and "LLVM-C.lib" into "masonc/third-party/lib/" (on Windows).
-
-# cmake -G "Visual Studio 15" -T "llvm" -D CMAKE_GENERATOR_PLATFORM=x64 -D CMAKE_BUILD_TYPE=Release ..
-# cmake -G "Visual Studio 15" -D CMAKE_GENERATOR_PLATFORM=x64 -D CMAKE_BUILD_TYPE=Release ..
-# cmake --build . --config Release
-
 message(STATUS "CMake version is ${CMAKE_VERSION}")
 if(${CMAKE_VERSION} VERSION_LESS "3.18.1")
     message(STATUS "At least CMake 3.18.1 is required")
@@ -28,7 +19,10 @@ if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     set(MASONC_CONFIG "debug")
 elseif(${CMAKE_BUILD_TYPE} STREQUAL "Release")
     set(MASONC_CONFIG "release")
-# TODO: Add the other two configurations.
+elseif(${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo")
+    set(MASONC_CONFIG "release-with-debug-info")
+elseif(${CMAKE_BUILD_TYPE} STREQUAL "MinSizeRel")
+    set(MASONC_CONFIG "min-size-release")
 else()
     set(MASONC_CONFIG "unsupported")
     message(FATAL_ERROR "Build configuration is unsupported")
