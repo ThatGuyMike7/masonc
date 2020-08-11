@@ -1,19 +1,19 @@
 # Editor files
-.vscode/
-*.sublime-project
-*.sublime-workspace
-*.clang_complete
-*.vim
+/.vscode/
+/*.sublime-project
+/*.sublime-workspace
+/*.clang_complete
+/*.vim
 
 # Visual Studio files
-.vs/
+/.vs/
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
 *.sln
 
 # Project files
-build/
-intermediate/
-LLVM-C.dll
-tests/unicode/
+/build/
+/intermediate/
+/LLVM-C.dll
+/tests/unicode/
