@@ -1,9 +1,10 @@
-#include "parser.hpp"
-#include "common.hpp"
-#include "lang.hpp"
-#include "log.hpp"
-#include "timer.hpp"
-#include "lexer.hpp"
+#include <parser.hpp>
+
+#include <common.hpp>
+#include <lang.hpp>
+#include <log.hpp>
+#include <timer.hpp>
+#include <lexer.hpp>
 
 #include <iostream>
 #include <optional>

@@ -1,7 +1,7 @@
 #ifndef $_MASONC_STRING_COLLECTION_$
 #define $_MASONC_STRING_COLLECTION_$
 
-#include "common.hpp"
+#include <common.hpp>
 #include <vector>
 #include <string>
 
@@ -16,7 +16,7 @@ namespace masonc
 	{
         string_collection(u64 buffer_chunk_size = 4096);
         ~string_collection();
-        
+
         // 'length' is expected to not count the null terminator
         void add(const char* str, u64 length);
         void add(const std::string& str);
@@ -24,7 +24,7 @@ namespace masonc
         char* get(u64 index);
         u64 length_at(u64 index) const;
         u64 count() const;
-        
+
     private:
 
         // Items are composed of a `u64` and a sequence of characters ending with a null-terminator
@@ -32,7 +32,7 @@ namespace masonc
 
         // Contains buffer pointer offsets to the sequences of characters
         std::vector<u64> lookup;
-        
+
         u64 item_count;
         u64 occupied_bytes;
         u64 current_buffer_size;

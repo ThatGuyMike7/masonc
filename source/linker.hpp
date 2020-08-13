@@ -1,9 +1,9 @@
 #ifndef $_MASONC_LINKER_HPP_$
 #define $_MASONC_LINKER_HPP_$
 
-#include "scope.hpp"
-#include "message.hpp"
-#include "parser.hpp"
+#include <scope.hpp>
+#include <message.hpp>
+#include <parser.hpp>
 
 namespace masonc
 {
@@ -12,43 +12,43 @@ namespace masonc
         scope merged_global_scope;
         message_list messages;
     };
-    
-    // The pre-linker's job is to merge all package scope instances
-    // from all the parsers together (and maybe also the ASTs).
-    // The lexer, parser and pre-linker stages should run in parallel.
+
+    // The pre-linker's job is to merge all package scope instances and
+    // package ASTs from all parser outputs together.
+    // The lexer, parser and pre-linker stages can run in parallel.
     struct pre_linker
     {
         // TODO: Implement this
         void merge(parser_output* input);
-        
+
     private:
         parser_output* input;
         pre_linker_output* output;
-        
+
         // Input scopes must be package-level
         void merge_package_scopes(scope& destination, scope& source);
 
         // TODO: Implement this
         void merge_packages();
     };
-    
+
     struct linker_output
     {
         message_list messages;
     };
-    
+
     // The linker's job is to check if used symbols and types are correctly defined
     // and visible (and maybe also change the order to prepare for code generation).
     // The linker requires that the lexer, parser and pre-linker stages finished.
-	struct linker
-	{
+    struct linker
+    {
         // TODO: Implement this
         void link(pre_linker_output* input);
-        
-	private:
+
+    private:
         pre_linker_output* input;
         linker_output* output;
-	};
+    };
 }
 
 #endif

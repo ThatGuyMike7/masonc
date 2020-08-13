@@ -54,6 +54,11 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 # Add header files.
 target_include_directories(${PROJECT_NAME}
+    PRIVATE ${CMAKE_SOURCE_DIR}/source
+    PRIVATE ${CMAKE_SOURCE_DIR}/source/parser
+    PRIVATE ${CMAKE_SOURCE_DIR}/source/util
+    PRIVATE ${CMAKE_SOURCE_DIR}/source/language
+    PRIVATE ${CMAKE_SOURCE_DIR}/source/test
     PRIVATE ${CMAKE_SOURCE_DIR}/third-party/include
 )
 

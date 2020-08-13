@@ -1,7 +1,7 @@
-#include "lexer.hpp"
-#include "timer.hpp"
+#include <lexer.hpp>
+#include <timer.hpp>
 
-#include "build.hpp"
+#include <build.hpp>
 
 #include <cctype>
 #include <string>
@@ -14,7 +14,7 @@ namespace masonc
 	{
 		return (c == 'n' || c == 't' || c == '0' || c == '\\');
 	}
-	
+
 	char get_escape_char(char sequence)
 	{
 		switch(sequence) {
@@ -34,12 +34,12 @@ namespace masonc
 				return '\'';
 		}
 	}
-	
+
 	bool is_space(char c)
 	{
 		return (c == ' ' || c == '\n' || c == '\t');
 	}
-	
+
 	std::string get_composed_token(token_type type)
 	{
 		for(u64 i = 0; i < COMPOSED_TOKENS_LENGTH / 2; i += 1) {
@@ -50,10 +50,10 @@ namespace masonc
 				return str;
 			}
 		}
-		
+
 		return "";
 	}
-	
+
 	std::optional<char> lexer::get_char()
 	{
 		char c = this->input[this->char_index];
@@ -70,30 +70,30 @@ namespace masonc
 		else {
 			this->column_number += 1;
 		}
-		
+
 		this->char_index += 1;
 		return std::optional<char>{ c };
 	}
-	
+
 	std::optional<char> lexer::peek_char()
 	{
 		char c = this->input[this->char_index];
 		if(c == '\0')
 			return std::optional<char>{};
-		
+
 		return std::optional<char>{ c };
 	}
-	
+
 	void lexer::add_identifier(const std::string& identifier, u64 start_column, u64 end_column)
 	{
 		token tok = { this->output->identifiers.size(), TOKEN_IDENTIFIER };
 		token_location location = { this->line_number, start_column, end_column };
-		
+
 		this->output->tokens.push_back(tok);
 		this->output->locations.push_back(location);
 		this->output->identifiers.push_back(identifier);
 	}
-	
+
 	void lexer::add_number(const std::string& number, bool dot, u64 start_column, u64 end_column)
 	{
 		if (dot) {
@@ -118,16 +118,16 @@ namespace masonc
 			this->output->tokens.push_back(tok);
 			this->output->integers.push_back(number);
 		}
-		
+
 		token_location location = { this->line_number, start_column, end_column };
 		this->output->locations.push_back(location);
 	}
-	
+
 	void lexer::tokenize(const char* input, u64 input_size, lexer_output* output, u8 tab_size)
 	{
 		// Reset the lexer.
 		prepare(input, input_size, output, tab_size);
-		
+
 		// Do the actual work.
 		return analyze();
 	}
@@ -137,15 +137,15 @@ namespace masonc
 		this->input = input;
 		this->output = output;
 		this->tab_size = tab_size;
-		
+
 		this->char_index = 0;
 		this->line_number = 1;
 		this->column_number = 1;
-		
+
 		try {
 			// Guess how many characters will end up being 1 token on average to avoid reallocations.
 			const u64 characters_per_token_guess = input_size / 3 + 32;
-			
+
 			output->tokens.reserve(characters_per_token_guess);
 			output->locations.reserve(characters_per_token_guess);
 		}
@@ -153,7 +153,7 @@ namespace masonc
 			log_warning("Could not reserve space for token vector");
 		}
 	}
-	
+
 	void lexer::analyze()
 	{
 		// Get the first character.
@@ -174,32 +174,32 @@ namespace masonc
 				u64 string_start_column = this->column_number - 1;
 				std::string str;
 				char prev_char = char_result.value();
-				
+
 				while(true) {
 					char_result = get_char();
 					if(!char_result) {
 						// Error
 						output->messages.report_error("Expected '\"'", build_stage::LEXER,
 							this->line_number, string_start_column, this->column_number - 1);
-						
+
 						return;
 					}
-					
+
 					// Lex escape sequence.
 					if(char_result.value() == ESCAPE_BEGIN) {
 						u64 escape_start_column = this->column_number - 1;
-						
+
 						char_result = get_char();
 						if(!char_result) {
 							// Error
 							output->messages.report_error("Expected '\"'", build_stage::LEXER,
 								this->line_number, string_start_column, this->column_number - 1);
-							
+
 							return;
 						}
-						
+
 						// TODO: Continue work here
-						
+
 						if(!is_escape_sequence(char_result.value()) && char_result.value() != '"') {
 							// Error: Not valid escape sequence.
 							output->messages.report_error(
@@ -211,7 +211,7 @@ namespace masonc
 								escape_start_column,
 								this->column_number - 1
 							);
-							
+
 							// Skip until end of string.
 							do {
 								char_result = get_char();
@@ -224,56 +224,56 @@ namespace masonc
 										string_start_column,
 										this->column_number - 1
 									);
-									
+
 									return;
 								}
-								
+
 							} while(char_result.value() != '"');
-							
+
 							// Successfully skipped string, lex the next token.
 							continue;
 						}
-						
+
 						char escape_char = get_escape_char(char_result.value());
 						str.push_back(escape_char);
 						prev_char = escape_char;
 						continue;
 					}
-					
+
 					if(char_result.value() == '"')
 						break;
-					
+
 					str.push_back(char_result.value());
 					prev_char = char_result.value();
 				}
-				
+
 				token tok = { this->output->strings.size(), TOKEN_STRING };
-				
-				token_location location = { 
+
+				token_location location = {
 					this->line_number,
 					string_start_column,
 					this->column_number - 1
 				};
-				
+
 				this->output->tokens.push_back(tok);
 				this->output->strings.push_back(str);
 				this->output->locations.push_back(location);
-				
+
 				char_result = get_char();
 				if(!char_result)
 					return;
-				
+
 				// Done lexing constant string literal
 				continue;
 			}
-			
+
 			// Identifier starting with an alpha character (a-z, A-Z) or underscore and
 			// further characters being alpha, underscores or numeric (0-9).
 			if (is_alpha(char_result.value())) //|| char_result.value() == '_')
 			{
 				u64 identifier_start_column = this->column_number - 1;
 				std::string identifier;
-				
+
 				// Read the identifier.
 				do {
 					identifier.push_back(char_result.value());
@@ -284,7 +284,7 @@ namespace masonc
 						add_identifier(identifier, identifier_start_column, this->column_number - 1);
 						return;
 					}
-					
+
 				} while (is_alnum(char_result.value())); //|| char_result.value() == '_');
 
 				// TODO: Potentially check if it's a language-defined identifier.
@@ -324,7 +324,7 @@ namespace masonc
 								number_start_column,
 								this->column_number - 1
 							);
-							
+
 							return;
 						}
 
@@ -338,7 +338,7 @@ namespace masonc
 							return;
 						}
 					}
-					
+
 				} while (is_num(char_result.value()));
 
 				// Done lexing number.
@@ -359,7 +359,7 @@ namespace masonc
 							char_result = get_char();
 							if (!char_result)
 								return;
-							
+
 						} while (char_result.value() != '\n');
 
 						// Eat the "\n".
@@ -409,7 +409,7 @@ namespace masonc
 								// Eat the peeked token.
 								get_char();
 							}
-							
+
 						} while (nests > 0);
 
 						char_result = get_char();
@@ -421,29 +421,29 @@ namespace masonc
 					}
 				}
 			}
-			
+
 			// Composed tokens
 			u64 i = 0;
 			bool is_composed = false;
 			while (i < COMPOSED_TOKENS_LENGTH) {
 				if (char_result.value() == COMPOSED_TOKENS[i]) {
 					// It could be a composed token.
-					
+
 					std::optional<char> peek_token_result = peek_char();
 					if (!peek_token_result) {
 						// Not a composed token, create an ASCII token.
 						token tok;
 						tok.type = char_result.value();
-						
+
 						token_location location = {
 							this->line_number,
 							this->column_number - 1,	// current token column
 							this->column_number - 1
 						};
-						
+
 						this->output->tokens.push_back(tok);
 						this->output->locations.push_back(location);
-						
+
 						return;
 					}
 
@@ -451,16 +451,16 @@ namespace masonc
 						// It is a composed token.
 						token tok;
 						tok.type = COMPOSED_TOKEN_TYPES[i / 2];
-						
-						token_location location = { 
+
+						token_location location = {
 							this->line_number,
 							this->column_number - 1,	// current token column
 							this->column_number			// peeked token column
 						};
-						
+
 						this->output->tokens.push_back(tok);
 						this->output->locations.push_back(location);
-						
+
 						// Eat the current token and the peeked token.
 						get_char();
 						char_result = get_char();
@@ -482,13 +482,13 @@ namespace masonc
 			// Otherwise just create an ASCII token.
 			token tok;
 			tok.type = char_result.value();
-			
+
 			token_location location = {
 				this->line_number,
 				this->column_number - 1,	// current token column
 				this->column_number - 1
 			};
-			
+
 			this->output->tokens.push_back(tok);
 			this->output->locations.push_back(location);
 
@@ -497,7 +497,7 @@ namespace masonc
 				return;
 		}
 	}
-	
+
 	void lexer::print_tokens()
 	{
 		for(u64 i = 0; i < output->tokens.size(); i += 1) {

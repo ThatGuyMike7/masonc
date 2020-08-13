@@ -1,6 +1,6 @@
-#include "io.hpp"
+#include <io.hpp>
 
-#include "log.hpp"
+#include <log.hpp>
 
 #include <system_error>
 #include <cstdlib>
@@ -52,7 +52,7 @@ namespace masonc
     {
         std::error_code error;
         auto directory_iterator = std::filesystem::directory_iterator(directory_path, error);
-        
+
         if (error) {
             std::cout << "Directory " << directory_path << " does not exist." << std::endl;
             return std::vector<std::string>{};
@@ -68,15 +68,15 @@ namespace masonc
     }
 
 	std::vector<std::string> directory_files_recurse(const char* directory_path)
-	{   
+	{
         std::error_code error;
         auto recursive_directory_iterator = std::filesystem::recursive_directory_iterator(directory_path, error);
-        
+
         if (error) {
             std::cout << "Directory " << directory_path << " does not exist." << std::endl;
             return std::vector<std::string>{};
         }
-        
+
         std::vector<std::string> files;
         for (const auto& entry : recursive_directory_iterator) {
 			files.push_back(entry.path().generic_string());
@@ -152,7 +152,7 @@ namespace masonc
             }
         }
     }
-	
+
 	std::optional<char*> file_read(const char* path, const u64 block_size,
 		u64* terminator_index)
 	{
@@ -163,7 +163,7 @@ namespace masonc
 			log_error(std::string{ "Unable to allocate memory buffer for file '" + std::string(path) + "'" }.c_str());
 			return std::optional<char*>{};
 		}
-		
+
 		#pragma warning (disable: 4996)
 		std::FILE* stream = std::fopen(path, "r");
 		if (stream == nullptr)
@@ -172,12 +172,12 @@ namespace masonc
 			std::free(buffer);
 			return std::optional<char*>{};
 		}
-		
+
 		u64 bytes_read = std::fread(buffer, 1, block_size, stream);
 		u64 total_bytes_read = bytes_read;
-		
+
 		while (bytes_read == block_size)
-		{	
+		{
 			// Grow the buffer
 			buffer_size += block_size;
 			buffer = std::realloc(buffer, buffer_size);
@@ -186,7 +186,7 @@ namespace masonc
 				log_error(std::string{ "Unable to allocate memory buffer for file '" + std::string(path) + "'" }.c_str());
 				return std::optional<char*>{};
 			}
-			
+
 			// Location of last block (end of old buffer)
 			char* location = static_cast<char*>(buffer);
 			location += buffer_size - block_size;
@@ -195,7 +195,7 @@ namespace masonc
 			bytes_read = std::fread(location, 1, block_size, stream);
 			total_bytes_read += bytes_read;
 		}
-		
+
 		// EOF was reached
 		if (std::feof(stream) != 0)
 		{
@@ -205,18 +205,18 @@ namespace masonc
 
 			//char* final_buffer_bytes = static_cast<char*>(final_buffer);
 			final_buffer[total_bytes_read] = '\0';
-			
+
 			// Out the null terminator's index
 			if(terminator_index != nullptr)
 			{
 				*terminator_index = total_bytes_read;
 			}
-			
+
 			std::fclose(stream);
 			std::free(buffer);
 			return std::optional<char*>{ final_buffer };
 		}
-		
+
 		// An error occured while reading
 		if (std::ferror(stream) != 0)
 		{
@@ -225,7 +225,7 @@ namespace masonc
 			std::free(buffer);
 			return std::optional<char*>{};
 		}
-		
+
 		log_error(std::string{ "EOF was not reached while reading file '" + std::string(path) + "'" }.c_str());
 		std::fclose(stream);
 		std::free(buffer);

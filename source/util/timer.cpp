@@ -1,4 +1,4 @@
-#include "timer.hpp"
+#include <timer.hpp>
 
 #include <cmath>
 
@@ -27,7 +27,7 @@ namespace masonc
 
 			// Dividing by 1000000.0 converts ns to ms
 			// 'd' is used to round to a specific amount of decimal places
-			return std::to_string(std::round(static_cast<long double>(duration) / 1000000.0l * d) / d).substr(0, 2 + decimal_places) + " ms";	
+			return std::to_string(std::round(static_cast<long double>(duration) / 1000000.0l * d) / d).substr(0, 2 + decimal_places) + " ms";
 		}
 
 		// Print in fractional seconds if amount of ms exceeds this number

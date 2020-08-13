@@ -1,7 +1,7 @@
 #ifndef $_MASONC_TIMER_HPP_$
 #define $_MASONC_TIMER_HPP_$
 
-#include "common.hpp"
+#include <common.hpp>
 
 #include <chrono>
 #include <string>

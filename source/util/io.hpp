@@ -1,7 +1,7 @@
 #ifndef $_MASONC_IO_HPP_$
 #define $_MASONC_IO_HPP_$
 
-#include "common.hpp"
+#include <common.hpp>
 
 #include <vector>
 #include <unordered_set>
@@ -19,7 +19,7 @@ namespace masonc
 
     // Returns "DIR_PATH_RECURSE" if "path" ends with "/*" and
     // pops the last character so it becomes a valid directory path.
-    // 
+    //
     // Returns "DIR_PATH" if "path" ends with "/".
     // Otherwise returns "FILE_PATH".
     path_type get_path_type(std::string* path);
@@ -47,9 +47,9 @@ namespace masonc
     std::vector<std::string> directory_files_recurse(const char* directory_path);
     std::vector<std::string> directory_files_recurse(const char* directory_path,
         const std::unordered_set<std::string>& extensions);
-    
+
     // Receive a list of file paths from a path. All files are guaranteed to exist.
-    // 
+    //
     // If "path.type" is "DIR_PATH_RECURSE", all files in the directory and its sub-directories are returned.
     // If "path.type" is "DIR_PATH", all files in the directory are returned.
     // If "path.type" is "FILE_PATH", only the file path is returned if the file exists.

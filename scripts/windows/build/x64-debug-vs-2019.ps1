@@ -30,15 +30,15 @@ Invoke-Expression "& $cmake_configure"
 $cmake_build = 'cmake --build . --config Debug'
 Invoke-Expression "& $cmake_build"
 
-if (Test-Path "../../build/win-64/debug/masonc.exe")
-{
-    # Run the built executable with working directory being the project root directory.
-    Start-Process -FilePath "../../build/win-64/debug/masonc.exe" -WorkingDirectory "../.."
-}
+#if (Test-Path "../../build/win-64/debug/masonc.exe")
+#{
+#    # Run the built executable with working directory being the project root directory.
+#    Start-Process -FilePath "../../build/win-64/debug/masonc.exe" -WorkingDirectory "../.."
+#}
 
 # If running in the console, wait for input before closing.
-if ($Host.Name -eq "ConsoleHost")
-{
-    Write-Host "Press any key to continue..."
-    $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyUp") > $null
-}
+#if ($Host.Name -eq "ConsoleHost")
+#{
+#    Write-Host "Press any key to continue..."
+#    $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyUp") > $null
+#}
