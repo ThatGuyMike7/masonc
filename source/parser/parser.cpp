@@ -9,6 +9,7 @@
 #include <iostream>
 #include <optional>
 #include <limits>
+#include <cstring>
 
 namespace masonc
 {
@@ -438,7 +439,7 @@ namespace masonc
 
             const char* identifier = identifier_at(*token_result.value());
 
-            if (identifier == "mut") {
+            if (std::strcmp(identifier, "mut") == 0) {
                 eat();
 
                 if (specifiers & SPECIFIER_MUT) {
@@ -448,7 +449,7 @@ namespace masonc
 
                 specifiers |= SPECIFIER_MUT;
             }
-            else if (identifier == "const") {
+            else if (std::strcmp(identifier, "const") == 0) {
                 eat();
 
                 if (specifiers & SPECIFIER_CONST) {
@@ -479,11 +480,11 @@ namespace masonc
         eat();
 
         if (specifiers_result.value() == SPECIFIER_NONE) {
-            if (identifier == "proc")
+            if (std::strcmp(identifier, "proc") == 0)
                 return parse_procedure();
-            if (identifier == "package")
+            if (std::strcmp(identifier, "package") == 0)
                 return parse_package_declaration();
-            if (identifier == "import")
+            if (std::strcmp(identifier, "import") == 0)
                 return parse_package_import();
         }
 
@@ -513,7 +514,7 @@ namespace masonc
 
         eat();
 
-        if (identifier == "return") {
+        if (std::strcmp(identifier, "return") == 0) {
             // Parse return statement.
             return parse_expression(CONTEXT_STATEMENT);
         }
@@ -617,7 +618,7 @@ namespace masonc
                 const char* identifier = identifier_at(*token_result.value());
                 symbol_handle identifier_handle = token_result.value()->value_index;
 
-                if (identifier == "proc") {
+                if (std::strcmp(identifier, "proc") == 0) {
                     report_parse_error("Procedure must be top-level expression.");
                     // TODO: Jump to end of procedure and not next ";" or "}".
                     recover();
