@@ -1,16 +1,9 @@
-#include <lang.hpp>
-#include <scope.hpp>
-#include <package.hpp>
+#include <binary_operator.hpp>
 
 #include <optional>
 
 namespace masonc
 {
-    void initialize_language()
-    {
-        initialize_package_scope_template();
-    }
-
     std::optional<const binary_operator*> get_op(s8 op_code)
     {
         if (op_code == OP_EQUALS.op_code)

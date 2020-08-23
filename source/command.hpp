@@ -29,14 +29,14 @@ namespace masonc
 
     struct command_argument_definition
     {
-        std::string name;
-        std::string description;
+        const char* name;
+        const char* description;
         command_argument_type type;
     };
 
     struct command_option_definition
     {
-        std::string description;
+        const char* description;
         command_argument_type type;
     };
 
@@ -44,19 +44,19 @@ namespace masonc
     struct command_definition
     {
         u64 order;
-        std::string description;
+        const char* description;
         void(*executor)(const command_parsed& command);
         std::vector<command_argument_definition> arguments;
-        std::map<std::string, command_option_definition> options;
+        std::map<const char*, command_option_definition> options;
     };
 
     using command_argument_pair = std::pair<command_argument_type, command_argument_value>;
     using command_option_tuple = std::tuple<command_argument_type,
-        command_argument_value, const std::string*>;
+        command_argument_value, const char*>;
 
     struct command_parsed
     {
-        const std::string* name;
+        const char* name;
         const command_definition* definition;
         std::vector<command_argument_pair> parsed_arguments;
         std::vector<command_option_tuple> parsed_options;
@@ -78,12 +78,14 @@ namespace masonc
     bool listen_command(lexer* command_lexer);
 
     // Get a "command_argument_type" value as string.
-    std::string command_argument_type_string(command_argument_type argument_type);
+    const char* command_argument_type_string(command_argument_type argument_type);
+
+    // Command name associated with command definition - key and value types of "COMMANDS".
+    using command_name_pair = const std::pair<const char* const, const command_definition>;
 
     // Returns a pointer to a key-value pair in "COMMANDS"
     // that matches the command name found in the tokenizer's output.
-    static std::optional<const std::pair<const std::string, command_definition>*> find_command(
-        lexer_output* output);
+    static std::optional<command_name_pair*> find_command(lexer_output* output);
 
     std::optional<command_parsed> parse_command(lexer* command_lexer, lexer_output* output,
         const char* input, u64 input_size);
@@ -94,9 +96,9 @@ namespace masonc
 
     // Parse optional argument of a command.
     std::optional<command_option_tuple> parse_command_option(u64* token_index, lexer_output* output,
-        const std::map<std::string, command_option_definition>& options);
+        const std::map<const char*, command_option_definition>& options);
 
-    inline const std::map<std::string, command_definition> COMMANDS =
+    inline const std::map<const char* const, const command_definition> COMMANDS =
     {
         {
             "help",
@@ -155,7 +157,7 @@ namespace masonc
                         command_argument_type::STRING
                     }
                 },
-                std::map<std::string, command_option_definition>
+                std::map<const char*, command_option_definition>
                 {
                     {
                         "add_extensions",

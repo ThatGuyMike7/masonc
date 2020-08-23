@@ -16,12 +16,12 @@ namespace masonc
 	using u16 = uint16_t;
 	using u32 = uint32_t;
 	using u64 = uint64_t;
-	
+
 	using f32 = float;
 	using f64 = double;
-	
+
 	//using rune = s32;
-	
+
 	void assume(bool statement, const char* msg = "", int code = -1);
 
     /*
@@ -37,7 +37,7 @@ namespace masonc
         }
 
         explicit operator bool() const { return is_ok; }
-        
+
         T value() {
             assume(is_ok, "\"is_ok\" in std::optional<T> is false");
             return _value;
@@ -54,16 +54,16 @@ namespace masonc
 	public:
 		_result() : is_ok(false) { }
 		_result(T _value) : is_ok(true), _value(_value) { }
-			
+
 		//operator bool&() { return is_ok; }
 		explicit operator bool() const { return is_ok; }
-			
+
 		T value()
 		{
 			assume(is_ok, "\"is_ok\" in std::optional<T> is false");
 			return _value;
 		}
-		
+
 	private:
 		T _value;
 		bool is_ok;

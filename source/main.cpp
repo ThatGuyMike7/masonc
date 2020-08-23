@@ -3,12 +3,13 @@
 #include <lexer.hpp>
 #include <parser.hpp>
 #include <log.hpp>
-#include <lang.hpp>
+#include <language.hpp>
 #include <scope.hpp>
 #include <timer.hpp>
 #include <test.hpp>
 #include <llvm_converter.hpp>
 #include <command.hpp>
+#include <version.hpp>
 
 #include <iostream>
 #include <cstdlib>
@@ -42,9 +43,10 @@ int main(int argc, char** argv)
     // If "command_line_input" is empty, a user has probably launched the compiler manually.
     if(command_line_input.empty()) {
         std::cout << MASON_ASCII_ART << "\n\n"
-                  << "Compiler for the mason programming language." << "\n"
-                  << "Written by Mike Jasinski." << "\n"
-                  << "github.com/ThatGuyMike7/masonc" << "\n\n"
+                  << "Compiler for the mason programming language, "
+                  << "written by Mike Jasinski." << "\n"
+                  << "Version " << masonc::VERSION << "\n"
+                  << "Ongoing development at https://github.com/ThatGuyMike7/masonc" << "\n\n"
 
                   << "Usage: command [arguments] [options]?" << "\n"
                   << "Type \"help\" for a list of commands." << "\n\n"

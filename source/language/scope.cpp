@@ -1,127 +1,101 @@
 #include <scope.hpp>
+
 #include <log.hpp>
 #include <common.hpp>
+#include <package.hpp>
 
 #include <iostream>
 #include <optional>
 
 namespace masonc
 {
+    const char* scope::name()
+    {
+        if (name_handle)
+            return package->scope_names.at(name_handle.value());
+        else
+            return nullptr;
+    }
+
+    void scope::set_name(const char* name, u16 name_length)
+    {
+        if (name_handle)
+            return;
+
+        package->scope_names.copy_back(name, name_length);
+    }
+
+    // TODO: Instead of doing this, just keep a vector of pointers to parents in the scope.
+    std::vector<scope*> scope::parents()
+    {
+        scope* current_scope = &package->package_scope;
+        std::vector<scope*> parents = { current_scope };
+
+        for (u64 i = 0; i < this->index.size(); i += 1) {
+            current_scope = &current_scope->children[this->index[i]];
+            parents.push_back(current_scope);
+        }
+
+        return parents;
+    }
+
     scope_index scope::add_child(const scope& child)
     {
-        assume(this->name != SCOPE_NAME_UNINITIALIZED, "Scope is marked uninitialized");
-
         u64 added_child_index = this->children.size();
-        this->children.push_back(child);
+        scope* added_child = &this->children.emplace_back(child);
 
-        scope& added_child = this->children[added_child_index];
-        added_child.index = this->index;
-        added_child.index.indices.push_back(added_child_index);
+        added_child->index = this->index;
+        added_child->index.push_back(added_child_index);
 
-        return added_child.index;
+        added_child->package = this->package;
+
+        return added_child->index;
     }
 
-    scope* scope::get_child(const scope_index& si)
+    scope* scope::get_child(const scope_index& index)
     {
-        assume(this->name != SCOPE_NAME_UNINITIALIZED, "Scope is marked uninitialized");
+        scope* child = this;
 
-        scope* s = this;
-
-        for (u64 i = s->index.indices.size(); i < si.indices.size(); i += 1) {
-            s = &s->children[si.indices[i]];
+        for (u64 i = child->index.size(); i < index.size(); i += 1) {
+            child = &child->children[index[i]];
         }
 
-        return s;
+        return child;
     }
 
-    bool scope::add_symbol(const symbol& s, scope& package_scope)
+    bool scope::add_symbol(symbol element)
     {
-        assume(this->name != SCOPE_NAME_UNINITIALIZED, "Scope is marked uninitialized");
-
-        std::optional<symbol> search_result = find_symbol(s.name, package_scope);
-        if (search_result)
+        if (is_symbol_defined(element))
             return false;
 
-        this->symbols.insert({ s.name, s });
+        symbols.insert(element);
 
         return true;
     }
 
-    bool scope::add_type(const type& t, scope& package_scope)
+    bool scope::find_symbol(symbol element, u64 offset)
     {
-        assume(this->name != SCOPE_NAME_UNINITIALIZED, "Scope is marked uninitialized");
+        auto parent_scopes = parents();
 
-        std::optional<type> search_result = find_type(t.name, package_scope);
-        if (search_result)
+        // TODO: Look at imported packages as well.
+
+        if (parent_scopes.size() <= offset)
             return false;
 
-        this->types.insert({ t.name, t });
+        for (u64 i = parent_scopes.size() - offset; i >= 0; i -= 1) {
+            scope* current_parent_scope = parent_scopes[i];
+            auto symbol_search = current_parent_scope->symbols.find(element);
 
-        return true;
+            if (symbol_search != current_parent_scope->symbols.end())
+                return true;
+        }
+
+        return false;
     }
 
-    std::optional<type> scope::find_type(const std::string& type_name, scope& package_scope)
+    bool scope::is_symbol_defined(symbol element)
     {
-        assume(this->name != SCOPE_NAME_UNINITIALIZED, "Scope is marked uninitialized");
-
-        scope_index current_scope_index = package_scope.index;
-        u64 i = 0;
-
-        while (true) {
-            scope* child = package_scope.get_child(current_scope_index);
-
-            auto it = child->types.find(type_name);
-            if (it != child->types.end()) {
-                return std::optional<type>{ it->second };
-            }
-
-            if (i == this->index.indices.size())
-                break;
-
-            current_scope_index.indices.push_back(this->index.indices[i]);
-            i += 1;
-        }
-
-        // If loop did not run then this scope is the package scope.
-        if (i == 0) {
-            auto it = types.find(type_name);
-            if (it != types.end())
-                return std::optional<type>{ it->second };
-        }
-
-        // Type not found => not visible in current scope.
-        return std::optional<type>{};
-    }
-
-    std::optional<symbol> scope::find_symbol(const std::string& symbol_name, scope& package_scope)
-    {
-        assume(this->name != SCOPE_NAME_UNINITIALIZED, "Scope is marked uninitialized");
-
-        scope_index current_scope_index = package_scope.index;
-        u64 i = 0;
-
-        while (true) {
-            scope* child = package_scope.get_child(current_scope_index);
-
-            auto it = child->symbols.find(symbol_name);
-            if (it != child->symbols.end())
-                return std::optional<symbol>{ it->second };
-
-            if (i == this->index.indices.size())
-                break;
-
-            current_scope_index.indices.push_back(this->index.indices[i]);
-            i += 1;
-        }
-
-        // If loop did not run then this scope is the package scope.
-        if (i == 0) {
-            auto it = symbols.find(symbol_name);
-            if (it != symbols.end())
-                return std::optional<symbol>{ it->second };
-        }
-
-        // Symbol not found => not visible in current scope.
-        return std::optional<symbol>{};
+        return (symbols.find(element) != symbols.end());
+        //return (symbols_lookup.find(element) != symbols_lookup.end());
     }
 }

@@ -5,9 +5,11 @@
 
 #include <common.hpp>
 #include <symbol.hpp>
+#include <type.hpp>
+#include <binary_operator.hpp>
 
-#include <string>
 #include <vector>
+#include <optional>
 
 namespace masonc
 {
@@ -30,12 +32,6 @@ namespace masonc
         SPECIFIER_MUT = 1 << 0,
         SPECIFIER_CONST = 1 << 1
     };
-
-    struct binary_operator
-	{
-		u32 precedence;
-		s8 op_code;
-	};
 
     enum number_type : u8
     {
@@ -73,19 +69,18 @@ namespace masonc
     // := specifiers? name ':" '=' '&'? value (type inference)
     struct expression_variable_declaration
     {
-        symbol name;
-        std::string type_name;
+        symbol_handle name_handle;
+        type_handle type_handle;
         u8 specifiers;
         bool is_pointer;
     };
 
-    // 'return_type' is nullptr if the procedure returns nothing (void)
     // := specifiers? 'proc' name '(' argument_list? ')' ('->' return_type)?
     struct expression_procedure_prototype
     {
-        symbol name;
+        symbol_handle name_handle;
+        std::optional<type_handle> return_type_handle;
         std::vector<expression> argument_list;
-        std::string return_type_name;
     };
 
     // := prototype '{' body '}'
@@ -98,34 +93,38 @@ namespace masonc
     // := name '(' argument_list? ')'
     struct expression_procedure_call
     {
-        symbol name;
+        symbol_handle name_handle;
         std::vector<expression> argument_list;
     };
 
     struct expression_number_literal
     {
+        // Non-owning pointer to string.
+        const char* value;
         number_type type;
-        std::string value;
     };
 
     struct expression_string_literal
     {
-        std::string value;
+        // Non-owning pointer to string.
+        const char* value;
     };
 
     struct expression_reference
     {
-        symbol name;
+        symbol_handle name_handle;
     };
 
     struct expression_package_declaration
     {
-        std::string package_name;
+        // Non-owning pointer to string.
+        const char* package_name;
     };
 
     struct expression_package_import
     {
-        std::string package_name;
+        // Non-owning pointer to string.
+        const char* package_name;
     };
 
     enum expression_type : u8

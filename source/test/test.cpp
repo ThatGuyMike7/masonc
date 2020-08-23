@@ -1,14 +1,10 @@
 #include <test.hpp>
+
 #include <common.hpp>
-#include <lexer.hpp>
-#include <parser.hpp>
-#include <io.hpp>
-#include <scope.hpp>
-#include <lang.hpp>
-#include <string_collection.hpp>
 #include <log.hpp>
 
 #include <cstdlib>
+#include <string>
 #include <chrono>
 #include <iostream>
 #include <optional>

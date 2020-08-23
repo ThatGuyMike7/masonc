@@ -4,21 +4,23 @@
 // Code can be bundled into packages using the "package" keyword.
 // The first identifier following the keyword defines the module that the packages reside in.
 // Packages are defined with a dot and an identifier after the module or another package name.
-// 
+//
 //         ----- ----------- -------
 // package mason.collections.generic;
 //         ----- ----------- -------
 //           ^        ^         ^
 //         module  package   package
-// 
-// The module represents the compilation unit.
-// Packages contain code and are used for grouping related code inside the module.
-// 
-// This property allows you to easily export modules as libraries together
-// with all their dependencies.
 //
-// Dependencies between modules are resolved by tracking import statements inside them,
+// The module represents an executable or library.
+//
+// Packages are translation units containing code and are used for
+// grouping related code inside the module.
+//
+// Dependencies between packages are resolved by tracking import statements inside them,
 // so that building your application is simple, fast, and there is no need for external build tools.
+//
+// While import statements are tracked on a package-level,
+// they must be declared in every source file in which the packages are used.
 //
 // 1.
 // Import statements make a package, its parents and its dependencies visible
@@ -38,7 +40,7 @@ my_io.print("Hello World");
 
 // Conflicting module names (e.g. two different modules named "core")
 // can only be resolved in a pre-compile pass, more on passes later.
-// 
+//
 // 3.
 // Multiple import statements can optionally be grouped together.
 import
@@ -46,11 +48,11 @@ import
     core.io,
     core.os,
     core.math
-};
+}
 
 // 4.
 // The contents of a package can also be expanded directly into the current file scope.
-// Note that the parents and dependencies of the used package are imported too.
+// Note that the parents and dependencies of the used package are imported as usual.
 use core.io;
 print("Hello World");
 

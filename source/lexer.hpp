@@ -4,6 +4,7 @@
 #include <common.hpp>
 #include <log.hpp>
 #include <message.hpp>
+#include <containers.hpp>
 
 #include <vector>
 #include <string>
@@ -37,7 +38,6 @@ namespace masonc
 	{
 		// Index of value if type is identifier, integer, decimal.
 		u64 value_index;
-
 		s8 type;
 	};
 
@@ -77,10 +77,11 @@ namespace masonc
 	{
 		std::vector<token> tokens;
 		std::vector<token_location> locations;
-		std::vector<std::string> identifiers;
-		std::vector<std::string> integers;
-		std::vector<std::string> decimals;
-		std::vector<std::string> strings;
+
+		cstring_collection identifiers;
+		cstring_collection integers;
+		cstring_collection decimals;
+		cstring_collection strings;
 
 		message_list messages;
 	};

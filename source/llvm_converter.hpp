@@ -12,7 +12,7 @@
 
 namespace masonc
 {
-    inline std::map<std::string, LLVMTypeRef> type_map;
+    inline std::map<const char*, LLVMTypeRef> type_map;
 
     void initialize_llvm_converter();
 
@@ -50,17 +50,22 @@ namespace masonc
     // See the parser header for documentation about the terminology
     // and what each function generates.
     //
-    // Many converter functions can return `nullptr` on error,
+    // Many converter functions can return "nullptr" on error,
     // though that should not be happening if the parser finished successfully.
+    //
+    // "llvm_converter" is responsible for IR generation of a specific package.
     struct llvm_converter
     {
-        void convert(parser_output* input, llvm_converter_output* output);
+        void convert(lexer_output* input_lexer, parser_output* input_parser,
+            llvm_converter_output* output);
+
         void free();
 
         void print_IR();
 
     private:
-        parser_output* input;
+        lexer_output* input_lexer;
+        parser_output* input_parser;
         llvm_converter_output* output;
 
         LLVMBuilderRef llvm_builder;
@@ -70,7 +75,7 @@ namespace masonc
         void add_built_in_procedures();
 
         // Returns 'nullptr' if type was not found.
-        LLVMTypeRef llvm_type_by_name(const std::string& type_name);
+        LLVMTypeRef llvm_type_by_name(const char* type_name);
         LLVMTypeRef llvm_pointer_type(LLVMTypeRef llvm_element_type);
 
         LLVMValueRef build_alloca_at_entry(LLVMValueRef llvm_function,
@@ -106,10 +111,10 @@ namespace masonc
         LLVMValueRef convert_binary(s8 op_code, LLVMValueRef left, LLVMValueRef right);
         LLVMValueRef convert_term(expression* term_start);
 
-        // Transform a tree of binary operations into a list that resembles infix notation
-        void AST_to_infix(expression* term_start, std::vector<term_element>& term);
+        // Transform a tree of binary operations into a list that resembles infix notation.
+        void ast_to_infix(expression* term_start, std::vector<term_element>& term);
 
-        // Transform a term from infix notation to reverse polish notation (shunting yard algorithm)
+        // Transform a term from infix notation to reverse polish notation (shunting yard algorithm).
         std::vector<term_element> infix_to_RPN(const std::vector<term_element>& term);
 
         void print_term(const std::vector<term_element>& term);

@@ -6,7 +6,6 @@
 
 #include <iostream>
 #include <cstdlib>
-#include <string>
 
 namespace masonc
 {
@@ -19,27 +18,27 @@ namespace masonc
         std::string output;
 
         for(auto it = COMMANDS.begin(); it != COMMANDS.end(); it++) {
-            std::string command_usage = "Command: " + it->first;
-            std::string command_description = "Description: " + it->second.description + "\n";
+            std::string command_usage = "Command: " + std::string{ it->first };
+            std::string command_description = "Description: " + std::string{ it->second.description } + "\n";
             std::string command_argument_list;
 
             for(u64 i = 0; i < it->second.arguments.size(); i += 1) {
                 const command_argument_definition& argument = it->second.arguments[i];
-                std::string argument_type_name = command_argument_type_string(argument.type);
+                const char* argument_type_name = command_argument_type_string(argument.type);
 
-                command_usage += " <" + argument.name + ">";
-                command_argument_list += "    Argument: <" + argument.name + ">\n" +
+                command_usage += " <" + std::string{ argument.name } + ">";
+                command_argument_list += "    Argument: <" + std::string{ argument.name } + ">\n" +
                                          "    Type: " + argument_type_name + "\n" +
                                          "    Description: " + argument.description + "\n\n";
             }
 
             for(auto option : it->second.options) {
-                const std::string& option_name = option.first;
-                std::string option_type_name = command_argument_type_string(option.second.type);
-                const std::string& option_description = option.second.description;
+                const char* option_name = option.first;
+                const char* option_type_name = command_argument_type_string(option.second.type);
+                const char* option_description = option.second.description;
 
-                command_usage += " -" + option_name + "=<" + option_type_name + ">";
-                command_argument_list += "    Option: --" + option_name + "\n" +
+                command_usage += " -" + std::string{ option_name } + "=<" + option_type_name + ">";
+                command_argument_list += "    Option: --" + std::string{ option_name } + "\n" +
                                        //"    Type: " + option_type_name + "\n" +
                                          "    Description: " + option_description + "\n\n";
             }
@@ -65,7 +64,7 @@ namespace masonc
         }
 
         const command_definition& definition = find_command_it->second;
-        std::string command_usage = find_command_it->first;
+        const char* command_usage = find_command_it->first;
 
         // TODO: Implement the "usage" command.
     }
@@ -142,55 +141,46 @@ namespace masonc
         return true;
     }
 
-    std::string command_argument_type_string(command_argument_type argument_type)
+    const char* command_argument_type_string(command_argument_type argument_type)
     {
-        std::string argument_type_string;
-
         switch(argument_type) {
             default:
                 log_error("Not implemented command argument type.");
-                argument_type_string = "";
-                break;
+                return "";
             case command_argument_type::INTEGER:
-                argument_type_string = "Integer";
-                break;
+                return "Integer";
             case command_argument_type::DECIMAL:
-                argument_type_string = "Decimal";
-                break;
+                return "Decimal";
             case command_argument_type::STRING:
-                argument_type_string = "String";
-                break;
+                return "String";
         }
-
-        return argument_type_string;
     }
 
-    std::optional<const std::pair<const std::string, command_definition>*> find_command(
-        lexer_output* output)
+    std::optional<command_name_pair*> find_command(lexer_output* output)
     {
         if(output->tokens.size() == 0) {
             // User entered nothing or whitespace only.
             std::cout << "Expected command name." << std::endl;
-            return std::optional<const std::pair<const std::string, command_definition>*>{};
+            return std::nullopt;
         }
         token *command_token = &output->tokens[0];
 
         if(command_token->type != TOKEN_IDENTIFIER) {
             // User did not enter a valid command name.
             std::cout << "Expected command name." << std::endl;
-            return std::optional<const std::pair<const std::string, command_definition>*>{};
+            return std::nullopt;
         }
 
-        const std::string& command_name = output->identifiers[command_token->value_index];
+        const char* command_name = output->identifiers.at(command_token->value_index);
 
         auto find_command_it = COMMANDS.find(command_name);
         if(find_command_it == COMMANDS.end()) {
             // User entered a command that does not exist.
             std::cout << "Command \"" << command_name << "\" does not exist." << std::endl;
-            return std::optional<const std::pair<const std::string, command_definition>*>{};
+            return std::nullopt;
         }
 
-        return std::optional<const std::pair<const std::string, command_definition>*>{ &(*find_command_it) };
+        return std::make_optional(&(*find_command_it));
     }
 
     std::optional<command_parsed> parse_command(lexer* command_lexer, lexer_output* output,
@@ -200,17 +190,17 @@ namespace masonc
         command_lexer->tokenize(input, input_size, output);
         if(output->messages.errors.size() != 0) {
             std::cout << "Failed to tokenize command." << std::endl;
-            return std::optional<command_parsed>{};
+            return std::nullopt;
         }
 
         // Find the command.
         auto find_result = find_command(output);
         if(!find_result) {
-            return std::optional<command_parsed>{};
+            return std::nullopt;
         }
 
         command_parsed command;
-        command.name = &find_result.value()->first;
+        command.name = find_result.value()->first;
         command.definition = &find_result.value()->second;
 
         u64 token_index = 1;
@@ -219,14 +209,14 @@ namespace masonc
         for(u64 i = 0; i < command.definition->arguments.size(); i += 1) {
             if(token_index >= output->tokens.size()) {
                 std::cout << "Missing argument(s)." << std::endl;
-                return std::optional<command_parsed>{};
+                return std::nullopt;
             }
 
             auto argument_result = parse_command_argument(&token_index,
                 output, command.definition->arguments[i].type);
 
             if(!argument_result)
-                return std::optional<command_parsed>{};
+                return std::nullopt;
 
             command.parsed_arguments.push_back(argument_result.value());
         }
@@ -237,12 +227,12 @@ namespace masonc
                 output, command.definition->options);
 
             if(!option_result)
-                return std::optional<command_parsed>{};
+                return std::nullopt;
 
             command.parsed_options.push_back(option_result.value());
         }
 
-        return std::optional<command_parsed>{ command };
+        return std::make_optional(command);
     }
 
     std::optional<command_argument_pair> parse_command_argument(u64* token_index, lexer_output* output,
@@ -256,49 +246,43 @@ namespace masonc
         switch(argument_type) {
             default:
                 // Not implemented argument type.
-                return std::optional<command_argument_pair>{};
+                return std::nullopt;
 
             case command_argument_type::INTEGER:
                 if(current_token->type != TOKEN_INTEGER) {
                     std::cout << "Mismatched type, expected an integer." << std::endl;
-                    return std::optional<command_argument_pair>{};
+                    return std::nullopt;
                 }
 
-                value.integer = static_cast<s64>(std::stoll(output->integers[current_token->value_index]));
-                return std::optional<command_argument_pair>{
-                    command_argument_pair{ command_argument_type::INTEGER, value }
-                };
+                value.integer = static_cast<s64>(std::stoll(output->integers.at(current_token->value_index)));
+                return std::make_optional(command_argument_pair{ command_argument_type::INTEGER, value });
 
             case command_argument_type::DECIMAL:
                 if(current_token->type != TOKEN_DECIMAL) {
                     std::cout << "Mismatched type, expected a decimal." << std::endl;
-                    return std::optional<command_argument_pair>{};
+                    return std::nullopt;
                 }
 
-                value.decimal = static_cast<f64>(std::stod(output->decimals[current_token->value_index]));
-                return std::optional<command_argument_pair>{
-                    command_argument_pair{ command_argument_type::DECIMAL, value }
-                };
+                value.decimal = static_cast<f64>(std::stod(output->decimals.at(current_token->value_index)));
+                return std::make_optional(command_argument_pair{ command_argument_type::DECIMAL, value });
 
             case command_argument_type::STRING:
                 if(current_token->type != TOKEN_STRING) {
                     std::cout << "Mismatched type, expected a string." << std::endl;
-                    return std::optional<command_argument_pair>{};
+                    return std::nullopt;
                 }
 
-                value.str = output->strings[current_token->value_index].c_str();
-                return std::optional<command_argument_pair>{
-                    command_argument_pair{ command_argument_type::STRING, value }
-                };
+                value.str = output->strings.at(current_token->value_index);
+                return std::make_optional(command_argument_pair{ command_argument_type::STRING, value });
         }
     }
 
     std::optional<command_option_tuple> parse_command_option(u64* token_index, lexer_output* output,
-        const std::map<std::string, command_option_definition>& options)
+        const std::map<const char*, command_option_definition>& options)
     {
         if(*token_index + 4 >= output->tokens.size()) {
             std::cout << "Incomplete option." << std::endl;
-            return std::optional<command_option_tuple>{};
+            return std::nullopt;
         }
 
         // Relevant tokens of the option "-identifier=".
@@ -310,27 +294,27 @@ namespace masonc
 
         if(dash_token->type != '-') {
             std::cout << "Invalid option format, expected \"--\"." << std::endl;
-            return std::optional<command_option_tuple>{};
+            return std::nullopt;
         }
         if(dash_token_2->type != '-') {
             std::cout << "Invalid option format, expected \"--\"." << std::endl;
-            return std::optional<command_option_tuple>{};
+            return std::nullopt;
         }
         if(identifier_token->type != TOKEN_IDENTIFIER) {
             std::cout << "Invalid option format, expected identifier." << std::endl;
-            return std::optional<command_option_tuple>{};
+            return std::nullopt;
         }
         if(equals_token->type != '=') {
             std::cout << "Invalid option format, expected \"=\"." << std::endl;
-            return std::optional<command_option_tuple>{};
+            return std::nullopt;
         }
 
-        const std::string& option_name = output->identifiers[identifier_token->value_index];
+        const char* option_name = output->identifiers.at(identifier_token->value_index);
         auto option_find_it = options.find(option_name);
 
         if(option_find_it == options.end()) {
             std::cout << "Option not found for this command." << std::endl;
-            return std::optional<command_option_tuple>{};
+            return std::nullopt;
         }
 
         const command_argument_type& option_type = option_find_it->second.type;
@@ -338,13 +322,13 @@ namespace masonc
         // Parse the value
         auto value_result = parse_command_argument(token_index, output, option_type);
         if(!value_result)
-            return std::optional<command_option_tuple>{};
+            return std::nullopt;
 
         *token_index += 1;
-        return std::optional<command_option_tuple>{
+        return std::make_optional(
             command_option_tuple{
-                value_result.value().first, value_result.value().second, &option_name
+                value_result.value().first, value_result.value().second, option_name
             }
-        };
+        );
     }
 }

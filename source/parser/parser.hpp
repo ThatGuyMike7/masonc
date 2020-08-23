@@ -8,17 +8,16 @@
 #include <scope.hpp>
 #include <message.hpp>
 #include <package.hpp>
+#include <containers.hpp>
 
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include <memory>
 #include <optional>
 
 namespace masonc
 {
-    // Package names associated with ASTs.
-    using package_ast_map = std::unordered_map<std::string, std::vector<expression>>;
-
     enum parse_context : u8
     {
         CONTEXT_NONE,
@@ -27,18 +26,17 @@ namespace masonc
 
     struct parser_output
     {
-        package_map packages;
-
-        // Each package defined in the parser's input gets its own AST.
-        // After all parsers finished, ASTs of equal packages will be merged in the pre-linker.
-        package_ast_map asts;
+        // Indices of package names correspond to package handles.
+        cstring_collection package_names;
+        std::unordered_map<package_handle, package> packages;
+        std::unordered_map<package_handle, std::vector<expression>> asts;
 
         message_list messages;
     };
 
     struct parser
     {
-        // "input" is expected to have no errors,
+        // "input" is expected to have no errors and
         // "output" is expected to be allocated and empty.
         void parse(lexer_output* input, parser_output* output);
 
@@ -49,10 +47,12 @@ namespace masonc
         lexer_output* input;
         parser_output* output;
 
+        std::vector<expression*> delete_list_expressions;
+
         // "nullptr" when no package declaration was parsed.
         package* current_package;
         std::vector<expression>* current_ast;
-        std::string current_package_name;
+        package_handle current_package_handle;
 
         scope_index current_scope_index;
         u64 token_index;
@@ -66,6 +66,7 @@ namespace masonc
         scope* current_scope();
 
         // Set package with specified name to be current, or add a new package if it doesn't exist.
+        void set_package(const char* package_name, u16 package_name_length);
         void set_package(const std::string& package_name);
 
         void eat(u64 count = 1);
@@ -101,10 +102,10 @@ namespace masonc
         // Otherwise, the token is eaten and the result is valid.
         std::optional<token*> expect(const std::string& identifier);
 
-        const std::string& identifier_at(const token& identifier_token);
-        const std::string& integer_at(const token& integer_token);
-        const std::string& decimal_at(const token& decimal_token);
-        const std::string& string_at(const token& string_token);
+        const char* identifier_at(const token& identifier_token);
+        const char* integer_at(const token& integer_token);
+        const char* decimal_at(const token& decimal_token);
+        const char* string_at(const token& string_token);
 
         // Assumes that the index is in range.
         token_location* get_token_location(u64 token_index);
@@ -156,15 +157,18 @@ namespace masonc
         std::optional<expression> parse_parentheses(parse_context context);
 
         std::optional<expression> parse_number_literal(parse_context context,
-            const std::string& number, number_type type);
+            const char* number, number_type type);
 
-        std::optional<expression> parse_string_literal(parse_context context, const std::string& str);
-        std::optional<expression> parse_reference(parse_context context, const std::string& identifier);
+        std::optional<expression> parse_string_literal(parse_context context, const char* str);
+
+        std::optional<expression> parse_reference(parse_context context,
+            symbol_handle identifier_handle);
 
         std::optional<expression> parse_variable_declaration(parse_context context,
-            const std::string& variable_name, u8 specifiers);
+            symbol_handle name_handle, u8 specifiers);
 
-        std::optional<expression> parse_call(parse_context context, const std::string& procedure_name);
+        std::optional<expression> parse_call(parse_context context, symbol_handle name_handle);
+
         std::vector<expression> parse_argument_list();
 
         // Returns either Expression_Procedure_Prototype or Expression_Procedure_Definition

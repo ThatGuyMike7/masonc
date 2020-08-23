@@ -29,7 +29,6 @@ namespace masonc
                         1024u, &current_file_length);
 
                     if (!current_file) {
-
                         std::free(current_file.value());
                         return;
                     }
@@ -39,6 +38,7 @@ namespace masonc
                         current_file_length, current_lexer_output);
 
                     std::free(current_file.value());
+
                     if (current_lexer_output->messages.errors.size() > 0) {
                         current_lexer_output->messages.print_errors();
                         goto END;
@@ -55,6 +55,7 @@ namespace masonc
                 parser_output* current_parser_output = &parser_outputs.emplace_back(parser_output{});
 
                 source_parser.parse(current_lexer_output, current_parser_output);
+
                 if (current_parser_output->messages.errors.size() > 0) {
                     current_parser_output->messages.print_errors();
                     goto END;
@@ -64,18 +65,23 @@ namespace masonc
             llvm_converter source_converter;
             std::vector<llvm_converter_output> converter_outputs;
 
+            /*
             std::cout << "Generating code..." << std::endl;
             for (u64 i = 0; i < parser_outputs.size(); i += 1) {
+                lexer_output* current_lexer_output = &lexer_outputs[i];
                 parser_output* current_parser_output = &parser_outputs[i];
                 llvm_converter_output* current_converter_output =
                     &converter_outputs.emplace_back(llvm_converter_output{});
 
-                source_converter.convert(current_parser_output, current_converter_output);
+                source_converter.convert(current_lexer_output, current_parser_output,
+                    current_converter_output);
+
                 if (current_converter_output->messages.errors.size() > 0) {
                     current_converter_output->messages.print_errors();
                     goto END;
                 }
             }
+            */
         }
 
         END:

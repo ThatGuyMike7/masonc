@@ -91,7 +91,7 @@ namespace masonc
 
 		this->output->tokens.push_back(tok);
 		this->output->locations.push_back(location);
-		this->output->identifiers.push_back(identifier);
+		this->output->identifiers.copy_back(identifier);
 	}
 
 	void lexer::add_number(const std::string& number, bool dot, u64 start_column, u64 end_column)
@@ -100,7 +100,7 @@ namespace masonc
 			if (number.back() == '.') {
 				// Error
 				output->messages.report_error(
-					"Expected digit after '.' in decimal",
+					"Expected digit after \".\" in decimal.",
 					build_stage::LEXER,
 					this->line_number,
 					this->char_index
@@ -111,12 +111,12 @@ namespace masonc
 
 			token tok = { this->output->decimals.size(), TOKEN_DECIMAL };
 			this->output->tokens.push_back(tok);
-			this->output->decimals.push_back(number);
+			this->output->decimals.copy_back(number);
 		}
 		else {
 			token tok = { this->output->integers.size(), TOKEN_INTEGER };
 			this->output->tokens.push_back(tok);
-			this->output->integers.push_back(number);
+			this->output->integers.copy_back(number);
 		}
 
 		token_location location = { this->line_number, start_column, end_column };
@@ -256,7 +256,7 @@ namespace masonc
 				};
 
 				this->output->tokens.push_back(tok);
-				this->output->strings.push_back(str);
+				this->output->strings.copy_back(str);
 				this->output->locations.push_back(location);
 
 				char_result = get_char();
@@ -511,24 +511,31 @@ namespace masonc
 						break;
 					case TOKEN_IDENTIFIER:
 						std::cout << "Identifier Token (l. " << location->line_number << "): " <<
-                                      this->output->identifiers[current_token->value_index] << std::endl;
+                                      this->output->identifiers.at(current_token->value_index) <<
+                                      std::endl;
 						break;
 					case TOKEN_INTEGER:
 						std::cout << "Integer Token (l. " << location->line_number << "): " <<
-                                      this->output->integers[current_token->value_index] << std::endl;
+                                      this->output->integers.at(current_token->value_index) <<
+                                      std::endl;
 						break;
 					case TOKEN_DECIMAL:
 						std::cout << "Decimal Token (l. " << location->line_number << "): " <<
-                                      this->output->decimals[current_token->value_index] << std::endl;
+                                      this->output->decimals.at(current_token->value_index) <<
+                                      std::endl;
 						break;
 					case TOKEN_STRING:
 						std::cout << "String Token (l. " << location->line_number << "): " <<
-                                      this->output->strings[current_token->value_index] << std::endl;
+                                      this->output->strings.at(current_token->value_index) <<
+                                      std::endl;
 						break;
 					case TOKEN_DOUBLECOLON:
 					case TOKEN_RIGHT_POINTER:
 						std::cout << "Composed Token (l. " << location->line_number << "): " <<
-                                      get_composed_token(static_cast<token_type>(current_token->type)) << std::endl;
+                                      get_composed_token(
+                                          static_cast<token_type>(current_token->type)
+                                      ) <<
+                                      std::endl;
 						break;
 				}
 			}

@@ -13,6 +13,7 @@
 *.sln
 
 # Project files
+/miscellaneous/
 /build/
 /intermediate/
 /LLVM-C.dll

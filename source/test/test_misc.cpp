@@ -1,7 +1,7 @@
 #include <test_misc.hpp>
 
 #include <common.hpp>
-#include <string_collection.hpp>
+#include <containers.hpp>
 
 #include <cstdlib>
 #include <chrono>
@@ -71,22 +71,22 @@ namespace masonc::test
         std::cout << "free 65536 bytes: " << duration4free << " ns" << std::endl << std::endl;
     }
 
-    void test_string_collection_against_vector_iteration_and_append_speed()
+    void test_cstring_collection_against_vector_iteration_and_append_speed()
     {
         const u64 ITERATIONS = 4000000;
 
         // Test string is 128 characters long (without null-terminator)
-        string_collection collection{ (128 + 1 + 8) * ITERATIONS };
+        cstring_collection collection{ (128 + 1 + 8) * ITERATIONS };
 
         auto start = std::chrono::high_resolution_clock::now();
 
         for(u64 i = 0; i < ITERATIONS; i += 1)
         {
-            collection.add("Hello World 375817359871935789137958891375891375897139857981375891375987138951938578913759817395981357139875913857uesarhgfuheafg", 128);
+            collection.copy_back("Hello World 375817359871935789137958891375891375897139857981375891375987138951938578913759817395981357139875913857uesarhgfuheafg", 128);
         }
 
         auto end = std::chrono::high_resolution_clock::now();
-        auto duration_string_collection_append = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        auto duration_cstring_collection_append = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 
         std::vector<std::string> vector;
         vector.reserve(ITERATIONS);
@@ -106,7 +106,7 @@ namespace masonc::test
         std::string str1;
         for(u64 i = 0; i < ITERATIONS; i += 1)
         {
-            char* item = collection.get(i);
+            const char* item = collection.at(i);
             u64 length = collection.length_at(i);
 
             char* substring_start = static_cast<char*>(std::malloc(10));
@@ -124,7 +124,7 @@ namespace masonc::test
         }
 
         end = std::chrono::high_resolution_clock::now();
-        auto duration_string_collection_iterate = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        auto duration_cstring_collection_iterate = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 
         start = std::chrono::high_resolution_clock::now();
 
@@ -154,10 +154,10 @@ namespace masonc::test
         if (str1 != str2)
             std::cout << "Test is not working correctly" << std::endl;
 
-        std::cout << "string_collection append: " << duration_string_collection_append << " ms" << std::endl;
+        std::cout << "cstring_collection append: " << duration_cstring_collection_append << " ms" << std::endl;
         std::cout << "vector append: " << duration_vector_append << " ms" << std::endl << std::endl;
 
-        std::cout << "string_collection iterate: " << duration_string_collection_iterate << " ms" << std::endl;
+        std::cout << "cstring_collection iterate: " << duration_cstring_collection_iterate << " ms" << std::endl;
         std::cout << "vector iterate: " << duration_vector_iterate << " ms" << std::endl << std::endl;
     }
 }
