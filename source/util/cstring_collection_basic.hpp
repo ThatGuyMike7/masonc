@@ -14,7 +14,7 @@
 namespace masonc
 {
     // TODO: Implement shrinking on copy assignment to potentially save on memory.
-    // "length_t" refers to the maximum length of a string that can be stored.
+    // "length_t" refers to the maximum length of a string.
     template<typename length_t>
     struct cstring_collection_basic
     {
@@ -22,16 +22,18 @@ namespace masonc
             "cstring_collection_basic length_t is not arithmetic.");
 
     private:
-        // Items are composed of a "length_t" and
-        // a sequence of characters ending with a null-terminator.
+        // Strings of characters ending with null terminators.
         char* buffer;
-
-        // Contains buffer pointer offsets to the sequences of characters.
-        std::vector<u64> lookup;
 
         u64 occupied_bytes;
         u64 current_buffer_size;
         u64 buffer_chunk_size;
+
+        // Contains pointer offsets to elements in "buffer".
+        std::vector<u64> lookup;
+
+        // Keeps track of each string's length.
+        std::vector<length_t> lengths;
 
         void memory_allocation_error_exit()
         {
@@ -39,7 +41,7 @@ namespace masonc
             std::exit(-1);
         }
 
-        // Grow to a multiple of "buffer_chunk_size" that is greater or equal to "size".
+        // Grow to a multiple of "buffer_chunk_size" that is greater than "size".
         void grow_to_fit(u64 size)
         {
             if (size >= current_buffer_size) {
@@ -47,10 +49,7 @@ namespace masonc
                     current_buffer_size += buffer_chunk_size;
                 } while (size >= current_buffer_size);
 
-                buffer = static_cast<char*>(
-                    std::realloc(static_cast<void*>(buffer), current_buffer_size)
-                );
-
+                buffer = static_cast<char*>(std::realloc(buffer, current_buffer_size));
                 if (buffer == nullptr)
                     memory_allocation_error_exit();
             }
@@ -58,14 +57,15 @@ namespace masonc
 
     public:
         cstring_collection_basic(u64 buffer_chunk_size = 4096)
+            : buffer(static_cast<char*>(std::malloc(buffer_chunk_size))),
+              occupied_bytes(0),
+              current_buffer_size(buffer_chunk_size),
+              buffer_chunk_size(buffer_chunk_size),
+              lookup(),
+              lengths()
         {
-            buffer = static_cast<char*>(std::malloc(buffer_chunk_size));
             if (buffer == nullptr)
                 memory_allocation_error_exit();
-
-            this->buffer_chunk_size = buffer_chunk_size;
-            occupied_bytes = 0;
-            current_buffer_size = buffer_chunk_size;
         }
 
         ~cstring_collection_basic()
@@ -76,47 +76,56 @@ namespace masonc
         }
 
         cstring_collection_basic(const cstring_collection_basic& other)
-            : lookup(other.lookup),
+            : buffer(static_cast<char*>(std::malloc(other.current_buffer_size))),
               occupied_bytes(other.occupied_bytes),
               current_buffer_size(other.current_buffer_size),
-              buffer_chunk_size(other.buffer_chunk_size)
+              buffer_chunk_size(other.buffer_chunk_size),
+              lookup(other.lookup),
+              lengths(other.lengths)
         {
-            std::memcpy(static_cast<void*>(buffer), static_cast<void*>(other.buffer), other.occupied_bytes);
+            if (buffer == nullptr)
+                memory_allocation_error_exit();
+
+            std::memcpy(buffer, other.buffer, other.occupied_bytes);
         }
 
         cstring_collection_basic& operator=(const cstring_collection_basic& other)
         {
+            occupied_bytes = other.occupied_bytes;
             buffer_chunk_size = other.buffer_chunk_size;
             lookup = other.lookup;
-            occupied_bytes = other.occupied_bytes;
+            lengths = other.lengths;
 
             grow_to_fit(other.occupied_bytes);
-            std::memcpy(static_cast<void*>(buffer), static_cast<void*>(other.buffer), other.occupied_bytes);
+            std::memcpy(buffer, other.buffer, other.occupied_bytes);
 
             return *this;
         }
 
         cstring_collection_basic(cstring_collection_basic&& other)
-            : lookup(other.lookup),
+            : buffer(other.buffer),
               occupied_bytes(other.occupied_bytes),
               current_buffer_size(other.current_buffer_size),
               buffer_chunk_size(other.buffer_chunk_size),
-              buffer(other.buffer)
+              lookup(std::move(other.lookup)),
+              lengths(std::move(other.lengths))
         {
             other.buffer = nullptr;
         }
 
         cstring_collection_basic& operator=(cstring_collection_basic&& other)
         {
-            buffer_chunk_size = other.buffer_chunk_size;
-            lookup = other.lookup;
-            occupied_bytes = other.occupied_bytes;
-
             if (buffer != nullptr)
                 std::free(buffer);
 
             buffer = other.buffer;
             other.buffer = nullptr;
+
+            occupied_bytes = other.occupied_bytes;
+            current_buffer_size = other.current_buffer_size;
+            buffer_chunk_size = other.buffer_chunk_size;
+            lookup = std::move(other.lookup);
+            lengths = std::move(other.lengths);
 
             return *this;
         }
@@ -125,19 +134,15 @@ namespace masonc
         // Returns the index of the string.
         u64 copy_back(const char* str, length_t length)
         {
-            u64 item_size = sizeof(length_t) + length + 1;
-            grow_to_fit(occupied_bytes + item_size);
+            u64 occupied_bytes_after_copy = occupied_bytes + length + 1;
+            grow_to_fit(occupied_bytes_after_copy);
 
             u64 index = lookup.size();
-            lookup.push_back(occupied_bytes + sizeof(length_t));
+            lookup.push_back(occupied_bytes);
+            lengths.push_back(length);
 
-            char* destination = buffer + occupied_bytes;
-            std::memcpy(destination, &length, sizeof(length_t));
-
-            destination += sizeof(length_t);
-            std::memcpy(destination, str, length + 1);
-
-            occupied_bytes += item_size;
+            std::memcpy(buffer + occupied_bytes, str, length + 1);
+            occupied_bytes = occupied_bytes_after_copy;
 
             return index;
         }
@@ -154,10 +159,7 @@ namespace masonc
 
         length_t length_at(u64 index)
         {
-            length_t length;
-            std::memcpy(&length, buffer + lookup[index] - sizeof(length_t), sizeof(length_t));
-
-            return length;
+            return lengths[index];
         }
 
         u64 size()

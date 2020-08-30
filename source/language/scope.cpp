@@ -22,7 +22,7 @@ namespace masonc
         if (name_handle)
             return;
 
-        package->scope_names.copy_back(name, name_length);
+        name_handle = package->scope_names.copy_back(name, name_length);
     }
 
     // TODO: Instead of doing this, just keep a vector of pointers to parents in the scope.

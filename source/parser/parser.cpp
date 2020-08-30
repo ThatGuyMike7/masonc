@@ -233,7 +233,6 @@ namespace masonc
             current_package_handle = output->package_names.copy_back(package_name, package_name_length);
 
             // Create new package and AST.
-            // CRASH HERE.
             auto inserted_package = output->packages.insert({ current_package_handle, package{} });
             auto inserted_ast = output->asts.insert({ current_package_handle, std::vector<expression>{} });
 
@@ -243,11 +242,14 @@ namespace masonc
             current_package = &inserted_package.first->second;
             current_ast = &inserted_ast.first->second;
 
-            //u16 package_name_length = output->package_names.length_at(current_package_handle);
-            //const char* package_name = output->package_names.at(current_package_handle);
+            // Tell the package scope of the package.
+            current_package->package_scope.package = current_package;
+
+            u16 package_name_length = output->package_names.length_at(current_package_handle);
+            const char* package_name = output->package_names.at(current_package_handle);
 
             // Give the package scope the package name.
-            //current_package->package_scope.set_name(package_name, package_name_length);
+            current_package->package_scope.set_name(package_name, package_name_length);
 
             try {
                 // Guess how many tokens will end up being 1 expression on average to
@@ -1071,10 +1073,11 @@ namespace masonc
         u16 procedure_name_length = input->identifiers.length_at(prototype.name_handle);
         const char* procedure_name = input->identifiers.at(prototype.name_handle);
 
-        // Create new scope for the procedure.
-        scope procedure_scope;
-        procedure_scope.set_name(procedure_name, procedure_name_length);
-        current_scope_index = current_scope()->add_child(procedure_scope);
+        // Create new scope for the procedure and make it current.
+        current_scope_index = current_scope()->add_child(scope{});
+
+        scope* procedure_scope = current_scope();
+        procedure_scope->set_name(procedure_name, procedure_name_length);
 
         std::vector<expression> body;
 

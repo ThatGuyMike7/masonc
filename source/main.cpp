@@ -10,6 +10,7 @@
 #include <llvm_converter.hpp>
 #include <command.hpp>
 #include <version.hpp>
+#include <containers.hpp>
 
 #include <iostream>
 #include <cstdlib>

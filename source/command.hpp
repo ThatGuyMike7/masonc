@@ -3,6 +3,7 @@
 
 #include <common.hpp>
 #include <lexer.hpp>
+#include <containers.hpp>
 
 #include <map>
 #include <vector>
@@ -98,7 +99,7 @@ namespace masonc
     std::optional<command_option_tuple> parse_command_option(u64* token_index, lexer_output* output,
         const std::map<const char*, command_option_definition>& options);
 
-    inline const std::map<const char* const, const command_definition> COMMANDS =
+    inline const cstring_unordered_map<const command_definition> COMMANDS =
     {
         {
             "help",
