@@ -8,7 +8,7 @@
 #include <iostream>
 #include <optional>
 
-namespace masonc::test
+namespace masonc::test::misc
 {
     void test_malloc_speed_for_different_sizes()
     {

@@ -7,7 +7,7 @@
 #include <optional>
 #include <string>
 
-namespace masonc::test
+namespace masonc::test::parser
 {
     struct test_parse_in_directory_output
     {

@@ -13,10 +13,10 @@
 
 namespace masonc
 {
-    void parser::parse(lexer_output* input, parser_output* output)
+    void parser::parse(masonc::lexer_output* lexer_output, masonc::parser_output* parser_output)
     {
-        this->input = input;
-        this->output = output;
+        this->parser_output = parser_output;
+        this->parser_output->lexer_output = lexer_output;
 
         this->current_package = nullptr;
         this->current_ast = nullptr;
@@ -41,6 +41,13 @@ namespace masonc
 
         // Drive the parser.
         drive();
+    }
+
+    void parser::free()
+    {
+        for (u64 i = 0; i < delete_list_expressions.size(); i += 1) {
+            delete delete_list_expressions[i];
+        }
     }
 
     std::string parser::format_expression(const expression& expr, u64 level)
@@ -186,7 +193,7 @@ namespace masonc
 
     void parser::print_expressions()
     {
-        for(auto ast_it = output->asts.begin(); ast_it != output->asts.end(); ast_it++) {
+        for(auto ast_it = parser_output->asts.begin(); ast_it != parser_output->asts.end(); ast_it++) {
             std::vector<expression>& ast = ast_it->second;
 
             for (u64 i = 0; i < ast.size(); i += 1) {
@@ -208,6 +215,11 @@ namespace masonc
         }
     }
 
+    lexer_output* parser::lexer_output()
+    {
+        return parser_output->lexer_output;
+    }
+
     scope* parser::current_scope()
     {
         return current_package->package_scope.get_child(current_scope_index);
@@ -215,26 +227,26 @@ namespace masonc
 
     void parser::set_package(const char* package_name, u16 package_name_length)
     {
-        auto search_package_name = output->package_names.find(package_name);
+        auto search_package_name = parser_output->package_names.find(package_name);
 
         if (search_package_name) {
             current_package_handle = search_package_name.value();
 
             // If we found the package name, we can assume the AST and package structure exist too,
             // hence no need to check if they could be found or not.
-            auto search_package = output->packages.find(current_package_handle);
-            auto search_ast = output->asts.find(current_package_handle);
+            auto search_package = parser_output->packages.find(current_package_handle);
+            auto search_ast = parser_output->asts.find(current_package_handle);
 
             current_package = &search_package->second;
             current_ast = &search_ast->second;
         }
         else {
             // Create new package name.
-            current_package_handle = output->package_names.copy_back(package_name, package_name_length);
+            current_package_handle = parser_output->package_names.copy_back(package_name, package_name_length);
 
             // Create new package and AST.
-            auto inserted_package = output->packages.insert({ current_package_handle, package{} });
-            auto inserted_ast = output->asts.insert({ current_package_handle, std::vector<expression>{} });
+            auto inserted_package = parser_output->packages.insert({ current_package_handle, package{} });
+            auto inserted_ast = parser_output->asts.insert({ current_package_handle, std::vector<expression>{} });
 
             assume(inserted_package.second && inserted_ast.second,
                 "either package exists and AST does not or AST exists and package does not");
@@ -245,8 +257,8 @@ namespace masonc
             // Tell the package scope of the package.
             current_package->package_scope.package = current_package;
 
-            u16 package_name_length = output->package_names.length_at(current_package_handle);
-            const char* package_name = output->package_names.at(current_package_handle);
+            u16 package_name_length = parser_output->package_names.length_at(current_package_handle);
+            const char* package_name = parser_output->package_names.at(current_package_handle);
 
             // Give the package scope the package name.
             current_package->package_scope.set_name(package_name, package_name_length);
@@ -254,7 +266,7 @@ namespace masonc
             try {
                 // Guess how many tokens will end up being 1 expression on average to
                 // avoid reallocations.
-                current_ast->reserve(input->tokens.size() / 10 + 32);
+                current_ast->reserve(lexer_output()->tokens.size() / 10 + 32);
             }
             catch (...) {
                 log_warning("Could not reserve space for AST container.");
@@ -279,8 +291,8 @@ namespace masonc
 
     std::optional<token*> parser::peek_token()
     {
-        if(token_index < input->tokens.size()) {
-            std::optional<token*> result{ &input->tokens[token_index] };
+        if(token_index < lexer_output()->tokens.size()) {
+            std::optional<token*> result{ &lexer_output()->tokens[token_index] };
             return result;
         }
 
@@ -359,31 +371,31 @@ namespace masonc
 
     const char* parser::identifier_at(const token& identifier_token)
     {
-        assume(input->identifiers.size() > identifier_token.value_index, "value_index is out of range");
-        return input->identifiers.at(identifier_token.value_index);
+        assume(lexer_output()->identifiers.size() > identifier_token.value_index, "value_index is out of range");
+        return lexer_output()->identifiers.at(identifier_token.value_index);
     }
 
     const char* parser::integer_at(const token& integer_token)
     {
-        assume(input->integers.size() > integer_token.value_index, "value_index is out of range");
-        return input->integers.at(integer_token.value_index);
+        assume(lexer_output()->integers.size() > integer_token.value_index, "value_index is out of range");
+        return lexer_output()->integers.at(integer_token.value_index);
     }
 
     const char* parser::decimal_at(const token& decimal_token)
     {
-        assume(input->decimals.size() > decimal_token.value_index, "value_index is out of range");
-        return input->decimals.at(decimal_token.value_index);
+        assume(lexer_output()->decimals.size() > decimal_token.value_index, "value_index is out of range");
+        return lexer_output()->decimals.at(decimal_token.value_index);
     }
 
     const char* parser::string_at(const token& string_token)
     {
-        assume(input->strings.size() > string_token.value_index, "value_index is out of range");
-        return input->strings.at(string_token.value_index);
+        assume(lexer_output()->strings.size() > string_token.value_index, "value_index is out of range");
+        return lexer_output()->strings.at(string_token.value_index);
     }
 
     token_location* parser::get_token_location(u64 token_index)
     {
-        return &input->locations[token_index];
+        return &lexer_output()->locations[token_index];
     }
 
     void parser::report_parse_error(const std::string& msg)
@@ -399,7 +411,7 @@ namespace masonc
     {
         token_location* location = get_token_location(token_index);
 
-        output->messages.report_error(msg, build_stage::PARSER,
+        parser_output->messages.report_error(msg, build_stage::PARSER,
             location->line_number, location->start_column, location->end_column
         );
     }
@@ -750,7 +762,7 @@ namespace masonc
     std::optional<expression> parser::parse_variable_declaration(parse_context context,
         symbol_handle name_handle, u8 specifiers)
     {
-        const char* name = input->identifiers.at(name_handle);
+        const char* name = lexer_output()->identifiers.at(name_handle);
         bool is_pointer;
 
         auto token_result = expect_any();
@@ -1070,8 +1082,8 @@ namespace masonc
 
         scope_index parent_scope_index = current_scope_index;
 
-        u16 procedure_name_length = input->identifiers.length_at(prototype.name_handle);
-        const char* procedure_name = input->identifiers.at(prototype.name_handle);
+        u16 procedure_name_length = lexer_output()->identifiers.length_at(prototype.name_handle);
+        const char* procedure_name = lexer_output()->identifiers.at(prototype.name_handle);
 
         // Create new scope for the procedure and make it current.
         current_scope_index = current_scope()->add_child(scope{});
@@ -1133,7 +1145,7 @@ namespace masonc
             }
             else if(token_result.value()->type == ';') {
                 set_package(temp_package_name);
-                const char* package_name = output->package_names.at(current_package_handle);
+                const char* package_name = parser_output->package_names.at(current_package_handle);
 
                 // Done parsing package declaration statement.
                 return expression{ expression_package_declaration{ package_name } };

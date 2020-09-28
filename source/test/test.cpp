@@ -1,5 +1,9 @@
 #include <test.hpp>
 
+#include <test_parser.hpp>
+#include <test_misc.hpp>
+#include <test_dependency_graph.hpp>
+
 #include <common.hpp>
 #include <log.hpp>
 
@@ -13,7 +17,7 @@ namespace masonc::test
 {
     void perform_parser_tests()
     {
-        auto parse_tests_pass = test_parse_in_directory("tests/pass", true);
+        auto parse_tests_pass = masonc::test::parser::test_parse_in_directory("tests/pass", true);
         for(u64 i = 0; i < parse_tests_pass.matched_expected.size(); i += 1) {
             if(!parse_tests_pass.matched_expected[i]) {
                 log_error(std::string{
@@ -24,7 +28,7 @@ namespace masonc::test
             }
         }
 
-        auto parse_tests_fail = test_parse_in_directory("tests/fail", false);
+        auto parse_tests_fail = masonc::test::parser::test_parse_in_directory("tests/fail", false);
         for(u64 i = 0; i < parse_tests_fail.matched_expected.size(); i += 1) {
             if(!parse_tests_fail.matched_expected[i]) {
                 log_error(std::string{
@@ -32,5 +36,12 @@ namespace masonc::test
                 }.c_str());
             }
         }
+    }
+
+    void perform_dependency_graph_tests()
+    {
+        masonc::test::dependency_graph::test_insert();
+        masonc::test::dependency_graph::test_find_direct();
+        masonc::test::dependency_graph::test_is_circular();
     }
 }

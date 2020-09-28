@@ -12,13 +12,18 @@ namespace masonc
     void build_object(std::vector<path> sources,
         std::unordered_set<std::string> additional_extensions)
     {
+        additional_extensions.insert(".m");
+        additional_extensions.insert(".mason");
+
+        lexer source_lexer;
+        parser source_parser;
+        llvm_converter source_converter;
+
+        std::vector<lexer_output> lexer_outputs;
+        std::vector<parser_output> parser_outputs;
+        std::vector<llvm_converter_output> converter_outputs;
+
         {
-            additional_extensions.insert(".m");
-            additional_extensions.insert(".mason");
-
-            lexer source_lexer;
-            std::vector<lexer_output> lexer_outputs;
-
             std::cout << '\n' << "Lexing..." << std::endl;
             for (u64 i = 0; i < sources.size(); i += 1) {
                 auto file_paths = files_from_path(sources[i], additional_extensions);
@@ -29,8 +34,8 @@ namespace masonc
                         1024u, &current_file_length);
 
                     if (!current_file) {
-                        std::free(current_file.value());
-                        return;
+                        //std::free(current_file.value());
+                        goto END;
                     }
 
                     lexer_output* current_lexer_output = &lexer_outputs.emplace_back(lexer_output{});
@@ -41,13 +46,11 @@ namespace masonc
 
                     if (current_lexer_output->messages.errors.size() > 0) {
                         current_lexer_output->messages.print_errors();
+                        std::cout << std::endl;
                         goto END;
                     }
                 }
             }
-
-            parser source_parser;
-            std::vector<parser_output> parser_outputs;
 
             std::cout << "Parsing..." << std::endl;
             for (u64 i = 0; i < lexer_outputs.size(); i += 1) {
@@ -58,12 +61,10 @@ namespace masonc
 
                 if (current_parser_output->messages.errors.size() > 0) {
                     current_parser_output->messages.print_errors();
+                    std::cout << std::endl;
                     goto END;
                 }
             }
-
-            llvm_converter source_converter;
-            std::vector<llvm_converter_output> converter_outputs;
 
             /*
             std::cout << "Generating code..." << std::endl;
@@ -85,7 +86,7 @@ namespace masonc
         }
 
         END:
-        std::cout << std::endl;
+        source_parser.free();
     }
 
     const std::string build_stage_name(build_stage stage)

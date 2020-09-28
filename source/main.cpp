@@ -11,6 +11,7 @@
 #include <command.hpp>
 #include <version.hpp>
 #include <containers.hpp>
+#include <dependency_graph.hpp>
 
 #include <iostream>
 #include <cstdlib>
@@ -27,6 +28,7 @@ int main(int argc, char** argv)
     masonc::initialize_language();
     masonc::initialize_llvm_converter();
 
+    masonc::test::perform_dependency_graph_tests();
     masonc::test::perform_parser_tests();
 
     // NOTE: It is apparently implementation-defined whether or not the first argument of "argv"

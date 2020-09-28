@@ -49,6 +49,8 @@ namespace masonc
     {
         expression* expr;
         s8 op_code;
+
+
     };
 
     // := expression op_code expression

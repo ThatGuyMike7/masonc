@@ -15,10 +15,10 @@ namespace masonc
 {
     // TODO: Implement shrinking on copy assignment to potentially save on memory.
     // "length_t" refers to the maximum length of a string.
-    template<typename length_t>
+    template <typename length_t>
     struct cstring_collection_basic
     {
-        static_assert(std::is_arithmetic<length_t>::value,
+        static_assert(std::is_arithmetic <length_t>::value,
             "cstring_collection_basic length_t is not arithmetic.");
 
     private:

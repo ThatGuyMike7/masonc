@@ -26,6 +26,8 @@ namespace masonc
 
     struct parser_output
     {
+        lexer_output* lexer_output;
+
         // Indices of package names correspond to package handles.
         cstring_collection package_names;
         std::unordered_map<package_handle, package> packages;
@@ -36,17 +38,22 @@ namespace masonc
 
     struct parser
     {
-        // "input" is expected to have no errors and
+        // "lexer_output" is expected to have no errors and
         // "output" is expected to be allocated and empty.
-        void parse(lexer_output* input, parser_output* output);
+        void parse(lexer_output* lexer_output, parser_output* parser_output);
+
+        // Release all heap-allocated expressions.
+        // This renders the AST unsafe to access, call at the very end of the build process.
+        void free();
 
         void print_expressions();
         std::string format_expression(const expression& expr, u64 level = 0);
 
     private:
-        lexer_output* input;
-        parser_output* output;
+        parser_output* parser_output;
 
+        // All heap-allocated expressions - the indirection is needed to
+        // avoid circular references in some cases.
         std::vector<expression*> delete_list_expressions;
 
         // "nullptr" when no package declaration was parsed.
@@ -63,6 +70,7 @@ namespace masonc
         // in turn parse their own expressions and so on.
         void drive();
 
+        lexer_output* lexer_output();
         scope* current_scope();
 
         // Set package with specified name to be current, or add a new package if it doesn't exist.
