@@ -99,8 +99,6 @@ namespace masonc
                 return "Lexer";
             case build_stage::PARSER:
                 return "Parser";
-            case build_stage::PRE_LINKER:
-                return "Pre-Linker";
             case build_stage::LINKER:
                 return "Linker";
             case build_stage::CODE_GENERATOR:

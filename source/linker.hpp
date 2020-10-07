@@ -1,28 +1,41 @@
 #ifndef $_MASONC_LINKER_HPP_$
 #define $_MASONC_LINKER_HPP_$
 
+#include <parser.hpp>
+#include <package.hpp>
 #include <scope.hpp>
 #include <message.hpp>
-#include <parser.hpp>
+#include <dependency_graph.hpp>
 
 namespace masonc
 {
     struct linker_output
     {
+        parser_output* parser_output;
+
         message_list messages;
     };
 
-    // The linker checks if used symbols and types are correctly defined
-    // and visible (and maybe also change the order to prepare for code generation).
-    // The linker requires that the lexer, parser and pre-linker stages finished.
+    // The linker resolves package and code dependencies for out-of-order compilation,
+    // any circular dependencies are reported as errors.
+    // It thus also checks if symbols and types are visible from where they are used and
+    // if they are used correctly.
+    //
+    // The linker requires that the lexer and parser stages finished completely.
     struct linker
     {
-        // TODO: Implement this.
-        void link(parser_output* input);
+        // Returns "nullptr" if package is not defined.
+        package* package_from_name(const char* package_name);
+
+        // "parser_output" is expected to have no errors and
+        // "linker_output" is expected to be allocated and empty.
+        void link(parser_output* parser_output, linker_output* linker_output);
 
     private:
-        parser_output* input;
-        linker_output* output;
+        linker_output* linker_output;
+        dependency_graph<package*> package_graph;
+
+        parser_output* parser_output();
     };
 }
 

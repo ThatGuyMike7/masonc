@@ -12,7 +12,6 @@
 
 #include <string>
 #include <vector>
-#include <unordered_map>
 #include <memory>
 #include <optional>
 
@@ -28,10 +27,14 @@ namespace masonc
     {
         lexer_output* lexer_output;
 
-        // Indices of package names correspond to package handles.
+        // Indices of package names correspond to package handles in "packages" and "asts".
         cstring_collection package_names;
-        std::unordered_map<package_handle, package> packages;
-        std::unordered_map<package_handle, std::vector<expression>> asts;
+
+        // Indices are package handles from "package_names".
+        std::vector<package> packages;
+
+        // Indices are package handles from "package_names".
+        std::vector<std::vector<expression>> asts;
 
         message_list messages;
     };
@@ -39,11 +42,12 @@ namespace masonc
     struct parser
     {
         // "lexer_output" is expected to have no errors and
-        // "output" is expected to be allocated and empty.
+        // "parser_output" is expected to be allocated and empty.
         void parse(lexer_output* lexer_output, parser_output* parser_output);
 
         // Release all heap-allocated expressions.
-        // This renders the AST unsafe to access, call at the very end of the build process.
+        // This renders the AST unsafe to access, call at the very end of the build process
+        // once the AST is not needed anymore.
         void free();
 
         void print_expressions();

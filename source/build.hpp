@@ -19,7 +19,6 @@ namespace masonc
         UNSET,
         LEXER,
         PARSER,
-        PRE_LINKER,
         LINKER,
         CODE_GENERATOR
     };

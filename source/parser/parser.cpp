@@ -193,11 +193,11 @@ namespace masonc
 
     void parser::print_expressions()
     {
-        for(auto ast_it = parser_output->asts.begin(); ast_it != parser_output->asts.end(); ast_it++) {
-            std::vector<expression>& ast = ast_it->second;
+        for(u64 i = 0; i < parser_output->asts.size(); i += 1) {
+            std::vector<expression>* ast = &parser_output->asts[i];
 
-            for (u64 i = 0; i < ast.size(); i += 1) {
-                std::cout << format_expression(ast[i]) << std::endl;
+            for (u64 j = 0; j < ast->size(); j += 1) {
+                std::cout << format_expression((*ast)[i]) << std::endl;
             }
         }
     }
@@ -232,27 +232,17 @@ namespace masonc
         if (search_package_name) {
             current_package_handle = search_package_name.value();
 
-            // If we found the package name, we can assume the AST and package structure exist too,
-            // hence no need to check if they could be found or not.
-            auto search_package = parser_output->packages.find(current_package_handle);
-            auto search_ast = parser_output->asts.find(current_package_handle);
-
-            current_package = &search_package->second;
-            current_ast = &search_ast->second;
+            // If we found the package name, we can assume the AST and package structure exist too.
+            current_package = &parser_output->packages[current_package_handle];
+            current_ast = &parser_output->asts[current_package_handle];
         }
         else {
             // Create new package name.
             current_package_handle = parser_output->package_names.copy_back(package_name, package_name_length);
 
             // Create new package and AST.
-            auto inserted_package = parser_output->packages.insert({ current_package_handle, package{} });
-            auto inserted_ast = parser_output->asts.insert({ current_package_handle, std::vector<expression>{} });
-
-            assume(inserted_package.second && inserted_ast.second,
-                "either package exists and AST does not or AST exists and package does not");
-
-            current_package = &inserted_package.first->second;
-            current_ast = &inserted_ast.first->second;
+            current_package = &parser_output->packages.emplace_back(package{});
+            current_ast = &parser_output->asts.emplace_back(std::vector<expression>{});
 
             // Tell the package scope of the package.
             current_package->package_scope.package = current_package;

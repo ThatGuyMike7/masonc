@@ -134,99 +134,81 @@ namespace masonc
             // Whether or not the tree is acyclic.
             bool acyclic = true;
 
-            resolve_recurse<vertex>(this, &seen, &seen_resolved, &acyclic);
+            resolve_recurse(this, &seen, &seen_resolved, &acyclic);
 
             return acyclic;
         }
 
     protected:
+        void resolve_recurse_edges(std::vector<vertex>* edges,
+                                   std::vector<value_ref_t>* seen, std::vector<BOOL>* seen_resolved,
+                                   bool* acyclic)
+        {
+            for (u64 i = 0; i < edges->size(); i += 1) {
+                resolve_recurse(&(*edges)[i], seen, seen_resolved, acyclic);
+            }
+        }
+
         // Perform depth-first post-order traversal, invoking the resolver on every vertex.
-        //
-        // "T" may either be "vertex" in case of passing the root or
-        // "std::vector<vertex>" in case of passing a vertex' edges.
-        template <typename T>
-        void resolve_recurse(T* root_or_edges,
+        void resolve_recurse(vertex* current_vertex,
                              std::vector<value_ref_t>* seen, std::vector<BOOL>* seen_resolved,
                              bool* acyclic)
         {
-            static_assert(std::is_same_v<T, vertex> || std::is_same_v<T, std::vector<vertex>>);
+            value_ref_t current_value = current_vertex->m_value;
+            auto search_value = std::lower_bound(seen->begin(), seen->end(), current_value);
 
-            u64 size;
+            if (search_value != seen->end() && *search_value != current_value ||
+                search_value == seen->end())
+            {
+                // The value has not been seen yet, add it to "seen" and
+                // a corresponding "FALSE" value to "seen_resolved".
+                auto seen_insertion_point = std::upper_bound(seen->begin(), seen->end(), current_value);
 
-            // In case of passing the root, the for loop will only iterate once
-            // (and hopefully be optimized away).
-            if constexpr (std::is_same_v<T, vertex>)
-                size = 1;
-            else
-                size = root_or_edges->size();
+                auto seen_resolved_insertion_point = seen_resolved->begin();
+                std::advance(seen_resolved_insertion_point, seen_insertion_point - seen->begin());
 
-            for (u64 i = 0; i < size; i += 1) {
-                vertex* current_vertex;
+                seen->insert(seen_insertion_point, current_value);
+                seen_resolved->insert(seen_resolved_insertion_point, FALSE);
 
-                // "vertex" or "std::vector<vertex>".
-                if constexpr (std::is_same_v<T, vertex>)
-                    current_vertex = root_or_edges;
-                else
-                    current_vertex = &(*root_or_edges)[i];
+                // Traverse the tree.
+                resolve_recurse_edges(&current_vertex->m_edges, seen, seen_resolved, acyclic);
 
-                value_ref_t current_value = current_vertex->m_value;
-                auto search_value = std::lower_bound(seen->begin(), seen->end(), current_value);
+                // Access the data.
+                m_resolver(current_value);
 
-                if (search_value != seen->end() && *search_value != current_value ||
-                    search_value == seen->end())
-                {
-                    // The value has not been seen yet, add it to "seen" and
-                    // a corresponding "FALSE" value to "seen_resolved".
-                    auto seen_insertion_point = std::upper_bound(seen->begin(), seen->end(), current_value);
+                // Mark it as resolved.
+                // For that, we need to find it again because insertions to vectors
+                // (specifically "seen" and "seen_resolved") invalidate iterators and indices.
+                //
+                // Since "seen" contains unique values and their indices correspond
+                // to values in "seen_resolved" with the same indices, we can use "seen" to
+                // find the correct index in "seen_resolved".
+                search_value = std::lower_bound(seen->begin(), seen->end(), current_value);
 
-                    auto seen_resolved_insertion_point = seen_resolved->begin();
-                    std::advance(seen_resolved_insertion_point, seen_insertion_point - seen->begin());
+                auto is_resolved_point = seen_resolved->begin();
+                std::advance(is_resolved_point, search_value - seen->begin());
 
-                    seen->insert(seen_insertion_point, current_value);
-                    seen_resolved->insert(seen_resolved_insertion_point, FALSE);
+                *is_resolved_point = TRUE;
+            }
+            else {
+                // The value has been seen before.
+                //
+                // If it and its dependencies are not resolved yet,
+                // we have found a circular dependency.
+                auto is_resolved_point = seen_resolved->begin();
+                std::advance(is_resolved_point, search_value - seen->begin());
 
-                    // Traverse the tree.
-                    resolve_recurse<std::vector<vertex>>(&current_vertex->m_edges,
-                        seen, seen_resolved, acyclic);
-
-                    // Access the data.
-                    m_resolver(current_value);
-
-                    // Mark it as resolved.
-                    // For that, we need to find it again because insertions to vectors
-                    // (specifically "seen" and "seen_resolved") invalidate iterators and indices.
-                    //
-                    // Since "seen" contains unique values and their indices correspond
-                    // to values in "seen_resolved" with the same indices, we can use "seen" to
-                    // find the correct index in "seen_resolved".
-                    search_value = std::lower_bound(seen->begin(), seen->end(), current_value);
-
-                    auto is_resolved_point = seen_resolved->begin();
-                    std::advance(is_resolved_point, search_value - seen->begin());
-
-                    *is_resolved_point = TRUE;
-                }
-                else {
-                    // The value has been seen before.
-                    //
-                    // If it and its dependencies are not resolved yet,
-                    // we have found a circular dependency.
-                    auto is_resolved_point = seen_resolved->begin();
-                    std::advance(is_resolved_point, search_value - seen->begin());
-
-                    if (*is_resolved_point == FALSE) {
-                        *acyclic = false;
-                        return;
-                    }
+                if (*is_resolved_point == FALSE) {
+                    *acyclic = false;
+                    return;
                 }
             }
         }
     };
 
     // Rooted directed graph that can be verified to be acyclic.
-    // Each value in every vertex must be unique, unless they refer to the same vertex,
-    // i.e. each vertex is identified by its value.
-    // "resolver_t" must implement "operator()" taking "value_t" as its only parameter.
+    // Each value in every vertex must be unique, unless they refer to the same vertex.
+    // "resolver_t" must implement "operator()" taking "const value_ref_t" as its only parameter.
     template <typename value_t,
               typename value_comparator_less_t = std::less<value_t>,
               typename resolver_t = dependency_graph_no_resolver<value_t>>
