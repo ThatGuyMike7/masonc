@@ -6,6 +6,7 @@
 namespace masonc::test
 {
     void perform_parser_tests();
+    void perform_iterator_tests();
     void perform_dependency_graph_tests();
 }
 

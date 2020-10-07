@@ -1,9 +1,9 @@
 #include <test_dependency_graph.hpp>
 
 #include <dependency_graph.hpp>
-#include <log.hpp>
 
-#include <iostream>
+#include <cstdlib>
+#include <stdexcept>
 
 namespace masonc::test::dependency_graph
 {
@@ -23,7 +23,6 @@ namespace masonc::test::dependency_graph
             graph.root.at(0)->at(1)->value() != 1111 ||
             graph.root.at(1)->at(1)->at(0)->value() != 1111)
         {
-            masonc::log_error("dependency graph insert test failed");
             throw std::runtime_error{ "dependency graph insert test failed" };
             std::exit(-1);
         }
@@ -39,7 +38,6 @@ namespace masonc::test::dependency_graph
         if (!find_result_11 || find_result_11.value()->value() != 11 ||
             !find_result_1111 || find_result_1111.value()->value() != 1111)
         {
-            masonc::log_error("dependency graph find direct test failed");
             throw std::runtime_error{ "dependency graph find direct test failed" };
             std::exit(-1);
         }
@@ -56,7 +54,6 @@ namespace masonc::test::dependency_graph
         auto circular_graph = get_circular_test_graph<dependency_graph_print_resolver<int>>();
 
         if (!non_circular_graph.root.resolve()) {
-            masonc::log_error("dependency graph is circular test failed");
             throw std::runtime_error{ "dependency graph is circular test failed" };
             std::exit(-1);
         }
@@ -64,7 +61,6 @@ namespace masonc::test::dependency_graph
         std::cout << std::endl;
 
         if (circular_graph.root.resolve()) {
-            masonc::log_error("dependency graph is circular test failed");
             throw std::runtime_error{ "dependency graph is circular test failed" };
             std::exit(-1);
         }

@@ -15,7 +15,7 @@ namespace masonc::test::parser
             auto test_parse_result = test_parse(output.files[i].c_str());
 
             if(!test_parse_result) {
-                log_error("Cannot perform test");
+                log_error("Cannot perform parse test");
                 output.matched_expected.emplace_back(true);
                 output.message_lists.emplace_back(masonc::message_list{});
                 continue;

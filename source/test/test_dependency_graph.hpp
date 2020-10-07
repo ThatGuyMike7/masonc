@@ -5,7 +5,6 @@
 #include <type_util.hpp>
 
 #include <functional>
-#include <iostream>
 
 namespace masonc::test::dependency_graph
 {

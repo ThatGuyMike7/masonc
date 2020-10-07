@@ -1,8 +1,9 @@
 #include <test.hpp>
 
 #include <test_parser.hpp>
-#include <test_misc.hpp>
+#include <test_iterator.hpp>
 #include <test_dependency_graph.hpp>
+#include <test_misc.hpp>
 
 #include <common.hpp>
 #include <log.hpp>
@@ -36,6 +37,13 @@ namespace masonc::test
                 }.c_str());
             }
         }
+    }
+
+    void perform_iterator_tests()
+    {
+        masonc::test::iterator::test_forward_iteration();
+        masonc::test::iterator::test_reverse_iteration();
+        masonc::test::iterator::test_STL_algorithms();
     }
 
     void perform_dependency_graph_tests()

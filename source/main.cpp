@@ -28,6 +28,7 @@ int main(int argc, char** argv)
     masonc::initialize_language();
     masonc::initialize_llvm_converter();
 
+    masonc::test::perform_iterator_tests();
     masonc::test::perform_dependency_graph_tests();
     masonc::test::perform_parser_tests();
 
