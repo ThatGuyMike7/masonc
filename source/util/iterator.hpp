@@ -4,14 +4,20 @@
 #include <common.hpp>
 
 #include <iterator>
+#include <type_traits>
+#include <optional>
 
 namespace masonc
 {
-    template <typename element_t>
+    struct iterator_no_data { };
+
+    template <typename element_t,
+              typename iterator_data = iterator_no_data>
     struct iterator
     {
-    private:
+    protected:
         const element_t* head;
+        const iterator_data data;
 
     public:
         // Iterator traits for STL compliance.
@@ -21,14 +27,31 @@ namespace masonc
         using reference = const element_t&;
         using iterator_category = std::bidirectional_iterator_tag;
 
-        explicit iterator(pointer head)
-            : head(head)
+        // "iterator_data" if "iterator_data" is not "iterator_no_data", otherwise no type.
+        using optional_iterator_data_t = std::enable_if_t<
+                                            !std::is_same_v<iterator_data, iterator_no_data>,
+                                            iterator_data>;
+
+        explicit iterator(pointer head, optional_iterator_data_t data)
+            : head(head), data(data)
         { }
 
+        bool operator== (iterator other) const { return head == other.head; }
+        bool operator!= (iterator other) const { return !(*this == other); }
+
+        reference operator* () const { return *head; }
+
         // Pre-increment
-        iterator& operator++()
+        virtual iterator& operator++()
         {
             head++;
+            return *this;
+        }
+
+        // Pre-decrement
+        virtual iterator operator--()
+        {
+            head--;
             return *this;
         }
 
@@ -43,13 +66,6 @@ namespace masonc
             return return_value;
         }
 
-        // Pre-decrement
-        iterator operator--()
-        {
-            head--;
-            return *this;
-        }
-
         // Post-decrement
         iterator operator--(int)
         {
@@ -60,18 +76,16 @@ namespace masonc
 
             return return_value;
         }
-
-        bool operator== (iterator other) const { return head == other.head; }
-        bool operator!= (iterator other) const { return !(*this == other); }
-
-        reference operator* () const { return *head; }
     };
 
-    template <typename element_t>
+    template <typename element_t,
+              template <typename> typename iterator_t = iterator>
     struct iterable
     {
-        virtual iterator<element_t> begin() = 0;
-        virtual iterator<element_t> end() = 0;
+        static_assert(std::is_base_of_v<iterator<element_t>, iterator_t<element_t>>);
+
+        virtual iterator_t<element_t> begin() = 0;
+        virtual iterator_t<element_t> end() = 0;
     };
 }
 
