@@ -76,7 +76,7 @@ namespace masonc
         reference operator* () const { return *head; }
 
         // Pre-increment
-        iterator& operator++()
+        virtual iterator& operator++()
         {
             head++;
             return *this;
