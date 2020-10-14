@@ -114,7 +114,7 @@ namespace masonc::test::iterator
 
         for (auto it = container.begin(); it != container.end(); it++) {
             if (*it != i) {
-                throw std::runtime_error{ "iterator forward iteration test failed" };
+                throw std::runtime_error{ "iterator data test failed" };
                 std::exit(-1);
             }
 
