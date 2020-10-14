@@ -12,12 +12,12 @@ namespace masonc
     struct iterator_no_data { };
 
     template <typename element_t,
-              typename iterator_data = iterator_no_data>
+              typename iterator_data_t = iterator_no_data>
     struct iterator
     {
     protected:
         const element_t* head;
-        const iterator_data data;
+        iterator_data_t data;
 
     public:
         // Iterator traits for STL compliance.
@@ -27,29 +27,63 @@ namespace masonc
         using reference = const element_t&;
         using iterator_category = std::bidirectional_iterator_tag;
 
-        // "iterator_data" if "iterator_data" is not "iterator_no_data", otherwise no type.
-        using optional_iterator_data_t = std::enable_if_t<
-                                            !std::is_same_v<iterator_data, iterator_no_data>,
-                                            iterator_data>;
-
-        explicit iterator(pointer head, optional_iterator_data_t data)
-            : head(head), data(data)
+        template <typename T = iterator_data_t,
+                  typename = std::enable_if_t<std::is_same_v<T, iterator_no_data>>>
+        explicit iterator(pointer head)
+            : head(head)
         { }
 
-        bool operator== (iterator other) const { return head == other.head; }
-        bool operator!= (iterator other) const { return !(*this == other); }
+        template <typename T = iterator_data_t,
+                  typename = std::enable_if_t<!std::is_same_v<T, iterator_no_data>>>
+        explicit iterator(pointer head, T* data)
+            : head(head), data(*data)
+        { }
+
+        iterator(const iterator& other)
+        {
+            if constexpr (std::is_same_v<iterator_data_t, iterator_no_data>) {
+                head = other.head;
+            }
+            else {
+                head = other.head;
+                data = other.data;
+            }
+        }
+
+        iterator& operator= (const iterator& other)
+        {
+            if constexpr (std::is_same_v<iterator_data_t, iterator_no_data>) {
+                head = other.head;
+            }
+            else {
+                head = other.head;
+                data = other.data;
+            }
+
+            return *this;
+        }
+
+        bool operator== (const iterator& other) const
+        {
+            if constexpr (std::is_same_v<iterator_data_t, iterator_no_data>)
+                return head == other.head;
+            else
+                return head == other.head && data == other.data;
+        }
+
+        bool operator!= (const iterator& other) const { return !(*this == other); }
 
         reference operator* () const { return *head; }
 
         // Pre-increment
-        virtual iterator& operator++()
+        iterator& operator++()
         {
             head++;
             return *this;
         }
 
         // Pre-decrement
-        virtual iterator operator--()
+        iterator& operator--()
         {
             head--;
             return *this;
@@ -82,8 +116,6 @@ namespace masonc
               template <typename> typename iterator_t = iterator>
     struct iterable
     {
-        static_assert(std::is_base_of_v<iterator<element_t>, iterator_t<element_t>>);
-
         virtual iterator_t<element_t> begin() = 0;
         virtual iterator_t<element_t> end() = 0;
     };

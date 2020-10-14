@@ -25,12 +25,17 @@ _  / / / / / /_/ /_(__  )/ /_/ /  / / /
 
 int main(int argc, char** argv)
 {
+    // Decouple C++ and C streams and prevent automatic flushing of "std::cout" on
+    // every newline when using an interactive device such as a terminal.
+    std::ios_base::sync_with_stdio(false);
+
+    // Prevent "std::cin" from automatically flushing "std::cout".
+    std::cin.tie(nullptr);
+
     masonc::initialize_language();
     masonc::initialize_llvm_converter();
 
-    masonc::test::perform_iterator_tests();
-    masonc::test::perform_dependency_graph_tests();
-    masonc::test::perform_parser_tests();
+    masonc::test::perform_all_tests();
 
     // NOTE: It is apparently implementation-defined whether or not the first argument of "argv"
     //       is the program name, but almost everyone passes the program name there.

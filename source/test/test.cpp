@@ -1,8 +1,8 @@
 #include <test.hpp>
 
-#include <test_parser.hpp>
 #include <test_iterator.hpp>
 #include <test_dependency_graph.hpp>
+#include <test_parser.hpp>
 #include <test_misc.hpp>
 
 #include <common.hpp>
@@ -16,6 +16,28 @@
 
 namespace masonc::test
 {
+    void perform_all_tests()
+    {
+        perform_iterator_tests();
+        perform_dependency_graph_tests();
+        perform_parser_tests();
+    }
+
+    void perform_iterator_tests()
+    {
+        masonc::test::iterator::test_forward_iteration();
+        masonc::test::iterator::test_reverse_iteration();
+        masonc::test::iterator::test_STL_algorithms();
+        masonc::test::iterator::test_iterator_data_iteration();
+    }
+
+    void perform_dependency_graph_tests()
+    {
+        masonc::test::dependency_graph::test_insert();
+        masonc::test::dependency_graph::test_find_direct();
+        masonc::test::dependency_graph::test_is_circular();
+    }
+
     void perform_parser_tests()
     {
         auto parse_tests_pass = masonc::test::parser::test_parse_in_directory("tests/pass", true);
@@ -37,19 +59,5 @@ namespace masonc::test
                 }.c_str());
             }
         }
-    }
-
-    void perform_iterator_tests()
-    {
-        masonc::test::iterator::test_forward_iteration();
-        masonc::test::iterator::test_reverse_iteration();
-        masonc::test::iterator::test_STL_algorithms();
-    }
-
-    void perform_dependency_graph_tests()
-    {
-        masonc::test::dependency_graph::test_insert();
-        masonc::test::dependency_graph::test_find_direct();
-        masonc::test::dependency_graph::test_is_circular();
     }
 }

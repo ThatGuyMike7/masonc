@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <type_traits>
+#include <new>
 
 namespace masonc
 {
@@ -35,10 +36,10 @@ namespace masonc
         // Keeps track of each string's length.
         std::vector<length_t> lengths;
 
-        void memory_allocation_error_exit()
+        void memory_allocation_error()
         {
             log_error("\"cstring_collection_basic\" memory allocation error.");
-            std::exit(-1);
+            throw std::bad_alloc{};
         }
 
         // Grow to a multiple of "buffer_chunk_size" that is greater than "size".
@@ -51,7 +52,7 @@ namespace masonc
 
                 buffer = static_cast<char*>(std::realloc(buffer, current_buffer_size));
                 if (buffer == nullptr)
-                    memory_allocation_error_exit();
+                    memory_allocation_error();
             }
         }
 
@@ -65,7 +66,7 @@ namespace masonc
               lengths()
         {
             if (buffer == nullptr)
-                memory_allocation_error_exit();
+                memory_allocation_error();
         }
 
         ~cstring_collection_basic()
@@ -84,7 +85,7 @@ namespace masonc
               lengths(other.lengths)
         {
             if (buffer == nullptr)
-                memory_allocation_error_exit();
+                memory_allocation_error();
 
             std::memcpy(buffer, other.buffer, other.occupied_bytes);
         }
