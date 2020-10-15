@@ -15,8 +15,8 @@ namespace masonc
     template <typename value_t>
     struct dependency_graph_no_resolver
     {
-        using value_ref_t = ref_t<value_t>;
-        void operator() (const value_ref_t value) { }
+        using const_value_ref_t = const_ref_t<value_t>;
+        void operator() (const_value_ref_t value) { }
     };
 
     template <typename value_t,
@@ -25,36 +25,33 @@ namespace masonc
     struct dependency_graph_vertex
     {
     public:
-        using vertex = dependency_graph_vertex<value_t, value_comparator_less_t, resolver_t>;
-
-        // Use "value_ref_t" whenever semantically pass-by-reference is appropriate,
-        // such as passing a function parameter or returning a value from a function.
         using value_ref_t = ref_t<value_t>;
+        using const_value_ref_t = const_ref_t<value_t>;
 
     protected:
         value_t m_value;
         value_comparator_less_t value_comparator_less;
 
-        std::vector<vertex> m_edges;
+        std::vector<dependency_graph_vertex> m_edges;
 
         resolver_t m_resolver;
 
     public:
-        dependency_graph_vertex(const value_ref_t value)
+        dependency_graph_vertex(const_value_ref_t value)
             : m_value(value)
         { }
 
-        bool operator< (const vertex& other) const
+        bool operator< (const dependency_graph_vertex& other) const
         {
             return value_comparator_less(m_value, other.m_value);
         }
 
-        const value_ref_t value() const
+        const_value_ref_t value() const
         {
             return m_value;
         }
 
-        const std::vector<vertex>& edges() const
+        const std::vector<dependency_graph_vertex>& edges() const
         {
             return m_edges;
         }
@@ -64,14 +61,14 @@ namespace masonc
             return m_resolver;
         }
 
-        vertex* at(u64 i)
+        dependency_graph_vertex* at(u64 i)
         {
             return &m_edges[i];
         }
 
         // Insert a new direct dependency and return a pointer to it.
         // May invalidate other pointers, references and iterators.
-        vertex* insert(const vertex& value)
+        dependency_graph_vertex* insert(const dependency_graph_vertex& value)
         {
             auto insert_vertex = m_edges.insert(
                 std::upper_bound(m_edges.begin(), m_edges.end(), value),
@@ -83,16 +80,16 @@ namespace masonc
 
         // Insert a new direct dependency and return a pointer to it.
         // May invalidate other pointers, references and iterators.
-        vertex* insert(const value_ref_t value)
+        dependency_graph_vertex* insert(const_value_ref_t value)
         {
-            return insert(vertex{ value });
+            return insert(dependency_graph_vertex{ value });
         }
 
         // Find and return the first direct dependency with a specific "value",
         // i.e. search in all directly connected vertices.
-        std::optional<const vertex*> find_direct(const value_ref_t value)
+        std::optional<const dependency_graph_vertex*> find_direct(const_value_ref_t value)
         {
-            vertex value_vertex{ value };
+            dependency_graph_vertex value_vertex{ value };
 
             auto search_element = std::lower_bound(
                 m_edges.begin(), m_edges.end(), value_vertex
@@ -106,7 +103,7 @@ namespace masonc
 
         // Find the first direct or indirect dependency with a specific "value".
         // Check if there are circular dependencies first to avoid a crash due to infinite looping.
-        std::optional<const vertex*> find(const value_ref_t value)
+        std::optional<const dependency_graph_vertex*> find(const_value_ref_t value)
         {
             auto direct_result = find_direct(value);
             if (direct_result)
@@ -140,7 +137,7 @@ namespace masonc
         }
 
     protected:
-        void resolve_recurse_edges(std::vector<vertex>* edges,
+        void resolve_recurse_edges(std::vector<dependency_graph_vertex>* edges,
                                    std::vector<value_ref_t>* seen, std::vector<BOOL>* seen_resolved,
                                    bool* acyclic)
         {
@@ -150,7 +147,7 @@ namespace masonc
         }
 
         // Perform depth-first post-order traversal, invoking the resolver on every vertex.
-        void resolve_recurse(vertex* current_vertex,
+        void resolve_recurse(dependency_graph_vertex* current_vertex,
                              std::vector<value_ref_t>* seen, std::vector<BOOL>* seen_resolved,
                              bool* acyclic)
         {
@@ -208,21 +205,23 @@ namespace masonc
 
     // Rooted directed graph that can be verified to be acyclic.
     // Each value in every vertex must be unique, unless they refer to the same vertex.
-    // "resolver_t" must implement "operator()" taking "const value_ref_t" as its only parameter.
+    // "resolver_t" must implement "operator()" taking "const_value_ref_t" as its only parameter.
     template <typename value_t,
               typename value_comparator_less_t = std::less<value_t>,
               typename resolver_t = dependency_graph_no_resolver<value_t>>
     struct dependency_graph
     {
     public:
-        using vertex = dependency_graph_vertex<value_t, value_comparator_less_t, resolver_t>;
         using value_ref_t = ref_t<value_t>;
+        using const_value_ref_t = const_ref_t<value_t>;
 
-        dependency_graph(const value_ref_t root_value)
-            : root(vertex{ root_value })
+        using vertex_t = dependency_graph_vertex<value_t, value_comparator_less_t, resolver_t>;
+
+        dependency_graph(const_value_ref_t root_value)
+            : root(vertex_t{ root_value })
         { }
 
-        vertex root;
+        vertex_t root;
     };
 }
 

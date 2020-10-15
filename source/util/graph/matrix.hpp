@@ -10,15 +10,12 @@
 
 namespace masonc
 {
-    // Sparse Matrices:
-    // https://www5.in.tum.de/pub/heinecke08.pdf
-
     template <typename element_t,
               template <typename> typename iterator_t = iterator,
               typename size_t = u64>
-    struct matrix : public iterable<element_t, iterator_t>
+    struct matrix_basic : public iterable<element_t, iterator_t>
     {
-        matrix(size_t row_count, size_t column_count);
+        matrix_basic(size_t row_count, size_t column_count);
 
         virtual element_t& operator[] (size_t row, size_t column) = 0;
         virtual const element_t& operator[] (size_t row, size_t column) const = 0;
@@ -31,9 +28,10 @@ namespace masonc
     struct matrix_row_major_iterator : public iterator<element_t>
     { };
 
+    // TODO: Implement tests for "matrix_row_major".
     template <typename element_t,
               typename size_t = u64>
-    struct matrix_row_major : public matrix<element_t, matrix_row_major_iterator, size_t>
+    struct matrix_row_major : public matrix_basic<element_t, matrix_row_major_iterator, size_t>
     {
     private:
         element_t* buffer;
