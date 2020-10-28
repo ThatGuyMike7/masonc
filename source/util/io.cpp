@@ -48,7 +48,7 @@ namespace masonc
     }
 
     std::vector<std::string> directory_files(const char* directory_path,
-        const std::unordered_set<std::string>& extensions)
+        const robin_hood::unordered_set<std::string>& extensions)
     {
         std::error_code error;
         auto directory_iterator = std::filesystem::directory_iterator(directory_path, error);
@@ -86,7 +86,7 @@ namespace masonc
     }
 
     std::vector<std::string> directory_files_recurse(const char* directory_path,
-        const std::unordered_set<std::string>& extensions)
+        const robin_hood::unordered_set<std::string>& extensions)
     {
         std::error_code error;
         auto recursive_directory_iterator = std::filesystem::recursive_directory_iterator(directory_path, error);
@@ -124,7 +124,7 @@ namespace masonc
     }
 
     std::vector<std::string> files_from_path(const path& path,
-        const std::unordered_set<std::string>& extensions)
+        const robin_hood::unordered_set<std::string>& extensions)
     {
         switch (path.type) {
             default: {
@@ -176,9 +176,10 @@ namespace masonc
 		u64 bytes_read = std::fread(buffer, 1, block_size, stream);
 		u64 total_bytes_read = bytes_read;
 
-		while (bytes_read == block_size)
+		//while (bytes_read == block_size)
+        while (bytes_read > 0)
 		{
-			// Grow the buffer
+			// Grow the buffer.
 			buffer_size += block_size;
 			buffer = std::realloc(buffer, buffer_size);
 			if(buffer == nullptr)
@@ -187,26 +188,26 @@ namespace masonc
 				return std::optional<char*>{};
 			}
 
-			// Location of last block (end of old buffer)
+			// Location of last block (end of old buffer).
 			char* location = static_cast<char*>(buffer);
 			location += buffer_size - block_size;
 
-			// Write to location
+			// Write to location.
 			bytes_read = std::fread(location, 1, block_size, stream);
 			total_bytes_read += bytes_read;
 		}
 
-		// EOF was reached
+		// EOF was reached.
 		if (std::feof(stream) != 0)
 		{
-			// Allocate a block of memory to contain the string with a null terminator
+			// Allocate a block of memory to contain the string with a null terminator.
 			char* final_buffer = static_cast<char*>(std::malloc(total_bytes_read + 1));
 			std::memcpy(final_buffer, buffer, total_bytes_read);
 
 			//char* final_buffer_bytes = static_cast<char*>(final_buffer);
 			final_buffer[total_bytes_read] = '\0';
 
-			// Out the null terminator's index
+			// Out the null terminator's index.
 			if(terminator_index != nullptr)
 			{
 				*terminator_index = total_bytes_read;

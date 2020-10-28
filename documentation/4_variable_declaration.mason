@@ -37,7 +37,7 @@ b2: byte = true;
 // However, the distinction between "u8" and "byte" allows for hinting at the semantics of your code,
 // while a character type is often semantically used as a character, number or byte in other
 // programming languages.
-// 
+//
 // Restricting a character type to only allow assignment of character literals and otherwise require
 // an explicit cast has been considered, but when dealing with characters, it is common to inspect
 // the numeric representation, for example to check if an ASCII character is alphabetic.
@@ -97,7 +97,7 @@ instance: moo = { 10 };
 // 7.
 // Type specifiers can change the semantics of a variable.
 // The "mut" specifier allows the variable to be mutated at runtime.
-mut i: u64 = 0;
+i: mut u64 = 0;
 
 // This works.
 i += 1;

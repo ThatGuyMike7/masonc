@@ -1,18 +1,18 @@
 #ifndef $_MASON_LLVM_CONVERTER_HPP_$
 #define $_MASON_LLVM_CONVERTER_HPP_$
 
-#include <llvm-c/Core.h>
-#include <llvm-c/Analysis.h>
-
-#include <string>
-#include <map>
-
 #include <parser.hpp>
 #include <message.hpp>
 
-namespace masonc
+#include <llvm-c/Core.h>
+#include <llvm-c/Analysis.h>
+#include <robin_hood.hpp>
+
+#include <string>
+
+namespace masonc::llvm
 {
-    inline std::map<const char*, LLVMTypeRef> type_map;
+    inline robin_hood::unordered_map<const char*, LLVMTypeRef> type_map;
 
     void initialize_llvm_converter();
 
@@ -31,7 +31,7 @@ namespace masonc
 
         union
         {
-            expression* expr;
+            masonc::parser::expression* expr;
             const binary_operator* op;
             LLVMValueRef llvm_value;
         };
@@ -40,7 +40,7 @@ namespace masonc
     struct llvm_converter_output
     {
         // Types of declared functions associated with their names.
-        std::map<std::string, LLVMTypeRef> function_type_map;
+        robin_hood::unordered_map<std::string, LLVMTypeRef> function_type_map;
 
         LLVMModuleRef llvm_module;
         message_list messages;
@@ -56,7 +56,7 @@ namespace masonc
     // "llvm_converter" is responsible for IR generation of a specific package.
     struct llvm_converter
     {
-        void convert(lexer_output* input_lexer, parser_output* input_parser,
+        void convert(masonc::lexer::lexer_output* input_lexer, masonc::parser::parser_output* input_parser,
             llvm_converter_output* output);
 
         void free();
@@ -64,8 +64,8 @@ namespace masonc
         void print_IR();
 
     private:
-        lexer_output* input_lexer;
-        parser_output* input_parser;
+        masonc::lexer::lexer_output* input_lexer;
+        masonc::parser::parser_output* input_parser;
         llvm_converter_output* output;
 
         LLVMBuilderRef llvm_builder;
@@ -81,38 +81,38 @@ namespace masonc
         LLVMValueRef build_alloca_at_entry(LLVMValueRef llvm_function,
             LLVMTypeRef llvm_variable_type, const char* variable_name);
 
-        LLVMValueRef convert_top_level(expression* expr);
-        LLVMValueRef convert_statement(expression* expr, LLVMValueRef llvm_function);
+        LLVMValueRef convert_top_level(masonc::parser::expression* expr);
+        LLVMValueRef convert_statement(masonc::parser::expression* expr, LLVMValueRef llvm_function);
 
-        LLVMValueRef convert_expression(expression* expr);
-        LLVMValueRef convert_primary(expression* expr);
+        LLVMValueRef convert_expression(masonc::parser::expression* expr);
+        LLVMValueRef convert_primary(masonc::parser::expression* expr);
 
-        LLVMValueRef convert_number_literal(expression_number_literal* expr);
+        LLVMValueRef convert_number_literal(masonc::parser::expression_number_literal* expr);
 
-        LLVMValueRef convert_local_variable(expression_variable_declaration* expr,
+        LLVMValueRef convert_local_variable(masonc::parser::expression_variable_declaration* expr,
             LLVMValueRef llvm_function);
 
-        LLVMValueRef convert_reference(expression_reference* expr);
+        LLVMValueRef convert_reference(masonc::parser::expression_reference* expr);
 
         LLVMValueRef convert_reference_of(LLVMValueRef llvm_value, LLVMValueRef llvm_pointer);
-        LLVMValueRef convert_dereference(expression* expr);
+        LLVMValueRef convert_dereference(masonc::parser::expression* expr);
 
         // TODO: Implement this
-        LLVMValueRef convert_global_variable(expression_variable_declaration* expr);
+        LLVMValueRef convert_global_variable(masonc::parser::expression_variable_declaration* expr);
 
-        LLVMValueRef convert_call(expression_procedure_call* expr);
+        LLVMValueRef convert_call(masonc::parser::expression_procedure_call* expr);
 
-        LLVMValueRef convert_procedure(expression_procedure_definition* expr);
-        LLVMValueRef convert_procedure_prototype(expression_procedure_prototype* expr);
+        LLVMValueRef convert_procedure(masonc::parser::expression_procedure_definition* expr);
+        LLVMValueRef convert_procedure_prototype(masonc::parser::expression_procedure_prototype* expr);
 
         void convert_procedure_body(LLVMValueRef llvm_function,
-            expression_procedure_definition* expr);
+            masonc::parser::expression_procedure_definition* expr);
 
         LLVMValueRef convert_binary(s8 op_code, LLVMValueRef left, LLVMValueRef right);
-        LLVMValueRef convert_term(expression* term_start);
+        LLVMValueRef convert_term(masonc::parser::expression* term_start);
 
         // Transform a tree of binary operations into a list that resembles infix notation.
-        void ast_to_infix(expression* term_start, std::vector<term_element>& term);
+        void ast_to_infix(masonc::parser::expression* term_start, std::vector<term_element>& term);
 
         // Transform a term from infix notation to reverse polish notation (shunting yard algorithm).
         std::vector<term_element> infix_to_RPN(const std::vector<term_element>& term);

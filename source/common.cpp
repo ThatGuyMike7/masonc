@@ -16,22 +16,21 @@ namespace masonc
 	// Assert that "char" is signed.
 	static_assert(std::numeric_limits<char>::is_signed);
 
-	// Checks
 	static_assert(UINTMAX_MAX <= UINT64_MAX, "UINTMAX_MAX (maximum value of uintmax_t)"
-		"is greater than UINT64_MAX (maximum value of u64/uint64_t)");
+		          "is greater than UINT64_MAX (maximum value of u64/uint64_t)");
 	static_assert(SIZE_MAX <= UINT64_MAX, "'SIZE_MAX' (maximum value of size_t)"
-		"is greater than UINT64_MAX (maximum value of u64/uint64_t)");
+		          "is greater than UINT64_MAX (maximum value of u64/uint64_t)");
 
-	void assume(bool statement, const char* msg, int code)
+	void assume(bool expression, const char* msg, int code)
 	{
 		#if defined(MASONC_DEBUG)
-		if (statement)
+		if (expression)
 			return;
 
 		std::cout << "Assume failed: " << msg << std::endl;
 		std::cout << "Press any key to exit with code " << code << std::endl;
 		std::getchar();
-		exit(code);
+		std::exit(code);
 		#endif
 	}
 }

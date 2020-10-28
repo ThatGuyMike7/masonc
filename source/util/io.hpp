@@ -3,8 +3,9 @@
 
 #include <common.hpp>
 
+#include <robin_hood.hpp>
+
 #include <vector>
-#include <unordered_set>
 #include <optional>
 #include <string>
 
@@ -41,12 +42,12 @@ namespace masonc
     // Receive a list of all files in a directory.
     std::vector<std::string> directory_files(const char* directory_path);
     std::vector<std::string> directory_files(const char* directory_path,
-        const std::unordered_set<std::string>& extensions);
+        const robin_hood::unordered_set<std::string>& extensions);
 
     // Receive a list of all files in a directory and all its sub-directories.
     std::vector<std::string> directory_files_recurse(const char* directory_path);
     std::vector<std::string> directory_files_recurse(const char* directory_path,
-        const std::unordered_set<std::string>& extensions);
+        const robin_hood::unordered_set<std::string>& extensions);
 
     // Receive a list of file paths from a path. All files are guaranteed to exist.
     //
@@ -56,7 +57,7 @@ namespace masonc
     // If it does not exist, the returned vector is empty.
     std::vector<std::string> files_from_path(const path& path);
     std::vector<std::string> files_from_path(const path& path,
-        const std::unordered_set<std::string>& extensions);
+        const robin_hood::unordered_set<std::string>& extensions);
 
 	// Read a file into a buffer. If 'terminator_index' is not nullptr,
     // it will be set to the index of the null terminator (last byte in array).

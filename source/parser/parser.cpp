@@ -11,9 +11,9 @@
 #include <limits>
 #include <cstring>
 
-namespace masonc
+namespace masonc::parser
 {
-    void parser::parse(masonc::lexer_output* lexer_output, masonc::parser_output* parser_output)
+    void parser::parse(masonc::lexer::lexer_output* lexer_output, masonc::parser::parser_output* parser_output)
     {
         this->parser_output = parser_output;
         this->parser_output->lexer_output = lexer_output;
@@ -215,7 +215,7 @@ namespace masonc
         }
     }
 
-    lexer_output* parser::lexer_output()
+    masonc::lexer::lexer_output* parser::lexer_output()
     {
         return parser_output->lexer_output;
     }
@@ -279,17 +279,17 @@ namespace masonc
         token_index += count;
     }
 
-    std::optional<token*> parser::peek_token()
+    std::optional<masonc::lexer::token*> parser::peek_token()
     {
         if(token_index < lexer_output()->tokens.size()) {
-            std::optional<token*> result{ &lexer_output()->tokens[token_index] };
+            std::optional<masonc::lexer::token*> result{ &lexer_output()->tokens[token_index] };
             return result;
         }
 
         return std::nullopt;
     }
 
-    std::optional<token*> parser::expect_any()
+    std::optional<masonc::lexer::token*> parser::expect_any()
     {
         auto token_result = peek_token();
         if (!token_result) {
@@ -302,7 +302,7 @@ namespace masonc
         return token_result.value();
     }
 
-    std::optional<token*> parser::expect_identifier()
+    std::optional<masonc::lexer::token*> parser::expect_identifier()
     {
         auto token_result = peek_token();
         if (!token_result) {
@@ -311,7 +311,7 @@ namespace masonc
             return std::nullopt;
         }
 
-        if (token_result.value()->type != TOKEN_IDENTIFIER) {
+        if (token_result.value()->type != masonc::lexer::TOKEN_IDENTIFIER) {
             report_parse_error("Expected an identifier.");
             return std::nullopt;
         }
@@ -320,7 +320,7 @@ namespace masonc
         return token_result.value();
     }
 
-    std::optional<token*> parser::expect(char c)
+    std::optional<masonc::lexer::token*> parser::expect(char c)
     {
         auto token_result = peek_token();
         if (!token_result) {
@@ -339,7 +339,7 @@ namespace masonc
         return token_result.value();
     }
 
-    std::optional<token*> parser::expect(const std::string& identifier)
+    std::optional<masonc::lexer::token*> parser::expect(const std::string& identifier)
     {
         auto token_result = peek_token();
         if (!token_result) {
@@ -348,7 +348,7 @@ namespace masonc
             return std::nullopt;
         }
 
-        if (token_result.value()->type != TOKEN_IDENTIFIER ||
+        if (token_result.value()->type != masonc::lexer::TOKEN_IDENTIFIER ||
             identifier_at(*token_result.value()) != identifier)
         {
             report_parse_error("Expected \"" + identifier + "\".");
@@ -359,31 +359,31 @@ namespace masonc
         return token_result.value();
     }
 
-    const char* parser::identifier_at(const token& identifier_token)
+    const char* parser::identifier_at(const masonc::lexer::token& identifier_token)
     {
         assume(lexer_output()->identifiers.size() > identifier_token.value_index, "value_index is out of range");
         return lexer_output()->identifiers.at(identifier_token.value_index);
     }
 
-    const char* parser::integer_at(const token& integer_token)
+    const char* parser::integer_at(const masonc::lexer::token& integer_token)
     {
         assume(lexer_output()->integers.size() > integer_token.value_index, "value_index is out of range");
         return lexer_output()->integers.at(integer_token.value_index);
     }
 
-    const char* parser::decimal_at(const token& decimal_token)
+    const char* parser::decimal_at(const masonc::lexer::token& decimal_token)
     {
         assume(lexer_output()->decimals.size() > decimal_token.value_index, "value_index is out of range");
         return lexer_output()->decimals.at(decimal_token.value_index);
     }
 
-    const char* parser::string_at(const token& string_token)
+    const char* parser::string_at(const masonc::lexer::token& string_token)
     {
         assume(lexer_output()->strings.size() > string_token.value_index, "value_index is out of range");
         return lexer_output()->strings.at(string_token.value_index);
     }
 
-    token_location* parser::get_token_location(u64 token_index)
+    masonc::lexer::token_location* parser::get_token_location(u64 token_index)
     {
         return &lexer_output()->locations[token_index];
     }
@@ -399,7 +399,7 @@ namespace masonc
 
     void parser::report_parse_error_at(const std::string& msg, u64 token_index)
     {
-        token_location* location = get_token_location(token_index);
+        masonc::lexer::token_location* location = get_token_location(token_index);
 
         parser_output->messages.report_error(msg, build_stage::PARSER,
             location->line_number, location->start_column, location->end_column
@@ -409,7 +409,7 @@ namespace masonc
     void parser::recover()
     {
         while (true) {
-            std::optional<token*> token_result = peek_token();
+            std::optional<masonc::lexer::token*> token_result = peek_token();
             if (!token_result)
                 return;
 
@@ -434,7 +434,7 @@ namespace masonc
                 return std::nullopt;
             }
 
-            if (token_result.value()->type != TOKEN_IDENTIFIER) {
+            if (token_result.value()->type != masonc::lexer::TOKEN_IDENTIFIER) {
                 report_parse_error("Expected an identifier.");
                 recover();
 
@@ -616,7 +616,7 @@ namespace masonc
 
                 return expression{ expression_unary{ expr, token_result.value()->type } };
             }
-            case TOKEN_IDENTIFIER: {
+            case masonc::lexer::TOKEN_IDENTIFIER: {
                 eat();
 
                 const char* identifier = identifier_at(*token_result.value());
@@ -645,15 +645,15 @@ namespace masonc
                         return parse_call(context, identifier_handle);
                 }
             }
-            case TOKEN_INTEGER: {
+            case masonc::lexer::TOKEN_INTEGER: {
                 eat();
                 return parse_number_literal(context, integer_at(*token_result.value()), NUMBER_INTEGER);
             }
-            case TOKEN_DECIMAL: {
+            case masonc::lexer::TOKEN_DECIMAL: {
                 eat();
                 return parse_number_literal(context, decimal_at(*token_result.value()), NUMBER_DECIMAL);
             }
-            case TOKEN_STRING: {
+            case masonc::lexer::TOKEN_STRING: {
                 eat();
                 return parse_string_literal(context, string_at(*token_result.value()));
             }
@@ -771,7 +771,7 @@ namespace masonc
         else {
             is_pointer = false;
 
-            if (token_result.value()->type != TOKEN_IDENTIFIER) {
+            if (token_result.value()->type != masonc::lexer::TOKEN_IDENTIFIER) {
                 report_parse_error("Expected an identifier.");
                 recover();
                 return std::nullopt;
@@ -997,7 +997,7 @@ namespace masonc
         std::optional<type_handle> return_type_handle;
 
         // Return type specified.
-        if (token_result.value()->type == TOKEN_RIGHT_POINTER)
+        if (token_result.value()->type == masonc::lexer::TOKEN_RIGHT_POINTER)
         {
             // Eat the "->".
             eat();
@@ -1175,10 +1175,9 @@ namespace masonc
                 // TODO: Check if imported twice.
 
                 u64 import_handle = current_package->imports.copy_back(package_name);
-                package_import import = current_package->imports.at(import_handle);
 
                 // Done parsing package import statement.
-                return expression{ expression_package_import{ import } };
+                return expression{ expression_package_import{ current_package->imports.at(import_handle) } };
             }
             else {
                 report_parse_error("Unexpected token.");
@@ -1196,5 +1195,20 @@ namespace masonc
             return &expr->value.parentheses.value.expr;
 
         return nullptr;
+    }
+
+    std::optional<masonc::lexer::token_location> find_package_import_location(package_import import,
+        std::vector<expression>* ast)
+    {
+        masonc::lexer::token_location location;
+
+        for (u64 i = 0; i < ast->size(); i += 1) {
+            expression* expr = &(*ast)[i];
+            if (expr->value.empty.type == EXPR_PACKAGE_IMPORT &&
+                std::strcmp(expr->value.package_import.value.package_name, import) == 0)
+            {
+                // TODO: Continue here
+            }
+        }
     }
 }

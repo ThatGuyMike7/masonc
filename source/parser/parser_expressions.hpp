@@ -11,7 +11,7 @@
 #include <vector>
 #include <optional>
 
-namespace masonc
+namespace masonc::parser
 {
     // expression_parentheses
     // := "(" expression_binary ")"
@@ -49,8 +49,6 @@ namespace masonc
     {
         expression* expr;
         s8 op_code;
-
-
     };
 
     // := expression op_code expression

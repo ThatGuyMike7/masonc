@@ -42,7 +42,7 @@ int main(int argc, char** argv)
     std::string command_line_input;
 
     // Ignore the program name and string together the rest of the input.
-    for(int i = 1; i < argc; i += 1) {
+    for (int i = 1; i < argc; i += 1) {
         command_line_input += argv[i];
         command_line_input += " ";
     }
@@ -50,7 +50,7 @@ int main(int argc, char** argv)
     masonc::lexer command_lexer;
 
     // If "command_line_input" is empty, a user has probably launched the compiler manually.
-    if(command_line_input.empty()) {
+    if (command_line_input.empty()) {
         std::cout << MASON_ASCII_ART << "\n\n"
                   << "Compiler for the mason programming language, "
                   << "written by Mike Jasinski." << "\n"
@@ -66,7 +66,7 @@ int main(int argc, char** argv)
 
         masonc::execute_command(test_compile_command);
 
-        while(true) {
+        while (true) {
             masonc::listen_command(&command_lexer);
         }
     }

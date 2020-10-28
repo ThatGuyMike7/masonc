@@ -8,30 +8,30 @@
 #include <vector>
 #include <limits>
 
-namespace masonc
+namespace masonc::llvm
 {
     void initialize_llvm_converter()
     {
-        type_map.insert(std::make_pair(TYPE_VOID, LLVMVoidType()));
+        type_map.insert(robin_hood::pair<const char*, LLVMTypeRef>{ TYPE_VOID, LLVMVoidType() });
 
-        type_map.insert(std::make_pair(TYPE_BOOL, LLVMInt1Type()));
-        type_map.insert(std::make_pair(TYPE_CHAR, LLVMInt8Type()));
-        type_map.insert(std::make_pair(TYPE_U8, LLVMInt8Type()));
-        type_map.insert(std::make_pair(TYPE_S8, LLVMInt8Type()));
+        type_map.insert(robin_hood::pair<const char*, LLVMTypeRef>{ TYPE_BOOL, LLVMInt1Type() });
+        type_map.insert(robin_hood::pair<const char*, LLVMTypeRef>{ TYPE_CHAR, LLVMInt8Type() });
+        type_map.insert(robin_hood::pair<const char*, LLVMTypeRef>{ TYPE_U8, LLVMInt8Type() });
+        type_map.insert(robin_hood::pair<const char*, LLVMTypeRef>{ TYPE_S8, LLVMInt8Type() });
 
-        type_map.insert(std::make_pair(TYPE_U16, LLVMInt16Type()));
-        type_map.insert(std::make_pair(TYPE_S16, LLVMInt16Type()));
+        type_map.insert(robin_hood::pair<const char*, LLVMTypeRef>{ TYPE_U16, LLVMInt16Type() });
+        type_map.insert(robin_hood::pair<const char*, LLVMTypeRef>{ TYPE_S16, LLVMInt16Type() });
 
-        type_map.insert(std::make_pair(TYPE_U32, LLVMInt32Type()));
-        type_map.insert(std::make_pair(TYPE_S32, LLVMInt32Type()));
-        type_map.insert(std::make_pair(TYPE_F32, LLVMFloatType()));
+        type_map.insert(robin_hood::pair<const char*, LLVMTypeRef>{ TYPE_U32, LLVMInt32Type() });
+        type_map.insert(robin_hood::pair<const char*, LLVMTypeRef>{ TYPE_S32, LLVMInt32Type() });
+        type_map.insert(robin_hood::pair<const char*, LLVMTypeRef>{ TYPE_F32, LLVMFloatType() });
 
-        type_map.insert(std::make_pair(TYPE_U64, LLVMInt64Type()));
-        type_map.insert(std::make_pair(TYPE_S64, LLVMInt64Type()));
-        type_map.insert(std::make_pair(TYPE_F64, LLVMDoubleType()));
+        type_map.insert(robin_hood::pair<const char*, LLVMTypeRef>{ TYPE_U64, LLVMInt64Type() });
+        type_map.insert(robin_hood::pair<const char*, LLVMTypeRef>{ TYPE_S64, LLVMInt64Type() });
+        type_map.insert(robin_hood::pair<const char*, LLVMTypeRef>{ TYPE_F64, LLVMDoubleType() });
     }
 
-    void llvm_converter::convert(lexer_output* input_lexer, parser_output* input_parser,
+    void llvm_converter::convert(masonc::lexer::lexer_output* input_lexer, masonc::parser::parser_output* input_parser,
         llvm_converter_output* output)
     {
         this->input_lexer = input_lexer;
@@ -99,7 +99,7 @@ namespace masonc
         return LLVMBuildAlloca(llvm_sub_builder, llvm_variable_type, variable_name);
     }
 
-    LLVMValueRef llvm_converter::convert_top_level(expression* expr)
+    LLVMValueRef llvm_converter::convert_top_level(masonc::parser::expression* expr)
     {
         switch (expr->value.empty.type) {
             default:
@@ -108,20 +108,20 @@ namespace masonc
                     std::to_string(expr->value.empty.type) }.c_str()
                 );
                 return nullptr;
-            case EXPR_VAR_DECLARATION:
+            case masonc::parser::EXPR_VAR_DECLARATION:
                 return nullptr;
-            case EXPR_PROC_PROTOTYPE:
+            case masonc::parser::EXPR_PROC_PROTOTYPE:
                 return convert_procedure_prototype(&expr->value.procedure_prototype.value);
-            case EXPR_PROC_DEFINITION:
+            case masonc::parser::EXPR_PROC_DEFINITION:
                 return convert_procedure(&expr->value.procedure_definition.value);
         }
     }
 
-    LLVMValueRef llvm_converter::convert_statement(expression* expr, LLVMValueRef llvm_function)
+    LLVMValueRef llvm_converter::convert_statement(masonc::parser::expression* expr, LLVMValueRef llvm_function)
     {
-        if(expr->value.empty.type == EXPR_VAR_DECLARATION)
+        if(expr->value.empty.type == masonc::parser::EXPR_VAR_DECLARATION)
             return convert_local_variable(&expr->value.variable_declaration.value, llvm_function);
-        else if(expr->value.empty.type == EXPR_PROC_CALL)
+        else if(expr->value.empty.type == masonc::parser::EXPR_PROC_CALL)
             return convert_call(&expr->value.procedure_call.value);
 
         log_error(
@@ -132,10 +132,10 @@ namespace masonc
         return nullptr;
     }
 
-    LLVMValueRef llvm_converter::convert_expression(expression* expr)
+    LLVMValueRef llvm_converter::convert_expression(masonc::parser::expression* expr)
     {
-        if (expr->value.empty.type == EXPR_BINARY ||
-            expr->value.empty.type == EXPR_PARENTHESES)
+        if (expr->value.empty.type == masonc::parser::EXPR_BINARY ||
+            expr->value.empty.type == masonc::parser::EXPR_PARENTHESES)
         {
             return convert_term(expr);
         }
@@ -143,7 +143,7 @@ namespace masonc
         return convert_primary(expr);
     }
 
-    LLVMValueRef llvm_converter::convert_primary(expression* expr)
+    LLVMValueRef llvm_converter::convert_primary(masonc::parser::expression* expr)
     {
         /*
         switch (expr->value.empty.type) {
@@ -173,7 +173,7 @@ namespace masonc
         return nullptr;
     }
 
-    LLVMValueRef llvm_converter::convert_number_literal(expression_number_literal* expr)
+    LLVMValueRef llvm_converter::convert_number_literal(masonc::parser::expression_number_literal* expr)
     {
         /*
         switch (expr->type) {
@@ -200,7 +200,7 @@ namespace masonc
         return nullptr;
     }
 
-    LLVMValueRef llvm_converter::convert_local_variable(expression_variable_declaration* expr,
+    LLVMValueRef llvm_converter::convert_local_variable(masonc::parser::expression_variable_declaration* expr,
         LLVMValueRef llvm_function)
     {
         /*
@@ -216,7 +216,7 @@ namespace masonc
         return nullptr;
     }
 
-    LLVMValueRef llvm_converter::convert_reference(expression_reference* expr)
+    LLVMValueRef llvm_converter::convert_reference(masonc::parser::expression_reference* expr)
     {
         return nullptr;
     }
@@ -227,7 +227,7 @@ namespace masonc
         return LLVMBuildStore(llvm_builder, llvm_value, llvm_pointer);
     }
 
-    LLVMValueRef llvm_converter::convert_dereference(expression* expr)
+    LLVMValueRef llvm_converter::convert_dereference(masonc::parser::expression* expr)
     {
         /*
         return LLVMBuildLoad2(llvm_builder,
@@ -236,7 +236,7 @@ namespace masonc
         return nullptr;
     }
 
-    LLVMValueRef llvm_converter::convert_call(expression_procedure_call* expr)
+    LLVMValueRef llvm_converter::convert_call(masonc::parser::expression_procedure_call* expr)
     {
         /*
         LLVMValueRef llvm_function = LLVMGetNamedFunction(output->llvm_module, expr->name.name.c_str());
@@ -268,7 +268,7 @@ namespace masonc
        return nullptr;
     }
 
-    LLVMValueRef llvm_converter::convert_procedure(expression_procedure_definition* expr)
+    LLVMValueRef llvm_converter::convert_procedure(masonc::parser::expression_procedure_definition* expr)
     {
         LLVMValueRef llvm_function = convert_procedure_prototype(&expr->prototype);
         convert_procedure_body(llvm_function, expr);
@@ -276,7 +276,7 @@ namespace masonc
         return llvm_function;
     }
 
-    LLVMValueRef llvm_converter::convert_procedure_prototype(expression_procedure_prototype* expr)
+    LLVMValueRef llvm_converter::convert_procedure_prototype(masonc::parser::expression_procedure_prototype* expr)
     {
         /*
         std::vector<LLVMTypeRef> llvm_argument_types;
@@ -330,7 +330,7 @@ namespace masonc
     }
 
     void llvm_converter::convert_procedure_body(LLVMValueRef llvm_function,
-        expression_procedure_definition* expr)
+        masonc::parser::expression_procedure_definition* expr)
     {
         LLVMBasicBlockRef llvm_function_block = LLVMAppendBasicBlock(llvm_function, "entry");
         LLVMPositionBuilderAtEnd(llvm_builder, llvm_function_block);
@@ -368,7 +368,7 @@ namespace masonc
         }
     }
 
-    LLVMValueRef llvm_converter::convert_term(expression* term_start)
+    LLVMValueRef llvm_converter::convert_term(masonc::parser::expression* term_start)
     {
         std::vector<term_element> infix;
         std::vector<term_element> RPN;
@@ -417,11 +417,11 @@ namespace masonc
         return RPN[0].llvm_value;
     }
 
-    void llvm_converter::ast_to_infix(expression* term_start, std::vector<term_element>& term)
+    void llvm_converter::ast_to_infix(masonc::parser::expression* term_start, std::vector<term_element>& term)
     {
-        expression_binary* expr;
+        masonc::parser::expression_binary* expr;
 
-        if(term_start->value.empty.type == EXPR_BINARY) {
+        if(term_start->value.empty.type == masonc::parser::EXPR_BINARY) {
             expr = &term_start->value.binary.value;
 
             // Left-hand side
@@ -436,7 +436,7 @@ namespace masonc
             // Right-hand side
             ast_to_infix(expr->right, term);
         }
-        else if (term_start->value.empty.type == EXPR_PARENTHESES) {
+        else if (term_start->value.empty.type == masonc::parser::EXPR_PARENTHESES) {
             expr = &term_start->value.parentheses.value.expr;
 
             // "("

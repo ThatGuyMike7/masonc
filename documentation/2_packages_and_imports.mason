@@ -40,7 +40,7 @@ my_io.print("Hello World");
 
 // Conflicting module names (e.g. two different modules named "core")
 // can only be resolved in a pre-compile pass, more on passes later.
-//
+
 // 3.
 // Multiple import statements can optionally be grouped together.
 import
@@ -48,7 +48,7 @@ import
     core.io,
     core.os,
     core.math
-}
+};
 
 // 4.
 // The contents of a package can also be expanded directly into the current file scope.

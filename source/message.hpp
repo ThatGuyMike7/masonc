@@ -1,23 +1,22 @@
 #ifndef _MASON_MESSAGE_HPP_$
 #define _MASON_MESSAGE_HPP_$
 
+#include <common.hpp>
+#include <location.hpp>
+#include <build.hpp>
+
 #include <string>
 #include <vector>
 
-#include <common.hpp>
-#include <build.hpp>
-
 namespace masonc
 {
-	struct message
-	{
-		u64 line_number;
-        u64 start_column;
-        u64 end_column;
+    struct message
+    {
+        token_location location;
 
-		std::string msg;
+        std::string msg;
         build_stage stage;
-	};
+    };
 
     struct message_list
     {

@@ -12,17 +12,17 @@ namespace masonc
 
             std::cout << "Message";
 
-            if (msg->line_number > 0)
-                std::cout << "(l. " << msg->line_number;
+            if (msg->location.line_number > 0)
+                std::cout << "(l. " << msg->location.line_number;
 
-            if (msg->line_number > 0) {
-                std::cout << "(l. " << msg->line_number;
+            if (msg->location.line_number > 0) {
+                std::cout << "(l. " << msg->location.line_number;
 
-                if (msg->start_column > 0 && msg->end_column > 0) {
-                    if(msg->start_column == msg->end_column)
-                        std::cout << ", c. " << msg->start_column;
+                if (msg->location.start_column > 0 && msg->location.end_column > 0) {
+                    if(msg->location.start_column == msg->location.end_column)
+                        std::cout << ", c. " << msg->location.start_column;
                     else
-                        std::cout << ", c. " << msg->start_column << "-" << msg->end_column;
+                        std::cout << ", c. " << msg->location.start_column << "-" << msg->location.end_column;
                 }
 
                 std::cout << ")";
@@ -42,14 +42,14 @@ namespace masonc
 
             std::cout << "Warning";
 
-            if (warn->line_number > 0) {
-                std::cout << "(l. " << warn->line_number;
+            if (warn->location.line_number > 0) {
+                std::cout << "(l. " << warn->location.line_number;
 
-                if (warn->start_column > 0 && warn->end_column > 0) {
-                    if(warn->start_column == warn->end_column)
-                        std::cout << ", c. " << warn->start_column;
+                if (warn->location.start_column > 0 && warn->location.end_column > 0) {
+                    if(warn->location.start_column == warn->location.end_column)
+                        std::cout << ", c. " << warn->location.start_column;
                     else
-                        std::cout << ", c. " << warn->start_column << "-" << warn->end_column;
+                        std::cout << ", c. " << warn->location.start_column << "-" << warn->location.end_column;
                 }
 
                 std::cout << ")";
@@ -69,14 +69,14 @@ namespace masonc
 
             std::cout << "Error";
 
-            if (err->line_number > 0) {
-                std::cout << "(l. " << err->line_number;
+            if (err->location.line_number > 0) {
+                std::cout << "(l. " << err->location.line_number;
 
-                if (err->start_column > 0 && err->end_column > 0) {
-                    if(err->start_column == err->end_column)
-                        std::cout << ", c. " << err->start_column;
+                if (err->location.start_column > 0 && err->location.end_column > 0) {
+                    if(err->location.start_column == err->location.end_column)
+                        std::cout << ", c. " << err->location.start_column;
                     else
-                        std::cout << ", c. " << err->start_column << "-" << err->end_column;
+                        std::cout << ", c. " << err->location.start_column << "-" << err->location.end_column;
                 }
 
                 std::cout << ")";

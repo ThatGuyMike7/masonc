@@ -20,8 +20,6 @@ namespace masonc
 	using f32 = float;
 	using f64 = double;
 
-	//using rune = s32;
-
 	void assume(bool statement, const char* msg = "", int code = -1);
 
     /*

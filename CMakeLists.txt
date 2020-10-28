@@ -12,7 +12,7 @@ file(GLOB_RECURSE SOURCES
     "${CMAKE_SOURCE_DIR}/source/*.cpp"
 )
 
-message(STATUS "Sources are ${SOURCES}")
+#message(STATUS "Sources are ${SOURCES}")
 
 # Determine configuration.
 if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
@@ -89,7 +89,7 @@ find_library(MASONC_LLVM_LIB
     PATH_SUFIXES lib64 lib so a
 )
 
-message(STATUS "Libraries are ${MASONC_LLVM_LIB}")
+#message(STATUS "Libraries are ${MASONC_LLVM_LIB}")
 
 target_link_libraries(${PROJECT_NAME} ${MASONC_LLVM_LIB})
 

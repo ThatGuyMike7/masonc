@@ -3,6 +3,7 @@
 
 #include <parser_expressions.hpp>
 #include <common.hpp>
+#include <location.hpp>
 #include <lexer.hpp>
 #include <symbol.hpp>
 #include <scope.hpp>
@@ -15,7 +16,7 @@
 #include <memory>
 #include <optional>
 
-namespace masonc
+namespace masonc::parser
 {
     enum parse_context : u8
     {
@@ -25,7 +26,7 @@ namespace masonc
 
     struct parser_output
     {
-        lexer_output* lexer_output;
+        masonc::lexer::lexer_output* lexer_output;
 
         // Indices of package names correspond to package handles in "packages" and "asts".
         cstring_collection package_names;
@@ -43,7 +44,7 @@ namespace masonc
     {
         // "lexer_output" is expected to have no errors and
         // "parser_output" is expected to be allocated and empty.
-        void parse(lexer_output* lexer_output, parser_output* parser_output);
+        void parse(masonc::lexer::lexer_output* lexer_output, parser_output* parser_output);
 
         // Release all heap-allocated expressions.
         // This renders the AST unsafe to access, call at the very end of the build process
@@ -74,7 +75,7 @@ namespace masonc
         // in turn parse their own expressions and so on.
         void drive();
 
-        lexer_output* lexer_output();
+        masonc::lexer::lexer_output* lexer_output();
         scope* current_scope();
 
         // Set package with specified name to be current, or add a new package if it doesn't exist.
@@ -82,11 +83,11 @@ namespace masonc
         void set_package(const std::string& package_name);
 
         void eat(u64 count = 1);
-        std::optional<token*> peek_token();
+        std::optional<masonc::lexer::token*> peek_token();
 
         // If a next token does not exist, the parser is marked as "done",
         // a parse error is generated and the result is empty.
-        std::optional<token*> expect_any();
+        std::optional<masonc::lexer::token*> expect_any();
 
         // If a next token does not exist, the parser is marked as "done",
         // a parse error is generated and the result is empty.
@@ -94,7 +95,7 @@ namespace masonc
         // If the next token is not an identifier, a parse error is generated and the result is empty.
         //
         // Otherwise, the token is eaten and the result is valid.
-        std::optional<token*> expect_identifier();
+        std::optional<masonc::lexer::token*> expect_identifier();
 
         // If a next token does not exist, the parser is marked as "done",
         // a parse error is generated and the result is empty.
@@ -103,7 +104,7 @@ namespace masonc
         // a parse error is generated and the result is empty.
         //
         // Otherwise, the token is eaten and the result is valid.
-        std::optional<token*> expect(char c);
+        std::optional<masonc::lexer::token*> expect(char c);
 
         // If a next token does not exist, the parser is marked as "done",
         // a parse error is generated and the result is empty.
@@ -112,15 +113,15 @@ namespace masonc
         // a parse error is generated and the result is empty.
         //
         // Otherwise, the token is eaten and the result is valid.
-        std::optional<token*> expect(const std::string& identifier);
+        std::optional<masonc::lexer::token*> expect(const std::string& identifier);
 
-        const char* identifier_at(const token& identifier_token);
-        const char* integer_at(const token& integer_token);
-        const char* decimal_at(const token& decimal_token);
-        const char* string_at(const token& string_token);
+        const char* identifier_at(const masonc::lexer::token& identifier_token);
+        const char* integer_at(const masonc::lexer::token& integer_token);
+        const char* decimal_at(const masonc::lexer::token& decimal_token);
+        const char* string_at(const masonc::lexer::token& string_token);
 
         // Assumes that the index is in range.
-        token_location* get_token_location(u64 token_index);
+        masonc::lexer::token_location* get_token_location(u64 token_index);
 
         // Report an error at the last token.
         void report_parse_error(const std::string& msg);
@@ -194,6 +195,14 @@ namespace masonc
     // Returns `expression_binary` from either `expression_binary` or `expression_parentheses`.
     // Any other passed expression type will return a null pointer.
     expression_binary* get_binary_expression(expression* expr);
+
+    // Returns the location of the package name token that matches "import" if it exists in "ast".
+    // "ast" should be a package-level AST since package imports can only be declared there.
+    //
+    // This function is useful for error reporting when a package is imported that does not exist and
+    // the location of the package import token needs to be found to be included in the error message.
+    std::optional<masonc::lexer::token_location> find_package_import_location(package_import import,
+        std::vector<expression>* ast);
 }
 
 #endif

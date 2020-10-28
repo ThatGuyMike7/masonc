@@ -1,17 +1,21 @@
 #ifndef $_MASONC_LINKER_HPP_$
 #define $_MASONC_LINKER_HPP_$
 
+#include <location.hpp>
 #include <parser.hpp>
 #include <package.hpp>
 #include <scope.hpp>
 #include <message.hpp>
 #include <dependency_graph.hpp>
 
-namespace masonc
+#include <vector>
+#include <optional>
+
+namespace masonc::linker
 {
     struct linker_output
     {
-        parser_output* parser_output;
+        masonc::parser::parser_output* parser_output;
 
         message_list messages;
     };
@@ -29,13 +33,13 @@ namespace masonc
 
         // "parser_output" is expected to have no errors and
         // "linker_output" is expected to be allocated and empty.
-        void link(parser_output* parser_output, linker_output* linker_output);
+        void link(masonc::parser::parser_output* parser_output, linker_output* linker_output);
 
     private:
         linker_output* linker_output;
-        dependency_graph<package*> package_graph;
+        //dependency_graph<package*> package_graph;
 
-        parser_output* parser_output();
+        masonc::parser::parser_output* parser_output();
     };
 }
 

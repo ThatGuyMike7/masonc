@@ -8,7 +8,7 @@
 #include <iostream>
 #include <optional>
 
-namespace masonc
+namespace masonc::lexer
 {
 	bool is_escape_sequence(char c)
 	{
