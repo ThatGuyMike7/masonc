@@ -8,14 +8,11 @@
 #include <message.hpp>
 #include <dependency_graph.hpp>
 
-#include <vector>
-#include <optional>
-
 namespace masonc::linker
 {
     struct linker_output
     {
-        masonc::parser::parser_output* parser_output;
+        masonc::parser::parser_instance_output* parser_output;
 
         message_list messages;
     };
@@ -33,13 +30,15 @@ namespace masonc::linker
 
         // "parser_output" is expected to have no errors and
         // "linker_output" is expected to be allocated and empty.
-        void link(masonc::parser::parser_output* parser_output, linker_output* linker_output);
+        void link(masonc::parser::parser_instance_output* parser_output, linker_output* linker_output);
 
     private:
         linker_output* linker_output;
         //dependency_graph<package*> package_graph;
 
-        masonc::parser::parser_output* parser_output();
+        masonc::parser::parser_instance_output* parser_output();
+
+        void report_link_error(const std::string& msg, const masonc::lexer::token_location& location);
     };
 }
 

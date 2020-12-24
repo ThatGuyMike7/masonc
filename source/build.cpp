@@ -15,12 +15,12 @@ namespace masonc
         additional_extensions.insert(".m");
         additional_extensions.insert(".mason");
 
-        masonc::lexer::lexer source_lexer;
-        masonc::parser::parser source_parser;
+        masonc::lexer::lexer_instance source_lexer;
+        masonc::parser::parser_instance source_parser;
         masonc::llvm::llvm_converter source_converter;
 
-        std::vector<masonc::lexer::lexer_output> lexer_outputs;
-        std::vector<masonc::parser::parser_output> parser_outputs;
+        std::vector<masonc::lexer::lexer_instance_output> lexer_outputs;
+        std::vector<masonc::parser::parser_instance_output> parser_outputs;
         std::vector<masonc::llvm::llvm_converter_output> converter_outputs;
 
         {
@@ -38,8 +38,8 @@ namespace masonc
                         goto END;
                     }
 
-                    masonc::lexer::lexer_output* current_lexer_output =
-                        &lexer_outputs.emplace_back(masonc::lexer::lexer_output{});
+                    masonc::lexer::lexer_instance_output* current_lexer_output =
+                        &lexer_outputs.emplace_back(masonc::lexer::lexer_instance_output{});
 
                     source_lexer.tokenize(current_file.value(),
                         current_file_length, current_lexer_output);
@@ -56,9 +56,9 @@ namespace masonc
 
             std::cout << "Parsing..." << std::endl;
             for (u64 i = 0; i < lexer_outputs.size(); i += 1) {
-                masonc::lexer::lexer_output* current_lexer_output = &lexer_outputs[i];
-                masonc::parser::parser_output* current_parser_output =
-                    &parser_outputs.emplace_back(masonc::parser::parser_output{});
+                masonc::lexer::lexer_instance_output* current_lexer_output = &lexer_outputs[i];
+                masonc::parser::parser_instance_output* current_parser_output =
+                    &parser_outputs.emplace_back(masonc::parser::parser_instance_output{});
 
                 source_parser.parse(current_lexer_output, current_parser_output);
 

@@ -33,7 +33,7 @@ int main(int argc, char** argv)
     std::cin.tie(nullptr);
 
     masonc::initialize_language();
-    masonc::initialize_llvm_converter();
+    masonc::llvm::initialize_llvm_converter();
 
     masonc::test::perform_all_tests();
 
@@ -47,7 +47,7 @@ int main(int argc, char** argv)
         command_line_input += " ";
     }
 
-    masonc::lexer command_lexer;
+    masonc::lexer::lexer_instance command_lexer;
 
     // If "command_line_input" is empty, a user has probably launched the compiler manually.
     if (command_line_input.empty()) {
@@ -72,7 +72,7 @@ int main(int argc, char** argv)
     }
     // The compiler was invoked with specific command line arguments.
     else {
-        masonc::lexer_output output;
+        masonc::lexer::lexer_instance_output output;
 
         // Parse and execute the command in question.
         auto command_result = masonc::parse_command(&command_lexer, &output,

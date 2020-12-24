@@ -1,0 +1,4 @@
+# Ensure that the current folder gets upstream and the documentation pdf file, but nothing else.
+*
+!documentation.pdf
+!.gitignore

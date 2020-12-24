@@ -2,6 +2,7 @@
 #define $_MASON_PACKAGE_HPP_$
 
 #include <common.hpp>
+#include <package_handle.hpp>
 #include <scope.hpp>
 #include <parser_expressions.hpp>
 #include <containers.hpp>
@@ -20,26 +21,13 @@ namespace masonc
     // e.g. "core" from "core.io.streams".
     std::string module_name_from_package_name(const std::string& package_name);
 
-    using package_import = const char*;
-    //struct package_import
-    //{
-    //    std::string package_name;
-    //
-    //    bool operator< (const package_import& rhs) const
-    //    {
-    //        return package_name < rhs.package_name;
-    //    }
-    //};
-
     struct package
     {
-        cstring_collection imports;
+        cstring_collection package_import_names;
 
         scope package_scope = PACKAGE_SCOPE_TEMPLATE;
         cstring_collection scope_names;
     };
-
-    using package_handle = u64;
 }
 
 #endif

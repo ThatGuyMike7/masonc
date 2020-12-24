@@ -107,8 +107,8 @@ namespace masonc
     {
         std::cout << input << std::endl;
 
-        lexer command_lexer;
-        lexer_output output;
+        masonc::lexer::lexer_instance command_lexer;
+        masonc::lexer::lexer_instance_output output;
 
         std::optional<command_parsed> command_result = parse_command(&command_lexer, &output,
             input.c_str(), static_cast<u64>(input.length()));
@@ -122,10 +122,10 @@ namespace masonc
         return true;
     }
 
-    bool listen_command(lexer* command_lexer)
+    bool listen_command(masonc::lexer::lexer_instance* command_lexer)
     {
         std::string input;
-        lexer_output output;
+        masonc::lexer::lexer_instance_output output;
 
         std::getline(std::cin, input);
 
@@ -156,16 +156,16 @@ namespace masonc
         }
     }
 
-    std::optional<command_name_pair*> find_command(lexer_output* output)
+    std::optional<command_name_pair*> find_command(masonc::lexer::lexer_instance_output* output)
     {
         if(output->tokens.size() == 0) {
             // User entered nothing or whitespace only.
             std::cout << "Expected command name." << std::endl;
             return std::nullopt;
         }
-        token *command_token = &output->tokens[0];
+        masonc::lexer::token *command_token = &output->tokens[0];
 
-        if(command_token->type != TOKEN_IDENTIFIER) {
+        if(command_token->type != masonc::lexer::TOKEN_IDENTIFIER) {
             // User did not enter a valid command name.
             std::cout << "Expected command name." << std::endl;
             return std::nullopt;
@@ -183,8 +183,8 @@ namespace masonc
         return std::make_optional(&(*find_command_it));
     }
 
-    std::optional<command_parsed> parse_command(lexer* command_lexer, lexer_output* output,
-        const char* input, u64 input_size)
+    std::optional<command_parsed> parse_command(masonc::lexer::lexer_instance* command_lexer,
+        masonc::lexer::lexer_instance_output* output, const char* input, u64 input_size)
     {
         // Tokenize the input.
         command_lexer->tokenize(input, input_size, output);
@@ -235,12 +235,12 @@ namespace masonc
         return std::make_optional(command);
     }
 
-    std::optional<command_argument_pair> parse_command_argument(u64* token_index, lexer_output* output,
-        command_argument_type argument_type)
+    std::optional<command_argument_pair> parse_command_argument(u64* token_index,
+        masonc::lexer::lexer_instance_output* output, command_argument_type argument_type)
     {
         command_argument_value value;
 
-        token* current_token = &output->tokens[*token_index];
+        masonc::lexer::token* current_token = &output->tokens[*token_index];
         *token_index += 1;
 
         switch(argument_type) {
@@ -249,7 +249,7 @@ namespace masonc
                 return std::nullopt;
 
             case command_argument_type::INTEGER:
-                if(current_token->type != TOKEN_INTEGER) {
+                if(current_token->type != masonc::lexer::TOKEN_INTEGER) {
                     std::cout << "Mismatched type, expected an integer." << std::endl;
                     return std::nullopt;
                 }
@@ -258,7 +258,7 @@ namespace masonc
                 return std::make_optional(command_argument_pair{ command_argument_type::INTEGER, value });
 
             case command_argument_type::DECIMAL:
-                if(current_token->type != TOKEN_DECIMAL) {
+                if(current_token->type != masonc::lexer::TOKEN_DECIMAL) {
                     std::cout << "Mismatched type, expected a decimal." << std::endl;
                     return std::nullopt;
                 }
@@ -267,7 +267,7 @@ namespace masonc
                 return std::make_optional(command_argument_pair{ command_argument_type::DECIMAL, value });
 
             case command_argument_type::STRING:
-                if(current_token->type != TOKEN_STRING) {
+                if(current_token->type != masonc::lexer::TOKEN_STRING) {
                     std::cout << "Mismatched type, expected a string." << std::endl;
                     return std::nullopt;
                 }
@@ -277,8 +277,9 @@ namespace masonc
         }
     }
 
-    std::optional<command_option_tuple> parse_command_option(u64* token_index, lexer_output* output,
-        const std::map<const char*, command_option_definition>& options)
+    std::optional<command_option_tuple> parse_command_option(u64* token_index,
+        masonc::lexer::lexer_instance_output* output, const std::map<const char*,
+        command_option_definition>& options)
     {
         if(*token_index + 4 >= output->tokens.size()) {
             std::cout << "Incomplete option." << std::endl;
@@ -286,10 +287,10 @@ namespace masonc
         }
 
         // Relevant tokens of the option "-identifier=".
-        token* dash_token = &output->tokens[*token_index];
-        token* dash_token_2 = &output->tokens[*token_index + 1];
-        token* identifier_token = &output->tokens[*token_index + 2];
-        token* equals_token = &output->tokens[*token_index + 3];
+        masonc::lexer::token* dash_token = &output->tokens[*token_index];
+        masonc::lexer::token* dash_token_2 = &output->tokens[*token_index + 1];
+        masonc::lexer::token* identifier_token = &output->tokens[*token_index + 2];
+        masonc::lexer::token* equals_token = &output->tokens[*token_index + 3];
         *token_index += 4;
 
         if(dash_token->type != '-') {
@@ -300,7 +301,7 @@ namespace masonc
             std::cout << "Invalid option format, expected \"--\"." << std::endl;
             return std::nullopt;
         }
-        if(identifier_token->type != TOKEN_IDENTIFIER) {
+        if(identifier_token->type != masonc::lexer::TOKEN_IDENTIFIER) {
             std::cout << "Invalid option format, expected identifier." << std::endl;
             return std::nullopt;
         }

@@ -56,7 +56,7 @@ namespace masonc::llvm
     // "llvm_converter" is responsible for IR generation of a specific package.
     struct llvm_converter
     {
-        void convert(masonc::lexer::lexer_output* input_lexer, masonc::parser::parser_output* input_parser,
+        void convert(masonc::lexer::lexer_instance_output* input_lexer, masonc::parser::parser_instance_output* input_parser,
             llvm_converter_output* output);
 
         void free();
@@ -64,8 +64,8 @@ namespace masonc::llvm
         void print_IR();
 
     private:
-        masonc::lexer::lexer_output* input_lexer;
-        masonc::parser::parser_output* input_parser;
+        masonc::lexer::lexer_instance_output* input_lexer;
+        masonc::parser::parser_instance_output* input_parser;
         llvm_converter_output* output;
 
         LLVMBuilderRef llvm_builder;

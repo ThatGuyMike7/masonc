@@ -76,28 +76,29 @@ namespace masonc
     // Wait until the user enters something into the input stream,
     // parse the string into a command and execute it.
     // Returns false if the input cannot be parsed nor executed.
-    bool listen_command(lexer* command_lexer);
+    bool listen_command(masonc::lexer::lexer_instance* command_lexer);
 
     // Get a "command_argument_type" value as string.
     const char* command_argument_type_string(command_argument_type argument_type);
 
     // Command name associated with command definition - key and value types of "COMMANDS".
-    using command_name_pair = const std::pair<const char* const, const command_definition>;
+    using command_name_pair = const robin_hood::pair<const char* const, const command_definition>;
 
     // Returns a pointer to a key-value pair in "COMMANDS"
     // that matches the command name found in the tokenizer's output.
-    static std::optional<command_name_pair*> find_command(lexer_output* output);
+    static std::optional<command_name_pair*> find_command(masonc::lexer::lexer_instance_output* output);
 
-    std::optional<command_parsed> parse_command(lexer* command_lexer, lexer_output* output,
-        const char* input, u64 input_size);
+    std::optional<command_parsed> parse_command(masonc::lexer::lexer_instance* command_lexer,
+        masonc::lexer::lexer_instance_output* output, const char* input, u64 input_size);
 
     // Parse non-optional argument of a command.
-    std::optional<command_argument_pair> parse_command_argument(u64* token_index, lexer_output* output,
-        command_argument_type argument_type);
+    std::optional<command_argument_pair> parse_command_argument(u64* token_index,
+        masonc::lexer::lexer_instance_output* output, command_argument_type argument_type);
 
     // Parse optional argument of a command.
-    std::optional<command_option_tuple> parse_command_option(u64* token_index, lexer_output* output,
-        const std::map<const char*, command_option_definition>& options);
+    std::optional<command_option_tuple> parse_command_option(u64* token_index,
+        masonc::lexer::lexer_instance_output* output, const std::map<const char*,
+        command_option_definition>& options);
 
     inline const cstring_unordered_map<const command_definition> COMMANDS =
     {

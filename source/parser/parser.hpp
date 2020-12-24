@@ -9,6 +9,7 @@
 #include <scope.hpp>
 #include <message.hpp>
 #include <package.hpp>
+#include <package_handle.hpp>
 #include <containers.hpp>
 
 #include <string>
@@ -24,27 +25,24 @@ namespace masonc::parser
         CONTEXT_STATEMENT
     };
 
-    struct parser_output
+    struct parser_instance_output
     {
-        masonc::lexer::lexer_output* lexer_output;
+        masonc::lexer::lexer_instance_output* lexer_output;
 
-        // Indices of package names correspond to package handles in "packages" and "asts".
+        // These three containers have associated elements.
+        // See the "package_handle" type defined in "package.hpp" for more information.
         cstring_collection package_names;
-
-        // Indices are package handles from "package_names".
         std::vector<package> packages;
-
-        // Indices are package handles from "package_names".
         std::vector<std::vector<expression>> asts;
 
         message_list messages;
     };
 
-    struct parser
+    struct parser_instance
     {
         // "lexer_output" is expected to have no errors and
         // "parser_output" is expected to be allocated and empty.
-        void parse(masonc::lexer::lexer_output* lexer_output, parser_output* parser_output);
+        void parse(masonc::lexer::lexer_instance_output* lexer_output, parser_instance_output* parser_output);
 
         // Release all heap-allocated expressions.
         // This renders the AST unsafe to access, call at the very end of the build process
@@ -55,7 +53,7 @@ namespace masonc::parser
         std::string format_expression(const expression& expr, u64 level = 0);
 
     private:
-        parser_output* parser_output;
+        parser_instance_output* parser_output;
 
         // All heap-allocated expressions - the indirection is needed to
         // avoid circular references in some cases.
@@ -75,10 +73,10 @@ namespace masonc::parser
         // in turn parse their own expressions and so on.
         void drive();
 
-        masonc::lexer::lexer_output* lexer_output();
+        masonc::lexer::lexer_instance_output* lexer_output();
         scope* current_scope();
 
-        // Set package with specified name to be current, or add a new package if it doesn't exist.
+        // Sets package with specified name to be current, or adds a new package if it doesn't exist.
         void set_package(const char* package_name, u16 package_name_length);
         void set_package(const std::string& package_name);
 
@@ -123,13 +121,13 @@ namespace masonc::parser
         // Assumes that the index is in range.
         masonc::lexer::token_location* get_token_location(u64 token_index);
 
-        // Report an error at the last token.
+        // Reports an error at the last token.
         void report_parse_error(const std::string& msg);
 
-        // Report an error at a specific token.
+        // Reports an error at a specific token.
         void report_parse_error_at(const std::string& msg, u64 token_index);
 
-        // Jump to the next statement.
+        // Jumps to the next statement.
         void recover();
 
         // Guarantees that the next token exists and is an identifier, unless an error occured.
@@ -165,7 +163,7 @@ namespace masonc::parser
         std::optional<expression> parse_binary(parse_context context,
             const expression& left, const binary_operator* op);
 
-        // Parse either expression_primary which would ignore the parentheses,
+        // Parses either expression_primary which would ignore the parentheses,
         // or binary expression encased in parentheses, returning expression_parentheses
         std::optional<expression> parse_parentheses(parse_context context);
 
@@ -195,14 +193,6 @@ namespace masonc::parser
     // Returns `expression_binary` from either `expression_binary` or `expression_parentheses`.
     // Any other passed expression type will return a null pointer.
     expression_binary* get_binary_expression(expression* expr);
-
-    // Returns the location of the package name token that matches "import" if it exists in "ast".
-    // "ast" should be a package-level AST since package imports can only be declared there.
-    //
-    // This function is useful for error reporting when a package is imported that does not exist and
-    // the location of the package import token needs to be found to be included in the error message.
-    std::optional<masonc::lexer::token_location> find_package_import_location(package_import import,
-        std::vector<expression>* ast);
 }
 
 #endif

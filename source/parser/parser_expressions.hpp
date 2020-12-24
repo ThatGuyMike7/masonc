@@ -4,9 +4,11 @@
 #define $_MASONC_PARSER_EXPRESSIONS_HPP_$
 
 #include <common.hpp>
+#include <package_handle.hpp>
 #include <symbol.hpp>
 #include <type.hpp>
 #include <binary_operator.hpp>
+#include <location.hpp>
 
 #include <vector>
 #include <optional>
@@ -117,14 +119,18 @@ namespace masonc::parser
 
     struct expression_package_declaration
     {
-        // Non-owning pointer to string.
-        const char* package_name;
+        package_handle handle;
     };
 
     struct expression_package_import
     {
-        // Non-owning pointer to string.
-        const char* package_name;
+        package_handle handle;
+
+        // Index of an element in the "masonc::package::imports" container.
+        u64 import_index;
+
+        // Pointer to an element in the "masonc::lexer::lexer_instance::locations" container.
+        masonc::lexer::token_location* name_location;
     };
 
     enum expression_type : u8

@@ -1,5 +1,5 @@
-#ifndef _MASON_MESSAGE_HPP_$
-#define _MASON_MESSAGE_HPP_$
+#ifndef $_MASONC_MESSAGE_HPP_$
+#define $_MASONC_MESSAGE_HPP_$
 
 #include <common.hpp>
 #include <location.hpp>
@@ -10,6 +10,8 @@
 
 namespace masonc
 {
+    using masonc::lexer::token_location;
+
     struct message
     {
         token_location location;
@@ -30,13 +32,13 @@ namespace masonc
         void print();
 
         void report_message(const std::string& msg, build_stage stage = build_stage::UNSET,
-            u64 line_number = 0, u64 start_column = 0, u64 end_column = 0);
+            const token_location& location = token_location{ 0, 0, 0 });
 
         void report_warning(const std::string& msg, build_stage stage = build_stage::UNSET,
-            u64 line_number = 0, u64 start_column = 0, u64 end_column = 0);
+            const token_location& location = token_location{ 0, 0, 0 });
 
         void report_error(const std::string& msg, build_stage stage = build_stage::UNSET,
-            u64 line_number = 0, u64 start_column = 0, u64 end_column = 0);
+            const token_location& location = token_location{ 0, 0, 0 });
     };
 }
 

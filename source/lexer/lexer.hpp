@@ -49,7 +49,7 @@ namespace masonc::lexer
 
     constexpr char ESCAPE_BEGIN = '\\';
 
-    // Get a composed token as string by type.
+    // Gets a composed token as string by type.
     // Returns an empty string if token is not composed or could not be found.
     std::string get_composed_token(token_type type);
 
@@ -65,9 +65,11 @@ namespace masonc::lexer
 
     bool is_space(char c);
 
-    struct lexer_output
+    struct lexer_instance_output
     {
         std::vector<token> tokens;
+
+        // Locations of tokens that might be needed for error reporting.
         std::vector<token_location> locations;
 
         cstring_collection identifiers;
@@ -78,20 +80,20 @@ namespace masonc::lexer
         message_list messages;
     };
 
-    struct lexer
+    struct lexer_instance
     {
         // 'input': Null-terminated string that will be split into tokens.
         // 'input_size': Number of characters in input.
         // 'output' is expected to be allocated and empty.
         // 'tab_size' should be set to get correct error message column numbers.
-        void tokenize(const char* input, u64 input_size, lexer_output* output, u8 tab_size = 4);
+        void tokenize(const char* input, u64 input_size, lexer_instance_output* output, u8 tab_size = 4);
 
         // Print all tokens for debug purposes.
         void print_tokens();
 
     private:
         const char* input;
-        lexer_output* output;
+        lexer_instance_output* output;
 
         u64 char_index;
         u64 line_number;
@@ -101,8 +103,8 @@ namespace masonc::lexer
 
         u8 tab_size;
 
-        // Reset the lexer.
-        void prepare(const char* input, u64 input_size, lexer_output* output, u8 tab_size);
+        // Resets the lexer.
+        void prepare(const char* input, u64 input_size, lexer_instance_output* output, u8 tab_size);
         void analyze();
 
         // Returns true if next char is valid and increment "i".
@@ -155,9 +157,9 @@ namespace masonc::lexer
         return result;
     }
 
-    constexpr std::array<bool, 127> build_alpha_lookup();
+    //constexpr std::array<bool, 127> build_alpha_lookup();
     constexpr std::array<bool, 127> ALPHA_LOOKUP = build_alpha_lookup();
-    constexpr std::array<bool, 127> build_num_lookup();
+    //constexpr std::array<bool, 127> build_num_lookup();
     constexpr std::array<bool, 127> NUM_LOOKUP = build_num_lookup();
 
     // Is alpha [a-z], [A-Z] or underscore "_".

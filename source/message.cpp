@@ -100,21 +100,21 @@ namespace masonc
         std::cout << std::endl;
     }
 
-    void message_list::report_message(const std::string& msg, build_stage stage, u64 line_number,
-        u64 start_column, u64 end_column)
+    void message_list::report_message(const std::string& msg, build_stage stage,
+        const token_location& location)
     {
-        messages.push_back(message{ line_number, start_column, end_column, msg, stage });
+        messages.push_back(message{ location, msg, stage });
     }
 
-    void message_list::report_warning(const std::string& msg, build_stage stage, u64 line_number,
-        u64 start_column, u64 end_column)
+    void message_list::report_warning(const std::string& msg, build_stage stage,
+        const token_location& location)
     {
-        warnings.push_back(message{ line_number, start_column, end_column, msg, stage });
+        warnings.push_back(message{ location, msg, stage });
     }
 
-    void message_list::report_error(const std::string& msg, build_stage stage, u64 line_number,
-        u64 start_column, u64 end_column)
+    void message_list::report_error(const std::string& msg, build_stage stage,
+        const token_location& location)
     {
-        errors.push_back(message{ line_number, start_column, end_column, msg, stage });
+        errors.push_back(message{ location, msg, stage });
     }
 }

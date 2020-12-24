@@ -43,19 +43,19 @@ namespace masonc::test::parser
         if (!file)
             return std::optional<masonc::message_list>{};
 
-        masonc::lexer lex;
-        masonc::lexer_output lex_output;
+        masonc::lexer::lexer_instance lexer;
+        masonc::lexer::lexer_instance_output lexer_output;
 
-        lex.tokenize(file.value(), file_length, &lex_output);
-        if (lex_output.messages.errors.size() > 0)
+        lexer.tokenize(file.value(), file_length, &lexer_output);
+        if (lexer_output.messages.errors.size() > 0)
             return std::optional<masonc::message_list>{};
 
-        masonc::parser par;
-        masonc::parser_output par_output;
+        masonc::parser::parser_instance parser;
+        masonc::parser::parser_instance_output parser_output;
 
-        par.parse(&lex_output, &par_output);
+        parser.parse(&lexer_output, &parser_output);
         std::free(file.value());
 
-        return std::optional<masonc::message_list>{ par_output.messages };
+        return std::optional<masonc::message_list>{ parser_output.messages };
     }
 }

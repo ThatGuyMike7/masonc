@@ -1,6 +1,8 @@
 #include <parser.hpp>
 
 #include <common.hpp>
+#include <package.hpp>
+#include <package_handle.hpp>
 #include <type.hpp>
 #include <log.hpp>
 #include <timer.hpp>
@@ -13,7 +15,7 @@
 
 namespace masonc::parser
 {
-    void parser::parse(masonc::lexer::lexer_output* lexer_output, masonc::parser::parser_output* parser_output)
+    void parser_instance::parse(masonc::lexer::lexer_instance_output* lexer_output, masonc::parser::parser_instance_output* parser_output)
     {
         this->parser_output = parser_output;
         this->parser_output->lexer_output = lexer_output;
@@ -43,14 +45,14 @@ namespace masonc::parser
         drive();
     }
 
-    void parser::free()
+    void parser_instance::free()
     {
         for (u64 i = 0; i < delete_list_expressions.size(); i += 1) {
             delete delete_list_expressions[i];
         }
     }
 
-    std::string parser::format_expression(const expression& expr, u64 level)
+    std::string parser_instance::format_expression(const expression& expr, u64 level)
     {
         std::string message;
         for (u64 i = 0; i < level; i += 1) {
@@ -177,13 +179,14 @@ namespace masonc::parser
 
             case EXPR_PACKAGE_DECLARATION:
                 message += "Package Declaration: Name='";
-                message += expr.value.package_declaration.value.package_name;
+                message += this->parser_output->package_names.at(expr.value.package_declaration.value.handle);
                 message += "'";
                 break;
 
             case EXPR_PACKAGE_IMPORT:
                 message += "Package Import: Name='";
-                message += expr.value.package_import.value.package_name;
+                message += this->parser_output->packages.at(expr.value.package_import.value.handle)
+                    .package_import_names.at(expr.value.package_import.value.import_index);
                 message += "'";
                 break;
         }
@@ -191,7 +194,7 @@ namespace masonc::parser
         return message;
     }
 
-    void parser::print_expressions()
+    void parser_instance::print_expressions()
     {
         for(u64 i = 0; i < parser_output->asts.size(); i += 1) {
             std::vector<expression>* ast = &parser_output->asts[i];
@@ -202,7 +205,7 @@ namespace masonc::parser
         }
     }
 
-    void parser::drive()
+    void parser_instance::drive()
     {
         while(true) {
             auto top_level_expression = parse_top_level();
@@ -215,17 +218,17 @@ namespace masonc::parser
         }
     }
 
-    masonc::lexer::lexer_output* parser::lexer_output()
+    masonc::lexer::lexer_instance_output* parser_instance::lexer_output()
     {
         return parser_output->lexer_output;
     }
 
-    scope* parser::current_scope()
+    scope* parser_instance::current_scope()
     {
         return current_package->package_scope.get_child(current_scope_index);
     }
 
-    void parser::set_package(const char* package_name, u16 package_name_length)
+    void parser_instance::set_package(const char* package_name, u16 package_name_length)
     {
         auto search_package_name = parser_output->package_names.find(package_name);
 
@@ -266,7 +269,7 @@ namespace masonc::parser
         current_scope_index = current_package->package_scope.index;
     }
 
-    void parser::set_package(const std::string& package_name)
+    void parser_instance::set_package(const std::string& package_name)
     {
         assume(package_name.length() <= std::numeric_limits<u16>::max(),
             "\"package_name\" length exceeds size of \"u16\"");
@@ -274,12 +277,12 @@ namespace masonc::parser
         set_package(package_name.c_str(), package_name.length());
     }
 
-    void parser::eat(u64 count)
+    void parser_instance::eat(u64 count)
     {
         token_index += count;
     }
 
-    std::optional<masonc::lexer::token*> parser::peek_token()
+    std::optional<masonc::lexer::token*> parser_instance::peek_token()
     {
         if(token_index < lexer_output()->tokens.size()) {
             std::optional<masonc::lexer::token*> result{ &lexer_output()->tokens[token_index] };
@@ -289,7 +292,7 @@ namespace masonc::parser
         return std::nullopt;
     }
 
-    std::optional<masonc::lexer::token*> parser::expect_any()
+    std::optional<masonc::lexer::token*> parser_instance::expect_any()
     {
         auto token_result = peek_token();
         if (!token_result) {
@@ -302,7 +305,7 @@ namespace masonc::parser
         return token_result.value();
     }
 
-    std::optional<masonc::lexer::token*> parser::expect_identifier()
+    std::optional<masonc::lexer::token*> parser_instance::expect_identifier()
     {
         auto token_result = peek_token();
         if (!token_result) {
@@ -320,7 +323,7 @@ namespace masonc::parser
         return token_result.value();
     }
 
-    std::optional<masonc::lexer::token*> parser::expect(char c)
+    std::optional<masonc::lexer::token*> parser_instance::expect(char c)
     {
         auto token_result = peek_token();
         if (!token_result) {
@@ -339,7 +342,7 @@ namespace masonc::parser
         return token_result.value();
     }
 
-    std::optional<masonc::lexer::token*> parser::expect(const std::string& identifier)
+    std::optional<masonc::lexer::token*> parser_instance::expect(const std::string& identifier)
     {
         auto token_result = peek_token();
         if (!token_result) {
@@ -359,36 +362,36 @@ namespace masonc::parser
         return token_result.value();
     }
 
-    const char* parser::identifier_at(const masonc::lexer::token& identifier_token)
+    const char* parser_instance::identifier_at(const masonc::lexer::token& identifier_token)
     {
         assume(lexer_output()->identifiers.size() > identifier_token.value_index, "value_index is out of range");
         return lexer_output()->identifiers.at(identifier_token.value_index);
     }
 
-    const char* parser::integer_at(const masonc::lexer::token& integer_token)
+    const char* parser_instance::integer_at(const masonc::lexer::token& integer_token)
     {
         assume(lexer_output()->integers.size() > integer_token.value_index, "value_index is out of range");
         return lexer_output()->integers.at(integer_token.value_index);
     }
 
-    const char* parser::decimal_at(const masonc::lexer::token& decimal_token)
+    const char* parser_instance::decimal_at(const masonc::lexer::token& decimal_token)
     {
         assume(lexer_output()->decimals.size() > decimal_token.value_index, "value_index is out of range");
         return lexer_output()->decimals.at(decimal_token.value_index);
     }
 
-    const char* parser::string_at(const masonc::lexer::token& string_token)
+    const char* parser_instance::string_at(const masonc::lexer::token& string_token)
     {
         assume(lexer_output()->strings.size() > string_token.value_index, "value_index is out of range");
         return lexer_output()->strings.at(string_token.value_index);
     }
 
-    masonc::lexer::token_location* parser::get_token_location(u64 token_index)
+    masonc::lexer::token_location* parser_instance::get_token_location(u64 token_index)
     {
         return &lexer_output()->locations[token_index];
     }
 
-    void parser::report_parse_error(const std::string& msg)
+    void parser_instance::report_parse_error(const std::string& msg)
     {
         // TODO: Mark as unlikely.
         if (this->token_index == 0)
@@ -397,16 +400,13 @@ namespace masonc::parser
             report_parse_error_at(msg, this->token_index - 1);
     }
 
-    void parser::report_parse_error_at(const std::string& msg, u64 token_index)
+    void parser_instance::report_parse_error_at(const std::string& msg, u64 token_index)
     {
         masonc::lexer::token_location* location = get_token_location(token_index);
-
-        parser_output->messages.report_error(msg, build_stage::PARSER,
-            location->line_number, location->start_column, location->end_column
-        );
+        parser_output->messages.report_error(msg, build_stage::PARSER, *location);
     }
 
-    void parser::recover()
+    void parser_instance::recover()
     {
         while (true) {
             std::optional<masonc::lexer::token*> token_result = peek_token();
@@ -423,7 +423,7 @@ namespace masonc::parser
         }
     }
 
-    std::optional<u8> parser::parse_specifiers()
+    std::optional<u8> parser_instance::parse_specifiers()
     {
         u8 specifiers = SPECIFIER_NONE;
 
@@ -469,7 +469,7 @@ namespace masonc::parser
         }
     }
 
-    std::optional<expression> parser::parse_top_level()
+    std::optional<expression> parser_instance::parse_top_level()
     {
         std::optional<u8> specifiers_result = parse_specifiers();
         if (!specifiers_result)
@@ -504,7 +504,7 @@ namespace masonc::parser
             identifier_handle, specifiers_result.value());
     }
 
-    std::optional<expression> parser::parse_statement()
+    std::optional<expression> parser_instance::parse_statement()
     {
         std::optional<u8> specifiers_result = parse_specifiers();
         if(!specifiers_result)
@@ -550,7 +550,7 @@ namespace masonc::parser
         return std::nullopt;
     }
 
-    std::optional<expression> parser::parse_expression(parse_context context)
+    std::optional<expression> parser_instance::parse_expression(parse_context context)
     {
         auto primary_result = parse_primary(CONTEXT_NONE);
         if (!primary_result)
@@ -588,7 +588,7 @@ namespace masonc::parser
         return parse_binary(context, primary_result.value(), op_result.value());
     }
 
-    std::optional<expression> parser::parse_primary(parse_context context)
+    std::optional<expression> parser_instance::parse_primary(parse_context context)
     {
         auto token_result = peek_token();
         if (!token_result) {
@@ -664,7 +664,7 @@ namespace masonc::parser
         }
     }
 
-    std::optional<expression> parser::parse_binary(parse_context context,
+    std::optional<expression> parser_instance::parse_binary(parse_context context,
         const expression& left, const binary_operator* op)
     {
         auto right_result = parse_expression(context);
@@ -680,7 +680,7 @@ namespace masonc::parser
         return expression{ expression_binary{ expr_left, expr_right, op } };
     }
 
-    std::optional<expression> parser::parse_parentheses(parse_context context)
+    std::optional<expression> parser_instance::parse_parentheses(parse_context context)
     {
         // Parse what is inside the parentheses.
         auto expr_result = parse_expression(CONTEXT_NONE);
@@ -711,7 +711,7 @@ namespace masonc::parser
             return expr_result;
     }
 
-    std::optional<expression> parser::parse_number_literal(parse_context context,
+    std::optional<expression> parser_instance::parse_number_literal(parse_context context,
         const char* number, number_type type)
     {
         if (context == CONTEXT_STATEMENT) {
@@ -724,7 +724,7 @@ namespace masonc::parser
         return expression{ expression_number_literal{ number, type } };
     }
 
-    std::optional<expression> parser::parse_string_literal(parse_context context, const char* str)
+    std::optional<expression> parser_instance::parse_string_literal(parse_context context, const char* str)
     {
         if (context == CONTEXT_STATEMENT) {
             if (!expect(';')) {
@@ -736,7 +736,7 @@ namespace masonc::parser
         return expression{ expression_string_literal{ str } };
     }
 
-    std::optional<expression> parser::parse_reference(parse_context context,
+    std::optional<expression> parser_instance::parse_reference(parse_context context,
         symbol_handle identifier_handle)
     {
         if (context == CONTEXT_STATEMENT) {
@@ -749,7 +749,7 @@ namespace masonc::parser
         return expression{ expression_reference{ identifier_handle } };
     }
 
-    std::optional<expression> parser::parse_variable_declaration(parse_context context,
+    std::optional<expression> parser_instance::parse_variable_declaration(parse_context context,
         symbol_handle name_handle, u8 specifiers)
     {
         const char* name = lexer_output()->identifiers.at(name_handle);
@@ -833,7 +833,7 @@ namespace masonc::parser
         };
     }
 
-    std::optional<expression> parser::parse_call(parse_context context, symbol_handle name_handle)
+    std::optional<expression> parser_instance::parse_call(parse_context context, symbol_handle name_handle)
     {
         expression_procedure_call call_expr{ name_handle };
 
@@ -881,7 +881,7 @@ namespace masonc::parser
         return expression{ call_expr };
     }
 
-    std::vector<expression> parser::parse_argument_list()
+    std::vector<expression> parser_instance::parse_argument_list()
     {
         std::vector<expression> argument_list;
 
@@ -940,7 +940,7 @@ namespace masonc::parser
         }
     }
 
-    std::optional<expression> parser::parse_procedure()
+    std::optional<expression> parser_instance::parse_procedure()
     {
         auto token_result = expect_identifier();
         if (!token_result) {
@@ -1053,7 +1053,7 @@ namespace masonc::parser
         }
     }
 
-    std::optional<expression> parser::parse_procedure_body(const expression_procedure_prototype& prototype)
+    std::optional<expression> parser_instance::parse_procedure_body(const expression_procedure_prototype& prototype)
     {
         auto token_result = peek_token();
         if (!token_result) {
@@ -1111,7 +1111,7 @@ namespace masonc::parser
         return expression{ expression_procedure_definition{ prototype, body } };
     }
 
-    std::optional<expression> parser::parse_package_declaration()
+    std::optional<expression> parser_instance::parse_package_declaration()
     {
         std::string temp_package_name;
 
@@ -1129,16 +1129,15 @@ namespace masonc::parser
             if (!token_result)
                 return std::nullopt;
 
-            if(token_result.value()->type == '.') {
+            if (token_result.value()->type == '.') {
                 temp_package_name += ".";
                 continue;
             }
             else if(token_result.value()->type == ';') {
                 set_package(temp_package_name);
-                const char* package_name = parser_output->package_names.at(current_package_handle);
 
                 // Done parsing package declaration statement.
-                return expression{ expression_package_declaration{ package_name } };
+                return expression{ expression_package_declaration{ current_package_handle } };
             }
             else {
                 report_parse_error("Unexpected token.");
@@ -1148,9 +1147,9 @@ namespace masonc::parser
         }
     }
 
-    std::optional<expression> parser::parse_package_import()
+    std::optional<expression> parser_instance::parse_package_import()
     {
-        std::string package_name;
+        std::string temp_package_name;
 
         while(true)
         {
@@ -1160,24 +1159,28 @@ namespace masonc::parser
                 return std::nullopt;
             }
 
-            package_name += identifier_at(*token_result.value());
+            temp_package_name += identifier_at(*token_result.value());
 
             token_result = expect_any();
             if (!token_result)
                 return std::nullopt;
 
             // TODO: Check for "as" token.
-            if(token_result.value()->type == '.') {
-                package_name += ".";
+            if (token_result.value()->type == '.') {
+                temp_package_name += ".";
                 continue;
             }
-            else if(token_result.value()->type == ';') {
-                // TODO: Check if imported twice.
+            else if (token_result.value()->type == ';') {
+                // TODO: Check if imported more than once.
 
-                u64 import_handle = current_package->imports.copy_back(package_name);
+                u64 import_index = current_package->package_import_names.copy_back(temp_package_name);
 
                 // Done parsing package import statement.
-                return expression{ expression_package_import{ current_package->imports.at(import_handle) } };
+                return expression{
+                    expression_package_import{
+                        this->current_package_handle, import_index, get_token_location(this->token_index)
+                    }
+                };
             }
             else {
                 report_parse_error("Unexpected token.");
@@ -1189,26 +1192,11 @@ namespace masonc::parser
 
     expression_binary* get_binary_expression(expression* expr)
     {
-        if(expr->value.empty.type == EXPR_BINARY)
+        if (expr->value.empty.type == EXPR_BINARY)
             return &expr->value.binary.value;
-        else if(expr->value.empty.type == EXPR_PARENTHESES)
+        else if (expr->value.empty.type == EXPR_PARENTHESES)
             return &expr->value.parentheses.value.expr;
 
         return nullptr;
-    }
-
-    std::optional<masonc::lexer::token_location> find_package_import_location(package_import import,
-        std::vector<expression>* ast)
-    {
-        masonc::lexer::token_location location;
-
-        for (u64 i = 0; i < ast->size(); i += 1) {
-            expression* expr = &(*ast)[i];
-            if (expr->value.empty.type == EXPR_PACKAGE_IMPORT &&
-                std::strcmp(expr->value.package_import.value.package_name, import) == 0)
-            {
-                // TODO: Continue here
-            }
-        }
     }
 }

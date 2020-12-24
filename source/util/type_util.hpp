@@ -40,7 +40,7 @@ namespace masonc
     // "ptr_t" is the same type as "value_t" if "value_t" is a pointer.
     // Otherwise, "ptr_t" is "value_t*".
     template <typename value_t>
-    using ptr_t = ptr<value_t>::type;
+    using ptr_t = typename ptr<value_t>::type;
 
     // "ref_t" is the same type as "value_t" if "value_t" is arithmetic, a pointer or a reference.
     // Otherwise, "ref_t" is "value_t&".
