@@ -14,4 +14,4 @@ and **LLVM-C.lib** into **third-party/lib**.\
 Run one of the Powershell scripts in **scripts/windows/build** to build the project.
 
 # Features
-Take a look inside the **documentation** folder to see language features explained in detail.
+Take a look at **documentation/mason-specification.pdf** to see language features explained in detail.

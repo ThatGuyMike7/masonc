@@ -1,4 +1,4 @@
-# Ensure that the current folder gets upstream and the documentation pdf file, but nothing else.
+# Ensure that the current folder gets upstream and the specification pdf file, but nothing else.
 *
-!documentation.pdf
+!mason-specification.pdf
 !.gitignore
