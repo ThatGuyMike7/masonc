@@ -1,0 +1,182 @@
+% Display all inline math symbols like in math mode.
+\everymath{\displaystyle}
+
+% "leqno" = "Left equation numbering"
+\documentclass[leqno,12pt]{article}
+
+% Tree drawing.
+\usepackage{tikz}
+
+% More control over enumerations.
+\usepackage{enumitem}
+
+% Font color options.
+\usepackage{xcolor}
+
+% Clickable cross-references for enumerations and so on.
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks,
+    linkcolor={red!50!black},
+    citecolor={blue!50!black},
+    urlcolor={blue!80!black}
+}
+
+% Needed for umlauts etc. to be read correctly from the source file.
+\usepackage[utf8]{inputenc}
+
+% Font encoding of the PDF.
+\usepackage[T1]{fontenc}
+
+% German hyphenation patterns, date format, strings and so on.
+%\usepackage[ngerman]{babel}
+
+% English document.
+\usepackage[english]{babel}
+
+% Load font here.
+
+% Latin Modern font instead of the default Computer Modern font.
+\usepackage{lmodern}
+
+% Improve text rendering.
+\usepackage{microtype}
+
+% Set page margin.
+\usepackage[a4paper]{geometry}
+
+% Box drawing for multi-line equations.
+% Implicitly imports mathtools and amsmath.
+\usepackage{empheq}
+
+% q.e.d. symbol and so on.
+\usepackage{amsthm}
+
+% Extended set of symbols (implicitly imports amsfonts).
+\usepackage{amssymb}
+
+% More symbols like "\lightning".
+\usepackage{wasysym}
+
+% Define "\biggg" and "\bigggg" for even bigger symbols.
+% Define "\sothat" for set relation symbol and correct spacing.
+\makeatletter
+\newcommand\biggg{\bBigg@{2.5}}
+\newcommand\bigggg{\bBigg@{3}}
+\newcommand\sothat{\, \middle\vert \,}
+\makeatother
+
+% Define underscore character as "\_".
+\chardef\_=`_
+
+% Remove section and subsection counters while keeping the table of contents.
+\setcounter{secnumdepth}{0}
+
+\title{Mason \\ Programming Language Specification}
+\author{Mike Jasinski}
+%\date{}
+
+\begin{document}
+    \maketitle
+    \thispagestyle{empty}
+    \newpage
+    \tableofcontents
+    \newpage
+
+    \section{Introduction}
+    Mason is a system programming language that values simplicity, maintainability,
+    productivity and performance. It is designed and built for modern computers,
+    and aims to increase developer productivity by decreasing the friction between the programmer
+    and the programming language. It features strong, static typing, complete control
+    over data structures and memory allocation strategies, and a fast and lean standard
+    library.
+
+    \section{Notation}
+    The syntax of a feature is described when the feature is described. Additionally,
+    it can be inferred from code examples at various points in this document.
+    A BNF definition may be added at a later point.
+
+    \section{Lexical Elements}
+    \subsection{Source Code Representation}
+    Source code is text encoded in UTF-8. While Mason makes no effort to support Unicode
+    characters for the source itself, they can be used in \hyperref[comments_section]{comments}
+    and \hyperref[strings_section]{string} literals.
+
+    \subsection{Tokens}
+    Source code is split into tokens during lexical analysis. Whitespace and newline characters
+    are ignored and serve as token separators (except in \hyperref[strings_section]{string} literals).
+    \bigskip \\
+    There are 3 types of tokens:
+    \begin{enumerate}
+        \item
+        \textbf{Identifiers:} Tokens starting with \texttt{\_} or an alphabetical character
+        and further characters being \texttt{\_} or alphanumeric. For example:
+        \texttt{\_test}, \texttt{var2}, \texttt{obj\_type}.
+
+        \item
+        \textbf{Symbols:} \texttt{.} \texttt{,} \texttt{:} \texttt{;} \texttt{"} \texttt{->}
+        \texttt{+} \texttt{-} \texttt{*} \texttt{/} \texttt{\textasciicircum} \texttt{\&} and so on.
+        They can consist of multiple characters, such as \texttt{->}.
+
+        \item
+        \textbf{Literals:}
+        \begin{enumerate}
+            \item
+            \textbf{Integer Literals:}
+            \begin{enumerate}[label=(\roman*)]
+                \item
+                \textbf{Decimal Literals:} Optionally one of $\{\texttt{+}, \texttt{-}\}$ followed by
+                a combination of digits $[0,9]$. If the literal has more than one digit,
+                there must not be any leading digits equal to $0$. For example, $00012085$ is not
+                a decimal literal, but $0$, $22$, and $910492$ are.
+
+                \item
+                \textbf{Binary Literals:}
+                Not a very important feature, may be added at a later point.
+                \item
+                \textbf{Hexadecimal Literals:}
+                Not a very important feature, may be added at a later point.
+            \end{enumerate}
+
+            \item
+            \textbf{Floating-Point Literals:}
+            \begin{enumerate}[label=(\roman*)]
+                \item
+                Decimal literal followed by a \texttt{.} and a combination of digits $[0,9]$.
+                For example: $3.14159$, $509.12$, $0.0$.
+            \end{enumerate}
+
+            \item
+            \textbf{String Literals:}
+            \begin{enumerate}[label=(\roman*)]
+                \item
+                UTF-8 text enclosed by \texttt{""}. For example: "Hello World!".
+            \end{enumerate}
+
+        \end{enumerate}
+    \end{enumerate}
+
+    \subsection{Comments}
+    \label{comments_section}
+    The token \texttt{//} and any text that follows until end of line is ignored.\\
+    The tokens \texttt{/*}, \texttt{*/} and any text in between is ignored.
+
+    \subsection{Strings}
+    \label{strings_section}
+    ...
+
+    \section{Variables}
+
+    \section{Types}
+
+    \section{Standard Library}
+    \subsection{Allocators}
+
+    \section{Context System}
+    \subsection{Thread Safety}
+
+    \section{Scopes}
+
+    \section{Modules}
+
+\end{document}
