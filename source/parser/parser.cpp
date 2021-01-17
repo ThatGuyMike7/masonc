@@ -1,8 +1,8 @@
 #include <parser.hpp>
 
 #include <common.hpp>
-#include <package.hpp>
-#include <package_handle.hpp>
+#include <module.hpp>
+#include <module_handle.hpp>
 #include <type.hpp>
 #include <log.hpp>
 #include <timer.hpp>
@@ -20,26 +20,26 @@ namespace masonc::parser
         this->parser_output = parser_output;
         this->parser_output->lexer_output = lexer_output;
 
-        this->current_package = nullptr;
+        this->current_module = nullptr;
         this->current_ast = nullptr;
-        this->current_package_handle = 0;
+        this->current_module_handle = 0;
 
         this->token_index = 0;
 
         this->done = false;
 
-        // The first statement must be a package declaration.
-        auto package_identifier_result = expect("package");
-        if (!package_identifier_result) {
+        // The first statement must be a module declaration.
+        auto module_identifier_result = expect("module");
+        if (!module_identifier_result) {
             return;
         }
 
-        auto package_declaration_result = parse_package_declaration();
-        if (!package_declaration_result/*current_package == nullptr*/) {
+        auto module_declaration_result = parse_module_declaration();
+        if (!module_declaration_result/*current_module == nullptr*/) {
             return;
         }
 
-        current_ast->push_back(package_declaration_result.value());
+        current_ast->push_back(module_declaration_result.value());
 
         // Drive the parser.
         drive();
@@ -177,16 +177,16 @@ namespace masonc::parser
                 }
                 break;
 
-            case EXPR_PACKAGE_DECLARATION:
+            case EXPR_MODULE_DECLARATION:
                 message += "Package Declaration: Name='";
-                message += this->parser_output->package_names.at(expr.value.package_declaration.value.handle);
+                message += this->parser_output->module_names.at(expr.value.module_declaration.value.handle);
                 message += "'";
                 break;
 
-            case EXPR_PACKAGE_IMPORT:
+            case EXPR_MODULE_IMPORT:
                 message += "Package Import: Name='";
-                message += this->parser_output->packages.at(expr.value.package_import.value.handle)
-                    .package_import_names.at(expr.value.package_import.value.import_index);
+                message += this->parser_output->modules.at(expr.value.module_import.value.handle)
+                    .module_import_names.at(expr.value.module_import.value.import_index);
                 message += "'";
                 break;
         }
@@ -225,36 +225,36 @@ namespace masonc::parser
 
     scope* parser_instance::current_scope()
     {
-        return current_package->package_scope.get_child(current_scope_index);
+        return current_module->module_scope.get_child(current_scope_index);
     }
 
-    void parser_instance::set_package(const char* package_name, u16 package_name_length)
+    void parser_instance::set_module(const char* module_name, u16 module_name_length)
     {
-        auto search_package_name = parser_output->package_names.find(package_name);
+        auto search_module_name = parser_output->module_names.find(module_name);
 
-        if (search_package_name) {
-            current_package_handle = search_package_name.value();
+        if (search_module_name) {
+            current_module_handle = search_module_name.value();
 
-            // If we found the package name, we can assume the AST and package structure exist too.
-            current_package = &parser_output->packages[current_package_handle];
-            current_ast = &parser_output->asts[current_package_handle];
+            // If we found the module name, we can assume the AST and module structure exist too.
+            current_module = &parser_output->modules[current_module_handle];
+            current_ast = &parser_output->asts[current_module_handle];
         }
         else {
-            // Create new package name.
-            current_package_handle = parser_output->package_names.copy_back(package_name, package_name_length);
+            // Create new module name.
+            current_module_handle = parser_output->module_names.copy_back(module_name, module_name_length);
 
-            // Create new package and AST.
-            current_package = &parser_output->packages.emplace_back(package{});
+            // Create new module and AST.
+            current_module = &parser_output->modules.emplace_back(module{});
             current_ast = &parser_output->asts.emplace_back(std::vector<expression>{});
 
-            // Tell the package scope of the package.
-            current_package->package_scope.package = current_package;
+            // Tell the module scope of the module.
+            current_module->module_scope.m_module = current_module;
 
-            u16 package_name_length = parser_output->package_names.length_at(current_package_handle);
-            const char* package_name = parser_output->package_names.at(current_package_handle);
+            //u16 module_name_length = parser_output->module_names.length_at(current_module_handle);
+            //const char* module_name = parser_output->module_names.at(current_module_handle);
 
-            // Give the package scope the package name.
-            current_package->package_scope.set_name(package_name, package_name_length);
+            // Give the module scope the module name.
+            current_module->module_scope.set_name(module_name, module_name_length);
 
             try {
                 // Guess how many tokens will end up being 1 expression on average to
@@ -266,15 +266,15 @@ namespace masonc::parser
             }
         }
 
-        current_scope_index = current_package->package_scope.index;
+        current_scope_index = current_module->module_scope.index();
     }
 
-    void parser_instance::set_package(const std::string& package_name)
+    void parser_instance::set_module(const std::string& module_name)
     {
-        assume(package_name.length() <= std::numeric_limits<u16>::max(),
-            "\"package_name\" length exceeds size of \"u16\"");
+        assume(module_name.length() <= std::numeric_limits<u16>::max(),
+            "\"module_name\" length exceeds size of \"u16\"");
 
-        set_package(package_name.c_str(), package_name.length());
+        set_module(module_name.c_str(), static_cast<u16>(module_name.length()));
     }
 
     void parser_instance::eat(u64 count)
@@ -486,10 +486,10 @@ namespace masonc::parser
         if (specifiers_result.value() == SPECIFIER_NONE) {
             if (std::strcmp(identifier, "proc") == 0)
                 return parse_procedure();
-            if (std::strcmp(identifier, "package") == 0)
-                return parse_package_declaration();
+            if (std::strcmp(identifier, "module") == 0)
+                return parse_module_declaration();
             if (std::strcmp(identifier, "import") == 0)
-                return parse_package_import();
+                return parse_module_import();
         }
 
         // Specifiers are declared and parsed.
@@ -1111,9 +1111,9 @@ namespace masonc::parser
         return expression{ expression_procedure_definition{ prototype, body } };
     }
 
-    std::optional<expression> parser_instance::parse_package_declaration()
+    std::optional<expression> parser_instance::parse_module_declaration()
     {
-        std::string temp_package_name;
+        std::string temp_module_name;
 
         while(true)
         {
@@ -1123,21 +1123,21 @@ namespace masonc::parser
                 return std::nullopt;
             }
 
-            temp_package_name += identifier_at(*token_result.value());
+            temp_module_name += identifier_at(*token_result.value());
 
             token_result = expect_any();
             if (!token_result)
                 return std::nullopt;
 
             if (token_result.value()->type == '.') {
-                temp_package_name += ".";
+                temp_module_name += ".";
                 continue;
             }
             else if(token_result.value()->type == ';') {
-                set_package(temp_package_name);
+                set_module(temp_module_name);
 
-                // Done parsing package declaration statement.
-                return expression{ expression_package_declaration{ current_package_handle } };
+                // Done parsing module declaration statement.
+                return expression{ expression_module_declaration{ current_module_handle } };
             }
             else {
                 report_parse_error("Unexpected token.");
@@ -1147,9 +1147,9 @@ namespace masonc::parser
         }
     }
 
-    std::optional<expression> parser_instance::parse_package_import()
+    std::optional<expression> parser_instance::parse_module_import()
     {
-        std::string temp_package_name;
+        std::string temp_module_name;
 
         while(true)
         {
@@ -1159,7 +1159,7 @@ namespace masonc::parser
                 return std::nullopt;
             }
 
-            temp_package_name += identifier_at(*token_result.value());
+            temp_module_name += identifier_at(*token_result.value());
 
             token_result = expect_any();
             if (!token_result)
@@ -1167,18 +1167,18 @@ namespace masonc::parser
 
             // TODO: Check for "as" token.
             if (token_result.value()->type == '.') {
-                temp_package_name += ".";
+                temp_module_name += ".";
                 continue;
             }
             else if (token_result.value()->type == ';') {
                 // TODO: Check if imported more than once.
 
-                u64 import_index = current_package->package_import_names.copy_back(temp_package_name);
+                u64 import_index = current_module->module_import_names.copy_back(temp_module_name);
 
-                // Done parsing package import statement.
+                // Done parsing module import statement.
                 return expression{
-                    expression_package_import{
-                        this->current_package_handle, import_index, get_token_location(this->token_index)
+                    expression_module_import{
+                        this->current_module_handle, import_index, get_token_location(this->token_index)
                     }
                 };
             }

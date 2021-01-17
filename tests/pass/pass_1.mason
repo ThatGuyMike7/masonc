@@ -1,4 +1,4 @@
-package my_package;
+module my_module;
 
 proc foo();
 

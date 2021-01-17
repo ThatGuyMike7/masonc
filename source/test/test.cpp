@@ -1,7 +1,8 @@
 #include <test.hpp>
 
 #include <test_iterator.hpp>
-#include <test_dependency_graph.hpp>
+#include <test_dependency_list.hpp>
+//#include <test_dependency_graph.hpp>
 #include <test_parser.hpp>
 #include <test_misc.hpp>
 
@@ -19,7 +20,8 @@ namespace masonc::test
     void perform_all_tests()
     {
         perform_iterator_tests();
-        perform_dependency_graph_tests();
+        perform_dependency_list_tests();
+        //perform_dependency_graph_tests();
         perform_parser_tests();
     }
 
@@ -31,12 +33,21 @@ namespace masonc::test
         masonc::test::iterator::test_iterator_data_iteration();
     }
 
+    void perform_dependency_list_tests()
+    {
+        masonc::test::dependency_list::test_add_vertex_and_iterator();
+        masonc::test::dependency_list::test_find();
+        masonc::test::dependency_list::test_find_cycles();
+    }
+
+    /*
     void perform_dependency_graph_tests()
     {
         masonc::test::dependency_graph::test_insert();
         masonc::test::dependency_graph::test_find_direct();
         masonc::test::dependency_graph::test_is_circular();
     }
+    */
 
     void perform_parser_tests()
     {

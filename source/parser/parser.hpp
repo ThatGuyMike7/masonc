@@ -8,8 +8,8 @@
 #include <symbol.hpp>
 #include <scope.hpp>
 #include <message.hpp>
-#include <package.hpp>
-#include <package_handle.hpp>
+#include <module.hpp>
+#include <module_handle.hpp>
 #include <containers.hpp>
 
 #include <string>
@@ -30,9 +30,9 @@ namespace masonc::parser
         masonc::lexer::lexer_instance_output* lexer_output;
 
         // These three containers have associated elements.
-        // See the "package_handle" type defined in "package.hpp" for more information.
-        cstring_collection package_names;
-        std::vector<package> packages;
+        // See the "module_handle" type defined in "module.hpp" for more information.
+        cstring_collection module_names;
+        std::vector<module> modules;
         std::vector<std::vector<expression>> asts;
 
         message_list messages;
@@ -59,10 +59,10 @@ namespace masonc::parser
         // avoid circular references in some cases.
         std::vector<expression*> delete_list_expressions;
 
-        // "nullptr" when no package declaration was parsed.
-        package* current_package;
+        // "nullptr" when no module declaration was parsed.
+        module* current_module;
         std::vector<expression>* current_ast;
-        package_handle current_package_handle;
+        module_handle current_module_handle;
 
         scope_index current_scope_index;
         u64 token_index;
@@ -76,9 +76,9 @@ namespace masonc::parser
         masonc::lexer::lexer_instance_output* lexer_output();
         scope* current_scope();
 
-        // Sets package with specified name to be current, or adds a new package if it doesn't exist.
-        void set_package(const char* package_name, u16 package_name_length);
-        void set_package(const std::string& package_name);
+        // Sets module with specified name to be current, or adds a new module if it doesn't exist.
+        void set_module(const char* module_name, u16 module_name_length);
+        void set_module(const std::string& module_name);
 
         void eat(u64 count = 1);
         std::optional<masonc::lexer::token*> peek_token();
@@ -137,8 +137,8 @@ namespace masonc::parser
         // := expression_variable_declaration |
         //	  expression_procedure_prototype  |
         //	  expression_procedure_definition |
-        //	  expression_package_declaration  |
-        //	  expression_package_import
+        //	  expression_module_declaration  |
+        //	  expression_module_import
         std::optional<expression> parse_top_level();
 
         // statement (statements allowed in procedure bodies)
@@ -186,8 +186,8 @@ namespace masonc::parser
         std::optional<expression> parse_procedure();
         std::optional<expression> parse_procedure_body(const expression_procedure_prototype& prototype);
 
-        std::optional<expression> parse_package_declaration();
-        std::optional<expression> parse_package_import();
+        std::optional<expression> parse_module_declaration();
+        std::optional<expression> parse_module_import();
     };
 
     // Returns `expression_binary` from either `expression_binary` or `expression_parentheses`.

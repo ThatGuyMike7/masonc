@@ -4,7 +4,7 @@
 #define $_MASONC_PARSER_EXPRESSIONS_HPP_$
 
 #include <common.hpp>
-#include <package_handle.hpp>
+#include <module_handle.hpp>
 #include <symbol.hpp>
 #include <type.hpp>
 #include <binary_operator.hpp>
@@ -117,16 +117,16 @@ namespace masonc::parser
         symbol_handle name_handle;
     };
 
-    struct expression_package_declaration
+    struct expression_module_declaration
     {
-        package_handle handle;
+        module_handle handle;
     };
 
-    struct expression_package_import
+    struct expression_module_import
     {
-        package_handle handle;
+        module_handle handle;
 
-        // Index of an element in the "masonc::package::imports" container.
+        // Index of an element in the "masonc::module::imports" container.
         u64 import_index;
 
         // Pointer to an element in the "masonc::lexer::lexer_instance::locations" container.
@@ -146,8 +146,8 @@ namespace masonc::parser
         EXPR_PROC_PROTOTYPE,
         EXPR_PROC_DEFINITION,
         EXPR_PROC_CALL,
-        EXPR_PACKAGE_DECLARATION,
-        EXPR_PACKAGE_IMPORT
+        EXPR_MODULE_DECLARATION,
+        EXPR_MODULE_IMPORT
     };
 
     union expression_union
@@ -164,8 +164,8 @@ namespace masonc::parser
         struct expression_procedure_prototype_tagged { expression_type type; expression_procedure_prototype value; } procedure_prototype;
         struct expression_procedure_definition_tagged { expression_type type; expression_procedure_definition value; } procedure_definition;
         struct expression_procedure_call_tagged { expression_type type; expression_procedure_call value; } procedure_call;
-        struct expression_package_declaration_tagged { expression_type type; expression_package_declaration value; } package_declaration;
-        struct expression_package_import_tagged { expression_type type; expression_package_import value; } package_import;
+        struct expression_module_declaration_tagged { expression_type type; expression_module_declaration value; } module_declaration;
+        struct expression_module_import_tagged { expression_type type; expression_module_import value; } module_import;
 
         expression_union()
             : empty(expression_empty_tagged{ EXPR_EMPTY }) { }
@@ -201,11 +201,11 @@ namespace masonc::parser
         expression_union(expression_procedure_call value)
             : procedure_call(expression_procedure_call_tagged{ EXPR_PROC_CALL, value }) { }
 
-        expression_union(expression_package_declaration value)
-            : package_declaration(expression_package_declaration_tagged{ EXPR_PACKAGE_DECLARATION, value }) { }
+        expression_union(expression_module_declaration value)
+            : module_declaration(expression_module_declaration_tagged{ EXPR_MODULE_DECLARATION, value }) { }
 
-        expression_union(expression_package_import value)
-            : package_import(expression_package_import_tagged{ EXPR_PACKAGE_IMPORT, value }) { }
+        expression_union(expression_module_import value)
+            : module_import(expression_module_import_tagged{ EXPR_MODULE_IMPORT, value }) { }
 
         ~expression_union()
         {
@@ -246,11 +246,11 @@ namespace masonc::parser
                 case EXPR_PROC_CALL:
                     procedure_call.value.~expression_procedure_call();
                     break;
-                case EXPR_PACKAGE_DECLARATION:
-                    package_declaration.value.~expression_package_declaration();
+                case EXPR_MODULE_DECLARATION:
+                    module_declaration.value.~expression_module_declaration();
                     break;
-                case EXPR_PACKAGE_IMPORT:
-                    package_import.value.~expression_package_import();
+                case EXPR_MODULE_IMPORT:
+                    module_import.value.~expression_module_import();
                     break;
             }
         }
@@ -295,11 +295,11 @@ namespace masonc::parser
                 case EXPR_PROC_CALL:
                     new(&empty)expression_procedure_call_tagged{ EXPR_PROC_CALL, other.procedure_call.value };
                     break;
-                case EXPR_PACKAGE_DECLARATION:
-                    new(&empty)expression_package_declaration_tagged{ EXPR_PACKAGE_DECLARATION, other.package_declaration.value };
+                case EXPR_MODULE_DECLARATION:
+                    new(&empty)expression_module_declaration_tagged{ EXPR_MODULE_DECLARATION, other.module_declaration.value };
                     break;
-                case EXPR_PACKAGE_IMPORT:
-                    new(&empty)expression_package_import_tagged{ EXPR_PACKAGE_IMPORT, other.package_import.value };
+                case EXPR_MODULE_IMPORT:
+                    new(&empty)expression_module_import_tagged{ EXPR_MODULE_IMPORT, other.module_import.value };
                     break;
             }
         }
@@ -344,11 +344,11 @@ namespace masonc::parser
                 case EXPR_PROC_CALL:
                     new(&empty)expression_procedure_call_tagged{ EXPR_PROC_CALL, other.procedure_call.value };
                     break;
-                case EXPR_PACKAGE_DECLARATION:
-                    new(&empty)expression_package_declaration_tagged{ EXPR_PACKAGE_DECLARATION, other.package_declaration.value };
+                case EXPR_MODULE_DECLARATION:
+                    new(&empty)expression_module_declaration_tagged{ EXPR_MODULE_DECLARATION, other.module_declaration.value };
                     break;
-                case EXPR_PACKAGE_IMPORT:
-                    new(&empty)expression_package_import_tagged{ EXPR_PACKAGE_IMPORT, other.package_import.value };
+                case EXPR_MODULE_IMPORT:
+                    new(&empty)expression_module_import_tagged{ EXPR_MODULE_IMPORT, other.module_import.value };
                     break;
             }
 

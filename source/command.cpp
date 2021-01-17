@@ -63,8 +63,8 @@ namespace masonc
             return;
         }
 
-        const command_definition& definition = find_command_it->second;
-        const char* command_usage = find_command_it->first;
+        //const command_definition& definition = find_command_it->second;
+        //const char* command_usage = find_command_it->first;
 
         // TODO: Implement the "usage" command.
     }

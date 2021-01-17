@@ -53,7 +53,7 @@ namespace masonc::llvm
     // Many converter functions can return "nullptr" on error,
     // though that should not be happening if the parser finished successfully.
     //
-    // "llvm_converter" is responsible for IR generation of a specific package.
+    // "llvm_converter" is responsible for IR generation of a specific module.
     struct llvm_converter
     {
         void convert(masonc::lexer::lexer_instance_output* input_lexer, masonc::parser::parser_instance_output* input_parser,

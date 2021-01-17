@@ -7,45 +7,51 @@
 
 namespace masonc::linker
 {
-    package* linker::package_from_name(const char* package_name)
+    module* linker::module_from_name(const char* module_name)
     {
-        auto search_package = parser_output()->package_names.find(package_name);
+        /*
+        auto search_module = parser_output()->module_names.find(module_name);
 
-        if (!search_package)
+        if (!search_module)
             return nullptr;
         else
-            return &parser_output()->packages[search_package.value()];
+            return &parser_output()->modules[search_module.value()];
+        */
+        return nullptr;
     }
 
-    void linker::link(masonc::parser::parser_instance_output* parser_output, masonc::linker::linker_output* linker_output)
+    void linker::link(std::vector<masonc::parser::parser_instance_output>* parser_outputs,
+        masonc::linker::linker_output* linker_output)
     {
         this->linker_output = linker_output;
-        this->linker_output->parser_output = parser_output;
+        this->linker_output->parser_outputs = parser_outputs;
 
-        for (u64 i = 0; i < parser_output->package_names.size(); i += 1) {
-            const char* current_package_name = parser_output->package_names.at(i);
-            package* current_package = &parser_output->packages[i];
+        /*
+        for (u64 i = 0; i < parser_output->module_names.size(); i += 1) {
+            const char* current_module_name = parser_output->module_names.at(i);
+            module* current_module = &parser_output->modules[i];
             std::vector<masonc::parser::expression>* current_ast = &parser_output->asts[i];
 
-            /*
-            graph.add(current_package);
+            graph.add(current_module);
 
-            for (u64 j = 0; j < current_package->package_import_names.size(); i += 1) {
-                package* current_package_import = package_from_name(current_package->package_import_names.at(j));
-                if (current_package_import == nullptr) {
-                    // Error, the imported package could not be found.
-                    report_link_error("No package declaration with name " + x + " found.");
+            for (u64 j = 0; j < current_module->module_import_names.size(); i += 1) {
+                module* current_module_import = module_from_name(current_module->module_import_names.at(j));
+                if (current_module_import == nullptr) {
+                    // Error, the imported module could not be found.
+                    report_link_error("No module declaration with name " + x + " found.");
                 }
 
             }
-            */
         }
+        */
     }
 
+    /*
     masonc::parser::parser_instance_output* linker::parser_output()
     {
         return linker_output->parser_output;
     }
+    */
 
     void linker::report_link_error(const std::string& msg, const masonc::lexer::token_location& location)
     {

@@ -31,8 +31,8 @@ namespace masonc::llvm
         type_map.insert(robin_hood::pair<const char*, LLVMTypeRef>{ TYPE_F64, LLVMDoubleType() });
     }
 
-    void llvm_converter::convert(masonc::lexer::lexer_instance_output* input_lexer, masonc::parser::parser_instance_output* input_parser,
-        llvm_converter_output* output)
+    void llvm_converter::convert(masonc::lexer::lexer_instance_output* input_lexer,
+        masonc::parser::parser_instance_output* input_parser, llvm_converter_output* output)
     {
         this->input_lexer = input_lexer;
         this->input_parser = input_parser;

@@ -11,6 +11,7 @@
 #include <cstring>
 #include <type_traits>
 #include <new>
+#include <limits>
 
 namespace masonc
 {
@@ -150,7 +151,11 @@ namespace masonc
 
         u64 copy_back(const std::string& str)
         {
-            return copy_back(str.c_str(), str.length());
+            // Make sure conversion from "size_t" to "length_t" goes smooth in case the
+            // maximum value of "length_t" is smaller than the maximum value of "size_t".
+            assume(str.length() <= std::numeric_limits<length_t>::max());
+
+            return copy_back(str.c_str(), static_cast<length_t>(str.length()));
         }
 
         const char* at(u64 index)

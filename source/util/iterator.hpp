@@ -12,7 +12,8 @@ namespace masonc
     struct iterator_no_data { };
 
     template <typename element_t,
-              typename iterator_data_t = iterator_no_data>
+              typename iterator_data_t = iterator_no_data,
+              typename size_t = u64>
     struct iterator
     {
     protected:
@@ -76,21 +77,21 @@ namespace masonc
         reference operator* () const { return *head; }
 
         // Pre-increment
-        virtual iterator& operator++()
+        iterator& operator++ ()
         {
             head++;
             return *this;
         }
 
         // Pre-decrement
-        iterator& operator--()
+        iterator& operator-- ()
         {
             head--;
             return *this;
         }
 
         // Post-increment
-        iterator operator++(int)
+        iterator operator++ (int)
         {
             iterator return_value = *this;
 
@@ -101,7 +102,7 @@ namespace masonc
         }
 
         // Post-decrement
-        iterator operator--(int)
+        iterator operator-- (int)
         {
             iterator return_value = *this;
 
@@ -109,6 +110,40 @@ namespace masonc
             --(*this);
 
             return return_value;
+        }
+
+        // Binary addition compound assignment
+        iterator& operator+= (size_t other)
+        {
+            head += other;
+
+            return *this;
+        }
+
+        // Binary addition
+        friend iterator operator+ (iterator lhs, size_t rhs)
+        {
+            // Call binary addition compound assignment.
+            lhs += rhs;
+
+            return lhs;
+        }
+
+        // Binary subtraction compound assignment
+        iterator& operator-= (size_t other)
+        {
+            head -= other;
+
+            return *this;
+        }
+
+        // Binary subtraction
+        friend iterator operator- (iterator lhs, size_t rhs)
+        {
+            // Call binary subtraction compound assignment.
+            lhs -= rhs;
+
+            return lhs;
         }
     };
 

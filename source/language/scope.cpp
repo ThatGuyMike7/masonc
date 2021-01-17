@@ -2,17 +2,27 @@
 
 #include <log.hpp>
 #include <common.hpp>
-#include <package.hpp>
+#include <module.hpp>
 
 #include <iostream>
 #include <optional>
 
 namespace masonc
 {
+    scope_index scope::index()
+    {
+        return m_index;
+    }
+
+    const module& scope::get_module()
+    {
+        return *m_module;
+    }
+
     const char* scope::name()
     {
         if (name_handle)
-            return package->scope_names.at(name_handle.value());
+            return m_module->scope_names.at(name_handle.value());
         else
             return nullptr;
     }
@@ -22,17 +32,17 @@ namespace masonc
         if (name_handle)
             return;
 
-        name_handle = package->scope_names.copy_back(name, name_length);
+        name_handle = m_module->scope_names.copy_back(name, name_length);
     }
 
     // TODO: Instead of doing this, just keep a vector of pointers to parents in the scope.
     std::vector<scope*> scope::parents()
     {
-        scope* current_scope = &package->package_scope;
+        scope* current_scope = &m_module->module_scope;
         std::vector<scope*> parents = { current_scope };
 
-        for (u64 i = 0; i < this->index.size(); i += 1) {
-            current_scope = &current_scope->children[this->index[i]];
+        for (u64 i = 0; i < m_index.size(); i += 1) {
+            current_scope = &current_scope->children[m_index[i]];
             parents.push_back(current_scope);
         }
 
@@ -41,22 +51,22 @@ namespace masonc
 
     scope_index scope::add_child(const scope& child)
     {
-        u64 added_child_index = this->children.size();
-        scope* added_child = &this->children.emplace_back(child);
+        u64 added_child_index = children.size();
+        scope* added_child = &children.emplace_back(child);
 
-        added_child->index = this->index;
-        added_child->index.push_back(added_child_index);
+        added_child->m_index = m_index;
+        added_child->m_index.push_back(added_child_index);
 
-        added_child->package = this->package;
+        added_child->m_module = m_module;
 
-        return added_child->index;
+        return added_child->m_index;
     }
 
     scope* scope::get_child(const scope_index& index)
     {
         scope* child = this;
 
-        for (u64 i = child->index.size(); i < index.size(); i += 1) {
+        for (u64 i = child->m_index.size(); i < index.size(); i += 1) {
             child = &child->children[index[i]];
         }
 
@@ -77,7 +87,7 @@ namespace masonc
     {
         auto parent_scopes = parents();
 
-        // TODO: Look at imported packages as well.
+        // TODO: Look at imported modules as well.
 
         if (parent_scopes.size() <= offset)
             return false;

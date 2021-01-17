@@ -8,11 +8,14 @@ project (masonc CXX)
 
 # Add source files.
 # "GLOB_RECURSE" for subfolders, otherwise "GLOB".
-file(GLOB_RECURSE SOURCES
+file(GLOB SOURCES
     "${CMAKE_SOURCE_DIR}/source/*.cpp"
+    "${CMAKE_SOURCE_DIR}/source/lexer/*.cpp"
+    "${CMAKE_SOURCE_DIR}/source/parser/*.cpp"
+    "${CMAKE_SOURCE_DIR}/source/util/*.cpp"
+    "${CMAKE_SOURCE_DIR}/source/language/*.cpp"
+    "${CMAKE_SOURCE_DIR}/source/test/*.cpp"
 )
-
-#message(STATUS "Sources are ${SOURCES}")
 
 # Determine configuration.
 if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
@@ -58,7 +61,6 @@ target_include_directories(${PROJECT_NAME}
     PRIVATE ${CMAKE_SOURCE_DIR}/source/lexer
     PRIVATE ${CMAKE_SOURCE_DIR}/source/parser
     PRIVATE ${CMAKE_SOURCE_DIR}/source/util
-    PRIVATE ${CMAKE_SOURCE_DIR}/source/util/graph
     PRIVATE ${CMAKE_SOURCE_DIR}/source/language
     PRIVATE ${CMAKE_SOURCE_DIR}/source/test
     PRIVATE ${CMAKE_SOURCE_DIR}/third-party/include
@@ -77,6 +79,22 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_EXTENSIONS NO
 )
 
+# Set warning level.
+if(MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        /W4     # Warning level.
+        /wd4458 # Suppress warning "declaration of 'x' hides class member".
+        #/WX    # Treat warnings as errors.
+    )
+else()
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic -Werror)
+endif()
+
+# Use multiple processes to build faster with Visual Studio.
+if(CMAKE_GENERATOR MATCHES "Visual Studio")
+    target_compile_options(${PROJECT_NAME} PRIVATE /MP)
+endif ()
+
 # Define "MASONC_DEBUG" only in Debug mode.
 if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     target_compile_definitions(${PROJECT_NAME} PRIVATE MASONC_DEBUG)
@@ -87,9 +105,10 @@ set(MASONC_LIB_DIR ${CMAKE_SOURCE_DIR}/third-party/lib)
 find_library(MASONC_LLVM_LIB
     NAMES LLVM-C
     PATHS ${MASONC_LIB_DIR}
-    PATH_SUFIXES lib64 lib so a
+    PATH_SUFFIXES lib64 lib so a
 )
 
+#message(STATUS "Sources are ${SOURCES}")
 #message(STATUS "Libraries are ${MASONC_LLVM_LIB}")
 
 target_link_libraries(${PROJECT_NAME} ${MASONC_LLVM_LIB})

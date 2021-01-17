@@ -17,11 +17,12 @@ namespace masonc
 
         masonc::lexer::lexer_instance source_lexer;
         masonc::parser::parser_instance source_parser;
-        masonc::llvm::llvm_converter source_converter;
+        //masonc::llvm::llvm_converter source_converter;
 
+        // Each output structure contains data of exactly one source file.
         std::vector<masonc::lexer::lexer_instance_output> lexer_outputs;
         std::vector<masonc::parser::parser_instance_output> parser_outputs;
-        std::vector<masonc::llvm::llvm_converter_output> converter_outputs;
+        //std::vector<masonc::llvm::llvm_converter_output> converter_outputs;
 
         {
             std::cout << '\n' << "Lexing..." << std::endl;
@@ -33,10 +34,8 @@ namespace masonc
                     std::optional<char*> current_file = file_read(file_paths[j].c_str(),
                         1024u, &current_file_length);
 
-                    if (!current_file) {
-                        //std::free(current_file.value());
+                    if (!current_file)
                         goto END;
-                    }
 
                     masonc::lexer::lexer_instance_output* current_lexer_output =
                         &lexer_outputs.emplace_back(masonc::lexer::lexer_instance_output{});

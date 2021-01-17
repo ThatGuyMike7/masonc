@@ -1,11 +1,11 @@
 #include <language.hpp>
 
-#include <package.hpp>
+#include <module.hpp>
 
 namespace masonc
 {
     void initialize_language()
     {
-        initialize_package_scope_template();
+        initialize_module_scope_template();
     }
 }

@@ -71,7 +71,7 @@ namespace masonc::test::iterator
         for (auto it = container.begin(); it != container.end(); it++) {
             if (*it != i) {
                 throw std::runtime_error{ "iterator forward iteration test failed" };
-                std::exit(-1);
+                //std::exit(-1);
             }
 
             i += 1;
@@ -89,7 +89,7 @@ namespace masonc::test::iterator
 
             if (*it != i) {
                 throw std::runtime_error{ "iterator reverse iteration test failed" };
-                std::exit(-1);
+                //std::exit(-1);
             }
 
             i -= 1;
@@ -103,7 +103,7 @@ namespace masonc::test::iterator
 
         if (search_element == container.end() || *search_element != 20) {
             throw std::runtime_error{ "iterator STL algorithm test failed" };
-            std::exit(-1);
+            //std::exit(-1);
         }
     }
 
@@ -115,7 +115,7 @@ namespace masonc::test::iterator
         for (auto it = container.begin(); it != container.end(); it++) {
             if (*it != i) {
                 throw std::runtime_error{ "iterator data test failed" };
-                std::exit(-1);
+                //std::exit(-1);
             }
 
             i += 5;

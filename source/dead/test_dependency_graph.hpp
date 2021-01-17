@@ -14,7 +14,7 @@ namespace masonc::test::dependency_graph
         using value_ref_t = ref_t<value_t>;
         void operator() (const value_ref_t value)
         {
-            std::cout << value << std::endl;
+            //std::cout << value << std::endl;
         }
     };
 

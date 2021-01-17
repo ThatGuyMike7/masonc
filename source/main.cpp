@@ -11,7 +11,7 @@
 #include <command.hpp>
 #include <version.hpp>
 #include <containers.hpp>
-#include <dependency_graph.hpp>
+#include <dependency_list.hpp>
 
 #include <iostream>
 #include <cstdlib>
@@ -38,7 +38,7 @@ int main(int argc, char** argv)
     masonc::test::perform_all_tests();
 
     // NOTE: It is apparently implementation-defined whether or not the first argument of "argv"
-    //       is the program name, but almost everyone passes the program name there.
+    //       is the program name, but almost everyone passes the program name here.
     std::string command_line_input;
 
     // Ignore the program name and string together the rest of the input.
@@ -61,9 +61,7 @@ int main(int argc, char** argv)
                   << "Type \"help\" for a list of commands." << "\n\n"
                   << std::flush;
 
-        auto test_compile_command =
-            R"(build "E:/mason-lang/projects/masonc/tests/mason/*" "main.o")";
-
+        std::string test_compile_command = "build \"E:/mason-lang/projects/masonc/tests/mason/*\" \"main.o\"";
         masonc::execute_command(test_compile_command);
 
         while (true) {
