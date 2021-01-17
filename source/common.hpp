@@ -1,5 +1,5 @@
-#ifndef $_MASONC_COMMON_HPP_$
-#define $_MASONC_COMMON_HPP_$
+#ifndef MASONC_COMMON_HPP
+#define MASONC_COMMON_HPP
 
 #include <iostream>
 #include <cstdint>

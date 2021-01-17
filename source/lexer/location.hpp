@@ -1,5 +1,5 @@
-#ifndef $_MASONC_LOCATION_HPP_$
-#define $_MASONC_LOCATION_HPP_$
+#ifndef MASONC_LOCATION_HPP
+#define MASONC_LOCATION_HPP
 
 #include <common.hpp>
 

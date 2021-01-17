@@ -1,5 +1,5 @@
-#ifndef $_MASONC_LOG_HPP_$
-#define $_MASONC_LOG_HPP_$
+#ifndef MASONC_LOG_HPP
+#define MASONC_LOG_HPP
 
 namespace masonc
 {

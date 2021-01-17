@@ -1,5 +1,5 @@
-#ifndef $_MASONC_TEST_ITERATOR_HPP_$
-#define $_MASONC_TEST_ITERATOR_HPP_$
+#ifndef MASONC_TEST_ITERATOR_HPP
+#define MASONC_TEST_ITERATOR_HPP
 
 #include <iterator.hpp>
 

@@ -1,5 +1,5 @@
-#ifndef $_MASONC_BUILD_HPP_$
-#define $_MASONC_BUILD_HPP_$
+#ifndef MASONC_BUILD_HPP
+#define MASONC_BUILD_HPP
 
 #include <common.hpp>
 #include <io.hpp>

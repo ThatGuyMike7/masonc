@@ -1,5 +1,5 @@
-#ifndef $_MASONC_CSTRING_UTIL_HPP_$
-#define $_MASONC_CSTRING_UTIL_HPP_$
+#ifndef MASONC_CSTRING_UTIL_HPP
+#define MASONC_CSTRING_UTIL_HPP
 
 namespace masonc
 {

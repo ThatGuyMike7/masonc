@@ -1,5 +1,5 @@
-#ifndef $_MASONC_MATRIX_HPP_$
-#define $_MASONC_MATRIX_HPP_$
+#ifndef MASONC_MATRIX_HPP
+#define MASONC_MATRIX_HPP
 
 #include <common.hpp>
 #include <iterator.hpp>

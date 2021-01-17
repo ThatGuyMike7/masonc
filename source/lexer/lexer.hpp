@@ -1,5 +1,5 @@
-#ifndef $_MASONC_LEXER_HPP_$
-#define $_MASONC_LEXER_HPP_$
+#ifndef MASONC_LEXER_HPP
+#define MASONC_LEXER_HPP
 
 #include <common.hpp>
 #include <location.hpp>

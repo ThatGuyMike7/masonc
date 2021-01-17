@@ -1,5 +1,5 @@
-#ifndef $_MASONC_BINARY_OPERATOR_HPP_$
-#define $_MASONC_BINARY_OPERATOR_HPP_$
+#ifndef MASONC_BINARY_OPERATOR_HPP
+#define MASONC_BINARY_OPERATOR_HPP
 
 #include <common.hpp>
 

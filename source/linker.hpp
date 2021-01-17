@@ -1,5 +1,5 @@
-#ifndef $_MASONC_LINKER_HPP_$
-#define $_MASONC_LINKER_HPP_$
+#ifndef MASONC_LINKER_HPP
+#define MASONC_LINKER_HPP
 
 #include <location.hpp>
 #include <parser.hpp>

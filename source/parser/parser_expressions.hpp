@@ -1,7 +1,7 @@
 // This file contains all expression data structures required for the parser.
 
-#ifndef $_MASONC_PARSER_EXPRESSIONS_HPP_$
-#define $_MASONC_PARSER_EXPRESSIONS_HPP_$
+#ifndef MASONC_PARSER_EXPRESSIONS_HPP
+#define MASONC_PARSER_EXPRESSIONS_HPP
 
 #include <common.hpp>
 #include <mod_handle.hpp>

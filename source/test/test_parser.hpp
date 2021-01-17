@@ -1,5 +1,5 @@
-#ifndef $_MASONC_TEST_PARSER_HPP_$
-#define $_MASONC_TEST_PARSER_HPP_$
+#ifndef MASONC_TEST_PARSER_HPP
+#define MASONC_TEST_PARSER_HPP
 
 #include <message.hpp>
 

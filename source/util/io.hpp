@@ -1,5 +1,5 @@
-#ifndef $_MASONC_IO_HPP_$
-#define $_MASONC_IO_HPP_$
+#ifndef MASONC_IO_HPP
+#define MASONC_IO_HPP
 
 #include <common.hpp>
 

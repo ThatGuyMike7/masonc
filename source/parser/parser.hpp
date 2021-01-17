@@ -1,5 +1,5 @@
-#ifndef $_MASONC_PARSER_HPP_$
-#define $_MASONC_PARSER_HPP_$
+#ifndef MASONC_PARSER_HPP
+#define MASONC_PARSER_HPP
 
 #include <parser_expressions.hpp>
 #include <common.hpp>

@@ -1,5 +1,5 @@
-#ifndef $_MASONC_SYMBOL_HPP_$
-#define $_MASONC_SYMBOL_HPP_$
+#ifndef MASONC_SYMBOL_HPP
+#define MASONC_SYMBOL_HPP
 
 #include <common.hpp>
 

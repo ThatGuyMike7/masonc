@@ -1,5 +1,5 @@
-#ifndef $_MASONC_SCOPE_HPP_$
-#define $_MASONC_SCOPE_HPP_$
+#ifndef MASONC_SCOPE_HPP
+#define MASONC_SCOPE_HPP
 
 #include <common.hpp>
 #include <type.hpp>

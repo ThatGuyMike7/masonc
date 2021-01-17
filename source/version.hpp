@@ -1,5 +1,5 @@
-#ifndef $_MASONC_VERSION_HPP_$
-#define $_MASONC_VERSION_HPP_$
+#ifndef MASONC_VERSION_HPP
+#define MASONC_VERSION_HPP
 
 namespace masonc
 {

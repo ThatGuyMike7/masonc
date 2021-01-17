@@ -1,5 +1,5 @@
-#ifndef $_MASON_COMMAND_HPP_$
-#define $_MASON_COMMAND_HPP_$
+#ifndef MASONC_COMMAND_HPP
+#define MASONC_COMMAND_HPP
 
 #include <common.hpp>
 #include <lexer.hpp>

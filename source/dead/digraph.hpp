@@ -1,5 +1,5 @@
-#ifndef $_MASONC_DIGRAPH_HPP_$
-#define $_MASONC_DIGRAPH_HPP_$
+#ifndef MASONC_DIGRAPH_HPP
+#define MASONC_DIGRAPH_HPP
 
 #include <common.hpp>
 #include <type_util.hpp>

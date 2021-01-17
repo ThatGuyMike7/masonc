@@ -1,5 +1,5 @@
-#ifndef $_MASON_LLVM_CONVERTER_HPP_$
-#define $_MASON_LLVM_CONVERTER_HPP_$
+#ifndef MASONC_LLVM_CONVERTER_HPP
+#define MASONC_LLVM_CONVERTER_HPP
 
 #include <parser.hpp>
 #include <message.hpp>

@@ -1,5 +1,5 @@
-#ifndef $_MASONC_CONTAINERS_HPP_$
-#define $_MASONC_CONTAINERS_HPP_$
+#ifndef MASONC_CONTAINERS_HPP
+#define MASONC_CONTAINERS_HPP
 
 #include <cstring_util.hpp>
 #include <cstring_collection_basic.hpp>

@@ -1,5 +1,5 @@
-#ifndef $_MASONC_MESSAGE_HPP_$
-#define $_MASONC_MESSAGE_HPP_$
+#ifndef MASONC_MESSAGE_HPP
+#define MASONC_MESSAGE_HPP
 
 #include <common.hpp>
 #include <location.hpp>

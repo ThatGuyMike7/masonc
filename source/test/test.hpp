@@ -1,7 +1,7 @@
 // Include this file to get access to all tests.
 
-#ifndef $_MASONC_TEST_HPP_$
-#define $_MASONC_TEST_HPP_$
+#ifndef MASONC_TEST_HPP
+#define MASONC_TEST_HPP
 
 namespace masonc::test
 {

@@ -1,5 +1,5 @@
-#ifndef $_MASONC_TYPE_HPP_$
-#define $_MASONC_TYPE_HPP_$
+#ifndef MASONC_TYPE_HPP
+#define MASONC_TYPE_HPP
 
 #include <common.hpp>
 

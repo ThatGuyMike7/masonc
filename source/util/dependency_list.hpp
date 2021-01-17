@@ -1,5 +1,5 @@
-#ifndef $_MASONC_DEPENDENCY_LIST_HPP_$
-#define $_MASONC_DEPENDENCY_LIST_HPP_$
+#ifndef MASONC_DEPENDENCY_LIST_HPP
+#define MASONC_DEPENDENCY_LIST_HPP
 
 #include <common.hpp>
 #include <type_util.hpp>

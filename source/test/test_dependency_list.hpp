@@ -1,5 +1,5 @@
-#ifndef $_MASONC_TEST_DEPENDENCY_LIST_HPP_$
-#define $_MASONC_TEST_DEPENDENCY_LIST_HPP_$
+#ifndef MASONC_TEST_DEPENDENCY_LIST_HPP
+#define MASONC_TEST_DEPENDENCY_LIST_HPP
 
 #include <dependency_list.hpp>
 

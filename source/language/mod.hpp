@@ -1,5 +1,5 @@
-#ifndef $_MASON_MODULE_HPP_$
-#define $_MASON_MODULE_HPP_$
+#ifndef MASONC_MODULE_HPP
+#define MASONC_MODULE_HPP
 
 #include <common.hpp>
 #include <mod_handle.hpp>

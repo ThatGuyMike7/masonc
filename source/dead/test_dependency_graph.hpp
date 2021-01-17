@@ -1,5 +1,5 @@
-#ifndef $_MASONC_TEST_DEPENDENCY_GRAPH_HPP_$
-#define $_MASONC_TEST_DEPENDENCY_GRAPH_HPP_$
+#ifndef MASONC_TEST_DEPENDENCY_GRAPH_HPP
+#define MASONC_TEST_DEPENDENCY_GRAPH_HPP
 
 #include <dependency_graph.hpp>
 #include <type_util.hpp>

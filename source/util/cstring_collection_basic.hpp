@@ -1,5 +1,5 @@
-#ifndef $_MASONC_CSTRING_COLLECTION_BASIC_$
-#define $_MASONC_CSTRING_COLLECTION_BASIC_$
+#ifndef MASONC_CSTRING_COLLECTION_BASIC_$
+#define MASONC_CSTRING_COLLECTION_BASIC_$
 
 #include <common.hpp>
 #include <log.hpp>

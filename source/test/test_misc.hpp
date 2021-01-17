@@ -1,5 +1,5 @@
-#ifndef $_MASONC_TEST_MISC_HPP_$
-#define $_MASONC_TEST_MISC_HPP_$
+#ifndef MASONC_TEST_MISC_HPP
+#define MASONC_TEST_MISC_HPP
 
 namespace masonc::test::misc
 {

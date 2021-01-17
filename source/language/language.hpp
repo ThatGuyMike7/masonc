@@ -1,5 +1,5 @@
-#ifndef $_MASONC_LANGUAGE_HPP_$
-#define $_MASONC_LANGUAGE_HPP_$
+#ifndef MASONC_LANGUAGE_HPP
+#define MASONC_LANGUAGE_HPP
 
 #include <type.hpp>
 #include <symbol.hpp>

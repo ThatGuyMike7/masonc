@@ -1,5 +1,5 @@
-#ifndef $_MASONC_VECTOR2_HPP_$
-#define $_MASONC_VECTOR2_HPP_$
+#ifndef MASONC_VECTOR2_HPP
+#define MASONC_VECTOR2_HPP
 
 #include <common.hpp>
 

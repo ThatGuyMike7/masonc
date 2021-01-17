@@ -1,5 +1,5 @@
-#ifndef $_MASONC_TIMER_HPP_$
-#define $_MASONC_TIMER_HPP_$
+#ifndef MASONC_TIMER_HPP
+#define MASONC_TIMER_HPP
 
 #include <common.hpp>
 
