@@ -2,7 +2,7 @@
 #define $_MASON_MODULE_HPP_$
 
 #include <common.hpp>
-#include <module_handle.hpp>
+#include <mod_handle.hpp>
 #include <scope.hpp>
 #include <parser_expressions.hpp>
 #include <containers.hpp>
@@ -17,7 +17,7 @@ namespace masonc
     // Insert language-defined types into "MODULE_SCOPE_TEMPLATE".
     void initialize_module_scope_template();
 
-    struct module
+    struct mod
     {
         cstring_collection module_import_names;
 

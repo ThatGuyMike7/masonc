@@ -1,6 +1,6 @@
 #include <language.hpp>
 
-#include <module.hpp>
+#include <mod.hpp>
 
 namespace masonc
 {

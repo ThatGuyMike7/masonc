@@ -8,8 +8,8 @@
 #include <symbol.hpp>
 #include <scope.hpp>
 #include <message.hpp>
-#include <module.hpp>
-#include <module_handle.hpp>
+#include <mod.hpp>
+#include <mod_handle.hpp>
 #include <containers.hpp>
 
 #include <string>
@@ -30,9 +30,9 @@ namespace masonc::parser
         masonc::lexer::lexer_instance_output* lexer_output;
 
         // These three containers have associated elements.
-        // See the "module_handle" type defined in "module.hpp" for more information.
+        // See the "mod_handle" type defined in "module.hpp" for more information.
         cstring_collection module_names;
-        std::vector<module> modules;
+        std::vector<mod> modules;
         std::vector<std::vector<expression>> asts;
 
         message_list messages;
@@ -60,9 +60,9 @@ namespace masonc::parser
         std::vector<expression*> delete_list_expressions;
 
         // "nullptr" when no module declaration was parsed.
-        module* current_module;
+        mod* current_module;
         std::vector<expression>* current_ast;
-        module_handle current_module_handle;
+        mod_handle current_module_handle;
 
         scope_index current_scope_index;
         u64 token_index;

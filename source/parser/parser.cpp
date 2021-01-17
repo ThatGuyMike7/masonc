@@ -1,8 +1,8 @@
 #include <parser.hpp>
 
 #include <common.hpp>
-#include <module.hpp>
-#include <module_handle.hpp>
+#include <mod.hpp>
+#include <mod_handle.hpp>
 #include <type.hpp>
 #include <log.hpp>
 #include <timer.hpp>
@@ -244,7 +244,7 @@ namespace masonc::parser
             current_module_handle = parser_output->module_names.copy_back(module_name, module_name_length);
 
             // Create new module and AST.
-            current_module = &parser_output->modules.emplace_back(module{});
+            current_module = &parser_output->modules.emplace_back(mod{});
             current_ast = &parser_output->asts.emplace_back(std::vector<expression>{});
 
             // Tell the module scope of the module.

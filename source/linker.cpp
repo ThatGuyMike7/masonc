@@ -7,7 +7,7 @@
 
 namespace masonc::linker
 {
-    module* linker::module_from_name(const char* module_name)
+    mod* linker::module_from_name(const char* module_name)
     {
         /*
         auto search_module = parser_output()->module_names.find(module_name);
@@ -29,13 +29,13 @@ namespace masonc::linker
         /*
         for (u64 i = 0; i < parser_output->module_names.size(); i += 1) {
             const char* current_module_name = parser_output->module_names.at(i);
-            module* current_module = &parser_output->modules[i];
+            mod* current_module = &parser_output->modules[i];
             std::vector<masonc::parser::expression>* current_ast = &parser_output->asts[i];
 
             graph.add(current_module);
 
             for (u64 j = 0; j < current_module->module_import_names.size(); i += 1) {
-                module* current_module_import = module_from_name(current_module->module_import_names.at(j));
+                mod* current_module_import = module_from_name(current_module->module_import_names.at(j));
                 if (current_module_import == nullptr) {
                     // Error, the imported module could not be found.
                     report_link_error("No module declaration with name " + x + " found.");

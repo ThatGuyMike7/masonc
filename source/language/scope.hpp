@@ -21,7 +21,7 @@ namespace masonc
         struct parser_instance;
     }
 
-    struct module;
+    struct mod;
     struct scope
     {
         friend masonc::parser::parser_instance;
@@ -29,7 +29,7 @@ namespace masonc
         scope_index index();
 
         // Module in which this scope is defined.
-        const module& get_module();
+        const mod& get_module();
 
         // Returns "nullptr" if the scope is unnamed.
         const char* name();
@@ -59,7 +59,7 @@ namespace masonc
 
         // Module in which this scope is defined.
         // Usually set by "add_child", unless this is a top-level module scope.
-        module* m_module;
+        mod* m_module;
 
         // Variable names, function names, type names, and so on.
         cstring_unordered_set symbols;

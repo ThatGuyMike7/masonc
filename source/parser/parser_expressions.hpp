@@ -4,7 +4,7 @@
 #define $_MASONC_PARSER_EXPRESSIONS_HPP_$
 
 #include <common.hpp>
-#include <module_handle.hpp>
+#include <mod_handle.hpp>
 #include <symbol.hpp>
 #include <type.hpp>
 #include <binary_operator.hpp>
@@ -119,12 +119,12 @@ namespace masonc::parser
 
     struct expression_module_declaration
     {
-        module_handle handle;
+        mod_handle handle;
     };
 
     struct expression_module_import
     {
-        module_handle handle;
+        mod_handle handle;
 
         // Index of an element in the "masonc::module::imports" container.
         u64 import_index;

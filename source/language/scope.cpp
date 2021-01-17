@@ -2,7 +2,7 @@
 
 #include <log.hpp>
 #include <common.hpp>
-#include <module.hpp>
+#include <mod.hpp>
 
 #include <iostream>
 #include <optional>
@@ -14,7 +14,7 @@ namespace masonc
         return m_index;
     }
 
-    const module& scope::get_module()
+    const mod& scope::get_module()
     {
         return *m_module;
     }

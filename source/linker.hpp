@@ -3,7 +3,7 @@
 
 #include <location.hpp>
 #include <parser.hpp>
-#include <module.hpp>
+#include <mod.hpp>
 #include <scope.hpp>
 #include <message.hpp>
 //#include <dependency_list.hpp>
@@ -23,7 +23,7 @@ namespace masonc::linker
     struct linker
     {
         // Returns "nullptr" if module is not defined.
-        module* module_from_name(const char* module_name);
+        mod* module_from_name(const char* module_name);
 
         // "parser_outputs" are expected to have no errors and
         // "linker_output" is expected to be allocated and empty.
@@ -32,7 +32,7 @@ namespace masonc::linker
 
     private:
         linker_output* linker_output;
-        //dependency_graph<module*> module_graph;
+        //dependency_graph<mod*> module_graph;
 
         //masonc::parser::parser_instance_output* parser_output();
 
