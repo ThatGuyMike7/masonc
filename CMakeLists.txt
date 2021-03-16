@@ -93,7 +93,7 @@ endif()
 # Use multiple processes to build faster with Visual Studio.
 if(CMAKE_GENERATOR MATCHES "Visual Studio")
     target_compile_options(${PROJECT_NAME} PRIVATE /MP)
-endif ()
+endif()
 
 # Define "MASONC_DEBUG" only in Debug mode.
 if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")

@@ -1,4 +1,4 @@
-module x.y;
+module x::y;
 
 proc foo()
 {

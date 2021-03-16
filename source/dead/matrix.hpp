@@ -3,7 +3,7 @@
 
 #include <common.hpp>
 #include <iterator.hpp>
-#include <log.hpp>
+#include <logger.hpp>
 
 #include <cstdlib>
 #include <new>
@@ -52,7 +52,7 @@ namespace masonc
             buffer = static_cast<element_t*>(std::malloc(sizeof(element_t) * element_count));
 
             if (buffer == nullptr) {
-                log_error("Unable to allocate memory for \"matrix_row_major\".");
+                global_logger.log_error("Unable to allocate memory for \"matrix_row_major\".");
                 throw std::bad_alloc{};
             }
 
@@ -77,7 +77,7 @@ namespace masonc
             buffer = static_cast<element_t*>(std::malloc(sizeof(element_t) * element_count));
 
             if (buffer == nullptr) {
-                log_error("Unable to allocate memory for \"matrix_row_major\".");
+                global_logger.log_error("Unable to allocate memory for \"matrix_row_major\".");
                 throw std::bad_alloc{};
             }
 
@@ -97,7 +97,7 @@ namespace masonc
             buffer = std::realloc(buffer, sizeof(element_t) * other_element_count);
 
             if (buffer == nullptr) {
-                log_error("Unable to allocate memory for \"matrix_row_major\".");
+                global_logger.log_error("Unable to allocate memory for \"matrix_row_major\".");
                 throw std::bad_alloc{};
             }
 

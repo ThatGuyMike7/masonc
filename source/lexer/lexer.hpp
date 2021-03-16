@@ -3,7 +3,7 @@
 
 #include <common.hpp>
 #include <location.hpp>
-#include <log.hpp>
+#include <logger.hpp>
 #include <message.hpp>
 #include <containers.hpp>
 
@@ -86,6 +86,8 @@ namespace masonc::lexer
         // 'input_size': Number of characters in input.
         // 'output' is expected to be allocated and empty.
         // 'tab_size' should be set to get correct error message column numbers.
+        //
+        // This function can be called multiple times just fine.
         void tokenize(const char* input, u64 input_size, lexer_instance_output* output, u8 tab_size = 4);
 
         // Print all tokens for debug purposes.

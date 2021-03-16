@@ -2,7 +2,8 @@
 
 #include <lexer.hpp>
 #include <parser.hpp>
-#include <log.hpp>
+#include <logger.hpp>
+#include <io.hpp>
 
 namespace masonc::test::parser
 {
@@ -15,7 +16,7 @@ namespace masonc::test::parser
             auto test_parse_result = test_parse(output.files[i].c_str());
 
             if(!test_parse_result) {
-                log_error("Cannot perform parse test");
+                global_logger.log_error("Cannot perform parse test");
                 output.matched_expected.emplace_back(true);
                 output.message_lists.emplace_back(masonc::message_list{});
                 continue;
@@ -44,16 +45,14 @@ namespace masonc::test::parser
             return std::optional<masonc::message_list>{};
 
         masonc::lexer::lexer_instance lexer;
-        masonc::lexer::lexer_instance_output lexer_output;
-
-        lexer.tokenize(file.value(), file_length, &lexer_output);
-        if (lexer_output.messages.errors.size() > 0)
-            return std::optional<masonc::message_list>{};
-
-        masonc::parser::parser_instance parser;
         masonc::parser::parser_instance_output parser_output;
 
-        parser.parse(&lexer_output, &parser_output);
+        lexer.tokenize(file.value(), file_length, &parser_output.lexer_output);
+        if (parser_output.lexer_output.messages.errors.size() > 0)
+            return std::optional<masonc::message_list>{};
+
+        masonc::parser::parser_instance parser{ &parser_output };
+
         std::free(file.value());
 
         return std::optional<masonc::message_list>{ parser_output.messages };

@@ -27,47 +27,38 @@ namespace masonc::parser
 
     struct parser_instance_output
     {
-        masonc::lexer::lexer_instance_output* lexer_output;
+        masonc::lexer::lexer_instance_output lexer_output;
 
-        // These three containers have associated elements.
-        // See the "mod_handle" type defined in "module.hpp" for more information.
-        cstring_collection module_names;
-        std::vector<mod> modules;
-        std::vector<std::vector<expression>> asts;
-
-        message_list messages;
-    };
-
-    struct parser_instance
-    {
-        // "lexer_output" is expected to have no errors and
-        // "parser_output" is expected to be allocated and empty.
-        void parse(masonc::lexer::lexer_instance_output* lexer_output, parser_instance_output* parser_output);
-
-        // Release all heap-allocated expressions.
-        // This renders the AST unsafe to access, call at the very end of the build process
-        // once the AST is not needed anymore.
-        void free();
-
-        void print_expressions();
-        std::string format_expression(const expression& expr, u64 level = 0);
-
-    private:
-        parser_instance_output* parser_output;
+        std::string module_name;
+        mod file_module;
+        std::vector<expression> AST;
 
         // All heap-allocated expressions - the indirection is needed to
         // avoid circular references in some cases.
         std::vector<expression*> delete_list_expressions;
 
-        // "nullptr" when no module declaration was parsed.
-        mod* current_module;
-        std::vector<expression>* current_ast;
-        mod_handle current_module_handle;
+        message_list messages;
+
+        // Release all heap-allocated expressions.
+        // This renders the AST unsafe to access, call at the very end of the build process
+        // once the AST is not needed anymore.
+        void free();
+        void print_expressions();
+        std::string format_expression(const expression& expr, u64 level = 0);
+    };
+
+    struct parser_instance
+    {
+        // "parser_output.lexer_output" is expected to have no errors.
+        parser_instance(parser_instance_output* parser_output);
+
+    private:
+        parser_instance_output* parser_output;
 
         scope_index current_scope_index;
-        u64 token_index;
+        u64 token_index = 0;
 
-        bool done;
+        bool done = false;
 
         // Drives the parser by parsing top-level expressions which
         // in turn parse their own expressions and so on.
@@ -75,6 +66,9 @@ namespace masonc::parser
 
         masonc::lexer::lexer_instance_output* lexer_output();
         scope* current_scope();
+
+        // Whether or not a module declaration has been parsed.
+        bool module_declaration_exists();
 
         // Sets module with specified name to be current, or adds a new module if it doesn't exist.
         void set_module(const char* module_name, u16 module_name_length);

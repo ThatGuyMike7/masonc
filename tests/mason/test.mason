@@ -7,7 +7,7 @@ proc stuff(x: s64);
 
 proc foo()
 {
-    num: s64 = 400;
+    num: i64 = 400;
     p: ^s64 = &num;
 
     stuff(num);

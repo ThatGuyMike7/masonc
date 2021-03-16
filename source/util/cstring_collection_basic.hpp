@@ -2,7 +2,7 @@
 #define MASONC_CSTRING_COLLECTION_BASIC_$
 
 #include <common.hpp>
-#include <log.hpp>
+#include <logger.hpp>
 
 #include <vector>
 #include <string>
@@ -39,7 +39,7 @@ namespace masonc
 
         void memory_allocation_error()
         {
-            log_error("\"cstring_collection_basic\" memory allocation error.");
+            global_logger.log_error("\"cstring_collection_basic\" memory allocation error.");
             throw std::bad_alloc{};
         }
 
@@ -158,17 +158,17 @@ namespace masonc
             return copy_back(str.c_str(), static_cast<length_t>(str.length()));
         }
 
-        const char* at(u64 index)
+        const char* at(u64 index) const
         {
             return buffer + lookup[index];
         }
 
-        length_t length_at(u64 index)
+        length_t length_at(u64 index) const
         {
             return lengths[index];
         }
 
-        u64 size()
+        u64 size() const
         {
             return lookup.size();
         }

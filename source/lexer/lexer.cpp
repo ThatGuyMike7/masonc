@@ -1,7 +1,7 @@
 #include <lexer.hpp>
 #include <timer.hpp>
 
-#include <build.hpp>
+#include <build_stage.hpp>
 
 #include <cctype>
 #include <string>
@@ -150,7 +150,7 @@ namespace masonc::lexer
             output->locations.reserve(characters_per_token_guess);
         }
         catch (...) {
-            log_warning("Could not reserve space for token vector");
+            global_logger.log_error("Could not reserve space for token vector");
         }
     }
 

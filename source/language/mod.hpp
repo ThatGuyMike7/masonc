@@ -1,14 +1,8 @@
 #ifndef MASONC_MODULE_HPP
 #define MASONC_MODULE_HPP
 
-#include <common.hpp>
-#include <mod_handle.hpp>
 #include <scope.hpp>
-#include <parser_expressions.hpp>
 #include <containers.hpp>
-
-#include <string>
-#include <vector>
 
 namespace masonc
 {

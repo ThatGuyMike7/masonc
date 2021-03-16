@@ -7,7 +7,7 @@
 #include <test_misc.hpp>
 
 #include <common.hpp>
-#include <log.hpp>
+#include <logger.hpp>
 
 #include <cstdlib>
 #include <string>
@@ -54,7 +54,7 @@ namespace masonc::test
         auto parse_tests_pass = masonc::test::parser::test_parse_in_directory("tests/pass", true);
         for(u64 i = 0; i < parse_tests_pass.matched_expected.size(); i += 1) {
             if(!parse_tests_pass.matched_expected[i]) {
-                log_error(std::string{
+                global_logger.log_error(std::string{
                     "parse test failed (expected success): " + parse_tests_pass.files[i]
                 }.c_str());
 
@@ -65,7 +65,7 @@ namespace masonc::test
         auto parse_tests_fail = masonc::test::parser::test_parse_in_directory("tests/fail", false);
         for(u64 i = 0; i < parse_tests_fail.matched_expected.size(); i += 1) {
             if(!parse_tests_fail.matched_expected[i]) {
-                log_error(std::string{
+                global_logger.log_error(std::string{
                     "parse test succeeded (expected failure): " + parse_tests_fail.files[i]
                 }.c_str());
             }

@@ -4,11 +4,16 @@
 #include <type.hpp>
 #include <symbol.hpp>
 
+#include <array>
+
 namespace masonc
 {
+    constexpr std::array<char*, 2> SOURCE_FILE_EXTENSIONS = { "m", "mason" };
+
     // Master initialize function, call before doing anything else.
     void initialize_language();
 
+    /*
     struct value_t;
     struct procedure_t
     {
@@ -101,6 +106,7 @@ namespace masonc
             union_t union_type;
         };
     };
+    */
 }
 
 #endif

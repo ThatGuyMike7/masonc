@@ -12,6 +12,7 @@
 
 #include <vector>
 #include <optional>
+#include <string>
 
 namespace masonc::parser
 {
@@ -119,14 +120,14 @@ namespace masonc::parser
 
     struct expression_module_declaration
     {
-        mod_handle handle;
+        // Non-owning pointer to string.
+        // Note: This lives in parser_instance_output::module_name;
+        const char* name;
     };
 
     struct expression_module_import
     {
-        mod_handle handle;
-
-        // Index of an element in the "masonc::module::imports" container.
+        // Index of an element in the "masonc::mod::module_import_names" container.
         u64 import_index;
 
         // Pointer to an element in the "masonc::lexer::lexer_instance::locations" container.

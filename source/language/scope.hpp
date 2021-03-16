@@ -22,6 +22,7 @@ namespace masonc
     }
 
     struct mod;
+
     struct scope
     {
         friend masonc::parser::parser_instance;

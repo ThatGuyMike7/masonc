@@ -1,11 +1,12 @@
 #include <io.hpp>
 
-#include <log.hpp>
+#include <logger.hpp>
 
 #include <system_error>
 #include <cstdlib>
 #include <cstdio>
 #include <filesystem>
+#include <algorithm>
 
 namespace masonc
 {
@@ -48,7 +49,7 @@ namespace masonc
     }
 
     std::vector<std::string> directory_files(const char* directory_path,
-        const robin_hood::unordered_set<std::string>& extensions)
+        const std::vector<std::string>& extensions)
     {
         std::error_code error;
         auto directory_iterator = std::filesystem::directory_iterator(directory_path, error);
@@ -60,33 +61,18 @@ namespace masonc
 
         std::vector<std::string> files;
         for (const auto& entry : directory_iterator) {
-            if (extensions.find(entry.path().extension().generic_string()) != extensions.end())
+            if (std::find(extensions.begin(),
+                          extensions.end(),
+                          entry.path().extension().generic_string()) != extensions.end())
+            {
                 files.push_back(entry.path().generic_string());
+            }
         }
 
         return files;
     }
 
-	std::vector<std::string> directory_files_recurse(const char* directory_path)
-	{
-        std::error_code error;
-        auto recursive_directory_iterator = std::filesystem::recursive_directory_iterator(directory_path, error);
-
-        if (error) {
-            std::cout << "Directory " << directory_path << " does not exist." << std::endl;
-            return std::vector<std::string>{};
-        }
-
-        std::vector<std::string> files;
-        for (const auto& entry : recursive_directory_iterator) {
-			files.push_back(entry.path().generic_string());
-		}
-
-		return files;
-    }
-
-    std::vector<std::string> directory_files_recurse(const char* directory_path,
-        const robin_hood::unordered_set<std::string>& extensions)
+    std::vector<std::string> directory_files_recurse(const char* directory_path)
     {
         std::error_code error;
         auto recursive_directory_iterator = std::filesystem::recursive_directory_iterator(directory_path, error);
@@ -98,8 +84,31 @@ namespace masonc
 
         std::vector<std::string> files;
         for (const auto& entry : recursive_directory_iterator) {
-            if (extensions.find(entry.path().extension().generic_string()) != extensions.end())
+            files.push_back(entry.path().generic_string());
+        }
+
+        return files;
+    }
+
+    std::vector<std::string> directory_files_recurse(const char* directory_path,
+        const std::vector<std::string>& extensions)
+    {
+        std::error_code error;
+        auto recursive_directory_iterator = std::filesystem::recursive_directory_iterator(directory_path, error);
+
+        if (error) {
+            std::cout << "Directory " << directory_path << " does not exist." << std::endl;
+            return std::vector<std::string>{};
+        }
+
+        std::vector<std::string> files;
+        for (const auto& entry : recursive_directory_iterator) {
+            if (std::find(extensions.begin(),
+                          extensions.end(),
+                          entry.path().extension().generic_string()) != extensions.end())
+            {
                 files.push_back(entry.path().generic_string());
+            }
         }
 
         return files;
@@ -109,7 +118,7 @@ namespace masonc
     {
         switch (path.type) {
             default:
-                log_error("Not implemented \"path_type\" case.");
+                global_logger.log_error("Not implemented \"path_type\" case.");
                 return std::vector<std::string>{};
             case path_type::DIR_PATH_RECURSE:
                 return directory_files_recurse(path.path_string.c_str());
@@ -124,11 +133,11 @@ namespace masonc
     }
 
     std::vector<std::string> files_from_path(const path& path,
-        const robin_hood::unordered_set<std::string>& extensions)
+        const std::vector<std::string>& extensions)
     {
         switch (path.type) {
             default: {
-                log_error("Not implemented \"path_type\" case.");
+                global_logger.log_error("Not implemented \"path_type\" case.");
                 return std::vector<std::string>{};
             }
             case path_type::DIR_PATH_RECURSE: {
@@ -141,7 +150,9 @@ namespace masonc
                 std::filesystem::path _path{ path.path_string };
 
                 if (std::filesystem::exists(_path) &&
-                    extensions.find(_path.extension().generic_string()) != extensions.end())
+                    std::find(extensions.begin(),
+                              extensions.end(),
+                              _path.extension().generic_string()) != extensions.end())
                 {
                     return std::vector<std::string>{ path.path_string };
                 }
@@ -153,83 +164,99 @@ namespace masonc
         }
     }
 
-	std::optional<char*> file_read(const char* path, const u64 block_size,
-		u64* terminator_index)
-	{
-		u64 buffer_size = block_size;
-		void* buffer = std::malloc(buffer_size);
-		if (buffer == nullptr)
-		{
-			log_error(std::string{ "Unable to allocate memory buffer for file '" + std::string(path) + "'" }.c_str());
-			return std::optional<char*>{};
-		}
+    char* file_read(const char* path, const u64 block_size,
+        u64* terminator_index)
+    {
+        u64 buffer_size = block_size;
+        void* buffer = std::malloc(buffer_size);
+        if (buffer == nullptr) {
+            global_logger.log_error(
+                std::string{"Unable to allocate memory buffer for file '" + std::string(path) + "'"}
+                .c_str()
+            );
 
-		#pragma warning (disable: 4996)
-		std::FILE* stream = std::fopen(path, "r");
-		if (stream == nullptr)
-		{
-			log_error(std::string{ "Unable to open stream for reading file '" + std::string(path) + "'" }.c_str());
-			std::free(buffer);
-			return std::optional<char*>{};
-		}
+            return nullptr;
+        }
 
-		u64 bytes_read = std::fread(buffer, 1, block_size, stream);
-		u64 total_bytes_read = bytes_read;
+        #pragma warning (disable: 4996)
+        std::FILE* stream = std::fopen(path, "r");
+        if (stream == nullptr) {
+            global_logger.log_error(
+                std::string{ "Unable to open stream for reading file '" + std::string(path) + "'" }
+                .c_str()
+            );
 
-		//while (bytes_read == block_size)
-        while (bytes_read > 0)
-		{
-			// Grow the buffer.
-			buffer_size += block_size;
-			buffer = std::realloc(buffer, buffer_size);
-			if(buffer == nullptr)
-			{
-				log_error(std::string{ "Unable to allocate memory buffer for file '" + std::string(path) + "'" }.c_str());
-				return std::optional<char*>{};
-			}
+            std::free(buffer);
+            return nullptr;
+        }
 
-			// Location of last block (end of old buffer).
-			char* location = static_cast<char*>(buffer);
-			location += buffer_size - block_size;
+        u64 bytes_read = std::fread(buffer, 1, block_size, stream);
+        u64 total_bytes_read = bytes_read;
 
-			// Write to location.
-			bytes_read = std::fread(location, 1, block_size, stream);
-			total_bytes_read += bytes_read;
-		}
+        //while (bytes_read == block_size)
+        while (bytes_read > 0) {
+            // Grow the buffer.
+            buffer_size += block_size;
+            buffer = std::realloc(buffer, buffer_size);
 
-		// EOF was reached.
-		if (std::feof(stream) != 0)
-		{
-			// Allocate a block of memory to contain the string with a null terminator.
-			char* final_buffer = static_cast<char*>(std::malloc(total_bytes_read + 1));
-			std::memcpy(final_buffer, buffer, total_bytes_read);
+            if (buffer == nullptr) {
+                global_logger.log_error(
+                    std::string{ "Unable to allocate memory buffer for file '" + std::string(path) + "'" }
+                    .c_str()
+                );
 
-			//char* final_buffer_bytes = static_cast<char*>(final_buffer);
-			final_buffer[total_bytes_read] = '\0';
+                return nullptr;
+            }
 
-			// Out the null terminator's index.
-			if(terminator_index != nullptr)
-			{
-				*terminator_index = total_bytes_read;
-			}
+            // Location of last block (end of old buffer).
+            char* location = static_cast<char*>(buffer);
+            location += buffer_size - block_size;
 
-			std::fclose(stream);
-			std::free(buffer);
-			return std::optional<char*>{ final_buffer };
-		}
+            // Write to location.
+            bytes_read = std::fread(location, 1, block_size, stream);
+            total_bytes_read += bytes_read;
+        }
 
-		// An error occured while reading
-		if (std::ferror(stream) != 0)
-		{
-			log_error(std::string{ "Something went wrong while reading file '" + std::string(path) + "'" }.c_str());
-			std::fclose(stream);
-			std::free(buffer);
-			return std::optional<char*>{};
-		}
+        // EOF was reached.
+        if (std::feof(stream) != 0) {
+            // TODO: Instead of allocating, trim the existing buffer...
 
-		log_error(std::string{ "EOF was not reached while reading file '" + std::string(path) + "'" }.c_str());
-		std::fclose(stream);
-		std::free(buffer);
-		return std::optional<char*>{};
-	}
+            // Allocate a block of memory to contain the string with a null terminator.
+            char* final_buffer = static_cast<char*>(std::malloc(total_bytes_read + 1));
+            std::memcpy(final_buffer, buffer, total_bytes_read);
+
+            //char* final_buffer_bytes = static_cast<char*>(final_buffer);
+            final_buffer[total_bytes_read] = '\0';
+
+            // Out the null terminator's index.
+            if (terminator_index != nullptr) {
+                *terminator_index = total_bytes_read;
+            }
+
+            std::fclose(stream);
+            std::free(buffer);
+            return final_buffer;
+        }
+
+        // An error occured while reading
+        if (std::ferror(stream) != 0) {
+            global_logger.log_error(
+                std::string{ "Something went wrong while reading file '" + std::string(path) + "'" }
+                .c_str()
+            );
+
+            std::fclose(stream);
+            std::free(buffer);
+            return nullptr;
+        }
+
+        global_logger.log_error(
+            std::string{ "EOF was not reached while reading file '" + std::string(path) + "'" }
+            .c_str()
+        );
+
+        std::fclose(stream);
+        std::free(buffer);
+        return nullptr;
+    }
 }

@@ -3,7 +3,7 @@
 
 #include <common.hpp>
 #include <location.hpp>
-#include <build.hpp>
+#include <build_stage.hpp>
 
 #include <string>
 #include <vector>

@@ -1,4 +1,4 @@
-module x.y;
+module std::core;
 
 proc foo()
 {

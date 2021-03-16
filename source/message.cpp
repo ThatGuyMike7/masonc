@@ -1,5 +1,7 @@
 #include <message.hpp>
 
+#include <build_stage.hpp>
+
 namespace masonc
 {
     void message_list::print_messages()

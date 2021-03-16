@@ -1,6 +1,6 @@
 #include <command.hpp>
 
-#include <log.hpp>
+#include <logger.hpp>
 #include <io.hpp>
 #include <build.hpp>
 
@@ -100,7 +100,7 @@ namespace masonc
             }
         }
 
-        build_object(split_sources);
+        builder executable_builder{ split_sources, 1 };
     }
 
     bool execute_command(const std::string& input)
@@ -145,7 +145,7 @@ namespace masonc
     {
         switch(argument_type) {
             default:
-                log_error("Not implemented command argument type.");
+                global_logger.log_error("Not implemented command argument type.");
                 return "";
             case command_argument_type::INTEGER:
                 return "Integer";

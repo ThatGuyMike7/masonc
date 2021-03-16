@@ -1,6 +1,6 @@
 #include <llvm_converter.hpp>
 
-#include <log.hpp>
+#include <logger.hpp>
 #include <type.hpp>
 
 #include <iostream>
@@ -103,7 +103,7 @@ namespace masonc::llvm
     {
         switch (expr->value.empty.type) {
             default:
-                log_error(
+                global_logger.log_error(
                     std::string{ "Cannot generate code for expression of type " +
                     std::to_string(expr->value.empty.type) }.c_str()
                 );
@@ -124,7 +124,7 @@ namespace masonc::llvm
         else if(expr->value.empty.type == masonc::parser::EXPR_PROC_CALL)
             return convert_call(&expr->value.procedure_call.value);
 
-        log_error(
+        global_logger.log_error(
             std::string{ "Cannot generate code for expression of type " +
             std::to_string(expr->value.empty.type) }.c_str()
         );
@@ -289,7 +289,7 @@ namespace masonc::llvm
             LLVMTypeRef llvm_arg_type = llvm_type_by_name(arg->type_name);
             if (llvm_arg_type == nullptr)
             {
-                log_error(
+                global_logger.log_error(
                     std::string{ "Argument type '" + arg->type_name +
                     "' could not be found" }.c_str()
                 );
@@ -303,7 +303,7 @@ namespace masonc::llvm
         LLVMTypeRef llvm_return_type = llvm_type_by_name(expr->return_type_name);
         if (llvm_return_type == nullptr)
         {
-            log_error(
+            global_logger.log_error(
                 std::string{ "Return type '" + expr->return_type_name +
                 "' could not be found" }.c_str()
             );

@@ -4,9 +4,10 @@
 #include <mod.hpp>
 #include <mod_handle.hpp>
 #include <type.hpp>
-#include <log.hpp>
+#include <logger.hpp>
 #include <timer.hpp>
 #include <lexer.hpp>
+#include <build_stage.hpp>
 
 #include <iostream>
 #include <optional>
@@ -15,44 +16,21 @@
 
 namespace masonc::parser
 {
-    void parser_instance::parse(masonc::lexer::lexer_instance_output* lexer_output, masonc::parser::parser_instance_output* parser_output)
-    {
-        this->parser_output = parser_output;
-        this->parser_output->lexer_output = lexer_output;
-
-        this->current_module = nullptr;
-        this->current_ast = nullptr;
-        this->current_module_handle = 0;
-
-        this->token_index = 0;
-
-        this->done = false;
-
-        // The first statement must be a module declaration.
-        auto module_identifier_result = expect("module");
-        if (!module_identifier_result) {
-            return;
-        }
-
-        auto module_declaration_result = parse_module_declaration();
-        if (!module_declaration_result/*current_module == nullptr*/) {
-            return;
-        }
-
-        current_ast->push_back(module_declaration_result.value());
-
-        // Drive the parser.
-        drive();
-    }
-
-    void parser_instance::free()
+    void parser_instance_output::free()
     {
         for (u64 i = 0; i < delete_list_expressions.size(); i += 1) {
             delete delete_list_expressions[i];
         }
     }
 
-    std::string parser_instance::format_expression(const expression& expr, u64 level)
+    void parser_instance_output::print_expressions()
+    {
+        for (u64 i = 0; i < AST.size(); i += 1) {
+            std::cout << format_expression(AST[i]) << std::endl;
+        }
+    }
+
+    std::string parser_instance_output::format_expression(const expression& expr, u64 level)
     {
         std::string message;
         for (u64 i = 0; i < level; i += 1) {
@@ -178,15 +156,16 @@ namespace masonc::parser
                 break;
 
             case EXPR_MODULE_DECLARATION:
-                message += "Package Declaration: Name='";
-                message += this->parser_output->module_names.at(expr.value.module_declaration.value.handle);
+                message += "Module Declaration: Name='";
+                message += expr.value.module_declaration.value.name;
                 message += "'";
                 break;
 
             case EXPR_MODULE_IMPORT:
-                message += "Package Import: Name='";
-                message += this->parser_output->modules.at(expr.value.module_import.value.handle)
-                    .module_import_names.at(expr.value.module_import.value.import_index);
+                message += "Module Import: Name='";
+                message += file_module.module_import_names.at(
+                    expr.value.module_import.value.import_index);
+
                 message += "'";
                 break;
         }
@@ -194,15 +173,29 @@ namespace masonc::parser
         return message;
     }
 
-    void parser_instance::print_expressions()
+    parser_instance::parser_instance(masonc::parser::parser_instance_output* parser_output)
     {
-        for(u64 i = 0; i < parser_output->asts.size(); i += 1) {
-            std::vector<expression>* ast = &parser_output->asts[i];
+        this->parser_output = parser_output;
 
-            for (u64 j = 0; j < ast->size(); j += 1) {
-                std::cout << format_expression((*ast)[i]) << std::endl;
-            }
+        //this->token_index = 0;
+        //this->done = false;
+
+        // The first statement must be a module declaration.
+        auto module_identifier_result = expect("module");
+        if (!module_identifier_result) {
+            return;
         }
+
+        auto module_declaration_result = parse_module_declaration();
+        if (!module_declaration_result) {
+            report_parse_error("Missing module declaration.");
+            return;
+        }
+
+        parser_output->AST.push_back(module_declaration_result.value());
+
+        // Drive the parser.
+        drive();
     }
 
     void parser_instance::drive()
@@ -210,7 +203,7 @@ namespace masonc::parser
         while(true) {
             auto top_level_expression = parse_top_level();
             if (top_level_expression)
-                current_ast->push_back(top_level_expression.value());
+                parser_output->AST.push_back(top_level_expression.value());
 
             // Reached the end of the token stream.
             if (done)
@@ -220,53 +213,42 @@ namespace masonc::parser
 
     masonc::lexer::lexer_instance_output* parser_instance::lexer_output()
     {
-        return parser_output->lexer_output;
+        return &parser_output->lexer_output;
     }
 
     scope* parser_instance::current_scope()
     {
-        return current_module->module_scope.get_child(current_scope_index);
+        return parser_output->file_module.module_scope.get_child(current_scope_index);
+    }
+
+    bool parser_instance::module_declaration_exists()
+    {
+        return !parser_output->module_name.empty();
     }
 
     void parser_instance::set_module(const char* module_name, u16 module_name_length)
     {
-        auto search_module_name = parser_output->module_names.find(module_name);
+        parser_output->module_name = std::string{ module_name };
 
-        if (search_module_name) {
-            current_module_handle = search_module_name.value();
+        // Tell the module scope of the module.
+        parser_output->file_module.module_scope.m_module = &parser_output->file_module;
 
-            // If we found the module name, we can assume the AST and module structure exist too.
-            current_module = &parser_output->modules[current_module_handle];
-            current_ast = &parser_output->asts[current_module_handle];
+        //u16 module_name_length = parser_output->module_names.length_at(current_handle);
+        //const char* module_name = parser_output->module_names.at(current_handle);
+
+        // Give the module scope the module name.
+        parser_output->file_module.module_scope.set_name(module_name, module_name_length);
+
+        try {
+            // Guess how many tokens will end up being 1 expression on average to
+            // avoid reallocations.
+            parser_output->AST.reserve(lexer_output()->tokens.size() / 10 + 32);
         }
-        else {
-            // Create new module name.
-            current_module_handle = parser_output->module_names.copy_back(module_name, module_name_length);
-
-            // Create new module and AST.
-            current_module = &parser_output->modules.emplace_back(mod{});
-            current_ast = &parser_output->asts.emplace_back(std::vector<expression>{});
-
-            // Tell the module scope of the module.
-            current_module->module_scope.m_module = current_module;
-
-            //u16 module_name_length = parser_output->module_names.length_at(current_module_handle);
-            //const char* module_name = parser_output->module_names.at(current_module_handle);
-
-            // Give the module scope the module name.
-            current_module->module_scope.set_name(module_name, module_name_length);
-
-            try {
-                // Guess how many tokens will end up being 1 expression on average to
-                // avoid reallocations.
-                current_ast->reserve(lexer_output()->tokens.size() / 10 + 32);
-            }
-            catch (...) {
-                log_warning("Could not reserve space for AST container.");
-            }
+        catch (...) {
+            global_logger.log_error("Could not reserve space for AST container.");
         }
 
-        current_scope_index = current_module->module_scope.index();
+        current_scope_index = parser_output->file_module.module_scope.index();
     }
 
     void parser_instance::set_module(const std::string& module_name)
@@ -487,7 +469,8 @@ namespace masonc::parser
             if (std::strcmp(identifier, "proc") == 0)
                 return parse_procedure();
             if (std::strcmp(identifier, "module") == 0)
-                return parse_module_declaration();
+                report_parse_error("Module declaration must be the first statement in the source file, and there must only be one module declaration.");
+            //    return parse_module_declaration();
             if (std::strcmp(identifier, "import") == 0)
                 return parse_module_import();
         }
@@ -612,7 +595,7 @@ namespace masonc::parser
                     return std::nullopt;
 
                 expression* expr = new expression{ primary_result.value() };
-                delete_list_expressions.push_back(expr);
+                parser_output->delete_list_expressions.push_back(expr);
 
                 return expression{ expression_unary{ expr, token_result.value()->type } };
             }
@@ -674,8 +657,8 @@ namespace masonc::parser
         expression* expr_left = new expression{ left };
         expression* expr_right = new expression{ right_result.value() };
 
-        delete_list_expressions.push_back(expr_left);
-        delete_list_expressions.push_back(expr_right);
+        parser_output->delete_list_expressions.push_back(expr_left);
+        parser_output->delete_list_expressions.push_back(expr_right);
 
         return expression{ expression_binary{ expr_left, expr_right, op } };
     }
@@ -1129,15 +1112,15 @@ namespace masonc::parser
             if (!token_result)
                 return std::nullopt;
 
-            if (token_result.value()->type == '.') {
-                temp_module_name += ".";
+            if (token_result.value()->type == lexer::TOKEN_DOUBLECOLON) {
+                temp_module_name += "::";
                 continue;
             }
             else if(token_result.value()->type == ';') {
                 set_module(temp_module_name);
 
                 // Done parsing module declaration statement.
-                return expression{ expression_module_declaration{ current_module_handle } };
+                return expression{ expression_module_declaration{ parser_output->module_name.c_str() } };
             }
             else {
                 report_parse_error("Unexpected token.");
@@ -1166,20 +1149,18 @@ namespace masonc::parser
                 return std::nullopt;
 
             // TODO: Check for "as" token.
-            if (token_result.value()->type == '.') {
-                temp_module_name += ".";
+            if (token_result.value()->type == lexer::TOKEN_DOUBLECOLON) {
+                temp_module_name += "::";
                 continue;
             }
             else if (token_result.value()->type == ';') {
                 // TODO: Check if imported more than once.
 
-                u64 import_index = current_module->module_import_names.copy_back(temp_module_name);
+                u64 import_index = parser_output->file_module.module_import_names.copy_back(temp_module_name);
 
                 // Done parsing module import statement.
                 return expression{
-                    expression_module_import{
-                        this->current_module_handle, import_index, get_token_location(this->token_index)
-                    }
+                    expression_module_import{ import_index, get_token_location(this->token_index) }
                 };
             }
             else {

@@ -2,7 +2,7 @@
 #include <io.hpp>
 #include <lexer.hpp>
 #include <parser.hpp>
-#include <log.hpp>
+#include <logger.hpp>
 #include <language.hpp>
 #include <scope.hpp>
 #include <timer.hpp>
